@@ -21,10 +21,23 @@ from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
 )
+from django.http import JsonResponse
+
+def api_root(request):
+    return JsonResponse({
+        "status": "online",
+        "message": "Backend API is running...",
+        "frontend_url": "http://localhost:5173",
+        "endpoints": {
+            "admin": "/admin/",
+            "login": "/api/auth/login/",
+        }
+    })
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/auth/', include('users.urls')),
     path('api/auth/login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('', api_root),
 ]

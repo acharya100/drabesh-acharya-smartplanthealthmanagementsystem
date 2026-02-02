@@ -36,7 +36,7 @@ const Login = () => {
       // So sending JSON { "username": "user@example.com", "password": "..." } should work even if the field is 'email'.
 
       const { data } = await login({
-        username: formData.username, // using 'username' key for compat with simplejwt
+        email: formData.username, // mapping to 'email' key as expected by backend model
         password: formData.password
       });
 
@@ -62,7 +62,7 @@ const Login = () => {
         <form onSubmit={handleSubmit}>
           {error && <div className="error-message">{error}</div>}
           <div className="form-group">
-            <label>Username</label>
+            <label>Email</label>
             <input
               type="text"
               name="username"
@@ -87,7 +87,7 @@ const Login = () => {
             {loading ? "Logging in..." : "Login"}
           </button>
         </form>
-        <p className="login-footer">Default: superuser / superuser</p>
+        <p className="login-footer">Default: admin@example.com / superuser</p>
       </div>
     </div>
   );
