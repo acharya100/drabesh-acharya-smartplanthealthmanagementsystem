@@ -1,5 +1,7 @@
 import { useState } from "react";
+
 import { useNavigate } from "react-router-dom";
+import { login } from "../api";
 
 const Login = () => {
   const [formData, setFormData] = useState({ username: "", password: "" });
@@ -11,6 +13,7 @@ const Login = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     setError("");
   };
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -24,19 +27,26 @@ const Login = () => {
     }
 
     try {
-     
+      // NOTE: Our backend uses 'email' as the username field, but the form uses 'username'.
+      // If the user inputs a username, we map it to 'email' if valid, or just send it as is.
+      // However, our backend explicitly expects 'email' in the login body if we use the default TokenObtainPairView
+      // BUT we customized the User model to use 'email'. TokenObtainPairView expects 'username' key by default unless configured.
+      // Let's check settings... defaulting to standard behavior: it sends 'username' and 'password'.
+      // Django's authenticate() method uses the USERNAME_FIELD which is 'email'.
+      // So sending JSON { "username": "user@example.com", "password": "..." } should work even if the field is 'email'.
 
-      setTimeout(() => {
-        if (formData.username === "superuser" && formData.password === "superuser") {
-          localStorage.setItem("isAuthenticated", "true");
-          navigate("/dashboard");
-        } else {
-          setError("Invalid credentials");
-          setLoading(false);
-        }
-      }, 300);
+      const { data } = await login({
+        username: formData.username, // using 'username' key for compat with simplejwt
+        password: formData.password
+      });
+
+      localStorage.setItem("access_token", data.access);
+      localStorage.setItem("refresh_token", data.refresh);
+      localStorage.setItem("isAuthenticated", "true");
+      navigate("/dashboard");
     } catch (err) {
-      setError("An error occurred");
+      console.error(err);
+      setError("Invalid credentials or server error");
       setLoading(false);
     }
   };
