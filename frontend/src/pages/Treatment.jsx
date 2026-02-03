@@ -102,15 +102,15 @@ const Treatment = () => {
       <div className="page-content animate-slide-up">
         <div className="page-header">
           <div>
-            <h1>Curative Protocols</h1>
-            <p className="subtitle">Expert-verified methodologies for botanical recovery and restoration</p>
+            <h1>Treatment Plans</h1>
+            <p className="subtitle">Guided steps for plant recovery and health</p>
           </div>
           <button
             className="btn-primary"
             onClick={() => setShowAddModal(true)}
           >
             <ShieldCheck size={20} />
-            <span>Enroll New Protocol</span>
+            <span>Add Treatment</span>
           </button>
         </div>
 
@@ -120,19 +120,19 @@ const Treatment = () => {
               <Search className="search-icon" size={20} />
               <input
                 type="text"
-                placeholder="Search protocols, medical agents or application steps..."
+                placeholder="Search treatments, products, or steps..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            <button type="submit" className="btn-primary">Execute Search</button>
+            <button type="submit" className="btn-primary">Search</button>
           </form>
         </div>
 
         {loading ? (
           <div className="loading-spinner-container">
             <div className="spinner"></div>
-            <p>Accessing medical and chemical archives...</p>
+            <p>Loading treatment records...</p>
           </div>
         ) : (
           <div className="treatments-grid">
@@ -148,14 +148,14 @@ const Treatment = () => {
 
                     <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                       <div className={`badge ${t.effectiveness_rate > 80 ? 'badge-edible' : 'badge-toxic'}`} style={{ borderRadius: '4px' }}>
-                        {t.effectiveness_rate}% Efficacy
+                        {t.effectiveness_rate}% Effective
                       </div>
-                      <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600 }}>Est. Cost: {t.cost_estimate}</span>
+                      <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600 }}>Cost: {t.cost_estimate}</span>
                     </div>
                   </div>
 
                   <div className="treatment-footer-v2" style={{ padding: '1.5rem 2.5rem', borderTop: '1px solid var(--border-light)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-main)' }}>
-                    <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--secondary)' }}>{t.treatment_type} Protocol</span>
+                    <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--secondary)' }}>{t.treatment_type} Type</span>
                     <button className="btn-secondary" style={{ padding: '0.4rem 1rem', fontSize: '0.8rem' }}>View Steps</button>
                   </div>
                 </div>
@@ -163,8 +163,8 @@ const Treatment = () => {
             ) : (
               <div className="no-results">
                 <ShieldCheck size={64} className="text-muted" />
-                <h3>No Protocols Found</h3>
-                <p>Verify your target pathogen or expand search parameters.</p>
+                <h3>No Treatments Found</h3>
+                <p>Try searching for a different disease or keyword.</p>
               </div>
             )}
           </div>
@@ -176,7 +176,7 @@ const Treatment = () => {
         <div className="modal-overlay">
           <div className="modal-content-large animate-slide-up">
             <div className="modal-header">
-              <h2>Enroll Curative Protocol</h2>
+              <h2>Add Treatment Plan</h2>
               <button className="close-btn" onClick={() => setShowAddModal(false)}>&times;</button>
             </div>
 
@@ -184,13 +184,13 @@ const Treatment = () => {
               <div className="form-grid">
                 <div className="form-left">
                   <div className="form-group">
-                    <label>Target Pathogen</label>
+                    <label>Target Disease</label>
                     <select
                       value={newTreatment.disease}
                       onChange={(e) => setNewTreatment({ ...newTreatment, disease: e.target.value })}
                       required
                     >
-                      <option value="">Select Pathogen...</option>
+                      <option value="">Select Disease...</option>
                       {diseases.map(d => (
                         <option key={d.id} value={d.id}>{d.name}</option>
                       ))}
@@ -198,7 +198,7 @@ const Treatment = () => {
                   </div>
 
                   <div className="form-group">
-                    <label>Protocol Methodology</label>
+                    <label>Treatment Type</label>
                     <select
                       value={newTreatment.treatment_type}
                       onChange={(e) => setNewTreatment({ ...newTreatment, treatment_type: e.target.value })}
@@ -210,7 +210,7 @@ const Treatment = () => {
                   </div>
 
                   <div className="form-group">
-                    <label>Measured Efficacy (%)</label>
+                    <label>Effectiveness (%)</label>
                     <input
                       type="number"
                       min="0" max="100"
@@ -227,7 +227,7 @@ const Treatment = () => {
                         onChange={(e) => setNewTreatment({ ...newTreatment, is_preventive: e.target.checked })}
                         style={{ width: '20px', height: '20px' }}
                       />
-                      PREVENTIVE ACTION
+                      Preventative Action
                     </label>
                   </div>
                 </div>
@@ -235,7 +235,7 @@ const Treatment = () => {
                 <div className="form-right">
                   <div className="form-group-row">
                     <div className="form-group">
-                      <label>Protocol Title</label>
+                      <label>Treatment Name</label>
                       <input
                         type="text"
                         value={newTreatment.name}
@@ -245,53 +245,53 @@ const Treatment = () => {
                       />
                     </div>
                     <div className="form-group">
-                      <label>Fiscal Impact</label>
+                      <label>Cost Level</label>
                       <select
                         value={newTreatment.cost_estimate}
                         onChange={(e) => setNewTreatment({ ...newTreatment, cost_estimate: e.target.value })}
                       >
-                        <option value="Low">Low (Economic)</option>
-                        <option value="Medium">Medium (Standard)</option>
-                        <option value="High">High (Professional)</option>
+                        <option value="Low">Low</option>
+                        <option value="Medium">Medium</option>
+                        <option value="High">High</option>
                       </select>
                     </div>
                   </div>
 
                   <div className="form-group">
-                    <label>Clinical Overview</label>
+                    <label>Description</label>
                     <textarea
                       value={newTreatment.description}
                       onChange={(e) => setNewTreatment({ ...newTreatment, description: e.target.value })}
                       rows="2"
-                      placeholder="Brief clinical summary of the treatment..."
+                      placeholder="Brief summary of the treatment..."
                     ></textarea>
                   </div>
 
                   <div className="form-group">
-                    <label>Administrative Steps (Sequential)</label>
+                    <label>Instructions</label>
                     <textarea
                       value={newTreatment.instructions}
                       onChange={(e) => setNewTreatment({ ...newTreatment, instructions: e.target.value })}
                       rows="4"
-                      placeholder="1. Calibrate dosage&#10;2. Apply to foliage underside..."
+                      placeholder="1. Prepare solution&#10;2. Apply to leaves..."
                     ></textarea>
                   </div>
 
                   <div className="form-group">
-                    <label>Required Agents / Products</label>
+                    <label>Products Needed</label>
                     <input
                       type="text"
                       value={newTreatment.products_needed}
                       onChange={(e) => setNewTreatment({ ...newTreatment, products_needed: e.target.value })}
-                      placeholder="e.g. Cold-pressed Neem oil, Castile soap, Purified water"
+                      placeholder="e.g. Neem oil, Soap, Water"
                     />
                   </div>
                 </div>
               </div>
 
               <div className="modal-footer" style={{ marginTop: '3rem', paddingTop: '2rem', borderTop: '1px solid var(--border-light)', display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
-                <button type="button" className="btn-secondary" onClick={() => setShowAddModal(false)}>Discard Session</button>
-                <button type="submit" className="btn-primary">Verify & Save Protocol</button>
+                <button type="button" className="btn-secondary" onClick={() => setShowAddModal(false)}>Cancel</button>
+                <button type="submit" className="btn-primary">Save Treatment</button>
               </div>
             </form>
           </div>

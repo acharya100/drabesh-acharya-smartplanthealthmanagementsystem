@@ -14,7 +14,7 @@ const Navbar = ({ activePage }) => {
       <div className="navbar-brand">
         <h2>
           <Leaf size={28} className="text-primary" />
-          <span>FloralIQ</span>
+          <span>Smart Plant Health</span>
         </h2>
       </div>
       <div className="navbar-links">
@@ -24,7 +24,7 @@ const Navbar = ({ activePage }) => {
         </Link>
         <Link to="/plants" className={`nav-link ${activePage === "plants" ? "active" : ""}`}>
           <Leaf size={18} />
-          <span>Plants</span>
+          <span>My Plants</span>
         </Link>
         <Link to="/diseases" className={`nav-link ${activePage === "diseases" ? "active" : ""}`}>
           <Activity size={18} />
@@ -36,7 +36,7 @@ const Navbar = ({ activePage }) => {
         </Link>
         <Link to="/treatment" className={`nav-link ${activePage === "treatment" ? "active" : ""}`}>
           <ShieldCheck size={18} />
-          <span>Treatment</span>
+          <span>Treatments</span>
         </Link>
         <button className="logout-btn" onClick={logout}>
           <LogOut size={18} />

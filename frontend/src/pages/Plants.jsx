@@ -174,15 +174,15 @@ const Plants = () => {
       <div className="page-content animate-slide-up">
         <div className="page-header">
           <div>
-            <h1>Specimen Archive</h1>
-            <p className="subtitle">A curated database of botanical intelligence and health data</p>
+            <h1>Plant Collection</h1>
+            <p className="subtitle">A complete list of your plants and their care requirements</p>
           </div>
           <button
             className="btn-primary"
             onClick={() => setShowAddModal(true)}
           >
             <Plus size={20} />
-            <span>Enroll New Species</span>
+            <span>Add New Plant</span>
           </button>
         </div>
 
@@ -193,12 +193,12 @@ const Plants = () => {
               <Search className="search-icon" size={20} />
               <input
                 type="text"
-                placeholder="Search botanical names or scientific profiles..."
+                placeholder="Search plants or scientific names..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            <button type="submit" className="btn-primary">Execute Search</button>
+            <button type="submit" className="btn-primary">Search</button>
           </form>
         </div>
 
@@ -206,7 +206,7 @@ const Plants = () => {
         {loading ? (
           <div className="loading-spinner-container">
             <div className="spinner"></div>
-            <p>Accessing encrypted botanical records...</p>
+            <p>Loading plant list...</p>
           </div>
         ) : (
           <div className="plants-grid">
@@ -233,11 +233,11 @@ const Plants = () => {
 
                     <div className="plant-footer">
                       <div className="plant-badges">
-                        {plant.is_edible && <span className="badge badge-edible">Food Safe</span>}
+                        {plant.is_edible && <span className="badge badge-edible">Edible</span>}
                         {plant.is_toxic && <span className="badge badge-toxic">Toxic</span>}
                       </div>
                       <button className="btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}>
-                        Profile Details
+                        View Details
                       </button>
                     </div>
                   </div>
@@ -246,8 +246,8 @@ const Plants = () => {
             ) : (
               <div className="no-results">
                 <Search size={64} className="text-muted" />
-                <h3>No Specimen Matches</h3>
-                <p>Adjust your search architecture to find hidden records.</p>
+                <h3>No Plants Found</h3>
+                <p>Try searching for a different plant name.</p>
               </div>
             )}
           </div>
@@ -259,7 +259,7 @@ const Plants = () => {
         <div className="modal-overlay">
           <div className="modal-content-large animate-slide-up">
             <div className="modal-header">
-              <h2>Enroll Botanical Identity</h2>
+              <h2>Add New Plant</h2>
               <button className="close-btn" onClick={() => setShowAddModal(false)}>&times;</button>
             </div>
 
@@ -274,7 +274,7 @@ const Plants = () => {
                     ) : (
                       <>
                         <Plus size={40} className="text-muted" />
-                        <span className="mt-4 text-muted font-bold text-center">DRAG & DROP<br />OR BROWSE</span>
+                        <span className="mt-4 text-muted font-bold text-center">UPLOAD PHOTO</span>
                       </>
                     )}
                     <input id="plant-image-input" type="file" accept="image/*" onChange={handleImageChange} hidden />
@@ -287,14 +287,14 @@ const Plants = () => {
                     onClick={handleAnalyzeAI}
                     disabled={isAnalyzing || !plantImage}
                   >
-                    {isAnalyzing ? "AI Engine Running..." : "Execute AI Identification"}
+                    {isAnalyzing ? "Identifying..." : "Identify with AI"}
                   </button>
                 </div>
 
                 <div className="form-right">
                   <div className="form-group-row">
                     <div className="form-group">
-                      <label>Common Identity</label>
+                      <label>Plant Name</label>
                       <input
                         type="text"
                         value={newPlant.name}
@@ -304,7 +304,7 @@ const Plants = () => {
                       />
                     </div>
                     <div className="form-group">
-                      <label>Scientific Nomenclature</label>
+                      <label>Scientific Name</label>
                       <input
                         type="text"
                         value={newPlant.scientific_name}
@@ -315,38 +315,38 @@ const Plants = () => {
                   </div>
 
                   <div className="form-group">
-                    <label>Botanical Profile / Description</label>
+                    <label>Description</label>
                     <textarea
                       value={newPlant.description}
                       onChange={(e) => setNewPlant({ ...newPlant, description: e.target.value })}
                       rows="4"
-                      placeholder="Enter a comprehensive description of the species..."
+                      placeholder="Enter a description of the plant..."
                     ></textarea>
                   </div>
 
                   <div className="form-group-row">
                     <div className="form-group">
-                      <label>Luminous Intakes</label>
+                      <label>Sunlight Requirement</label>
                       <select
                         value={newPlant.sunlight_requirement}
                         onChange={(e) => setNewPlant({ ...newPlant, sunlight_requirement: e.target.value })}
                       >
-                        <option value="full_sun">High Exposure</option>
-                        <option value="partial_sun">Moderate Exposure</option>
-                        <option value="partial_shade">Filtered Exposure</option>
-                        <option value="full_shade">Low Exposure</option>
+                        <option value="full_sun">Full Sun</option>
+                        <option value="partial_sun">Partial Sun</option>
+                        <option value="partial_shade">Partial Shade</option>
+                        <option value="full_shade">Full Shade</option>
                       </select>
                     </div>
                     <div className="form-group">
-                      <label>Hydration Hydrology</label>
+                      <label>Watering Frequency</label>
                       <select
                         value={newPlant.water_frequency}
                         onChange={(e) => setNewPlant({ ...newPlant, water_frequency: e.target.value })}
                       >
-                        <option value="daily">High Frequency</option>
-                        <option value="every_2_days">Frequent</option>
-                        <option value="weekly">Standard</option>
-                        <option value="bi_weekly">Periodic</option>
+                        <option value="daily">Daily</option>
+                        <option value="every_2_days">Every 2 Days</option>
+                        <option value="weekly">Weekly</option>
+                        <option value="bi_weekly">Every 2 Weeks</option>
                       </select>
                     </div>
                   </div>
@@ -354,19 +354,19 @@ const Plants = () => {
                   <div className="form-checkbox-group" style={{ display: 'flex', gap: '2rem', border: '1px solid var(--border-light)', padding: '1.5rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-main)' }}>
                     <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 'bold' }}>
                       <input type="checkbox" checked={newPlant.is_edible} onChange={(e) => setNewPlant({ ...newPlant, is_edible: e.target.checked })} style={{ width: '20px', height: '20px' }} />
-                      EDIBLE
+                      Edible
                     </label>
                     <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 'bold' }}>
                       <input type="checkbox" checked={newPlant.is_toxic} onChange={(e) => setNewPlant({ ...newPlant, is_toxic: e.target.checked })} style={{ width: '20px', height: '20px' }} />
-                      TOXIC
+                      Toxic
                     </label>
                   </div>
                 </div>
               </div>
 
               <div className="modal-footer" style={{ marginTop: '3rem', paddingTop: '2rem', borderTop: '1px solid var(--border-light)', display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
-                <button type="button" className="btn-secondary" onClick={() => setShowAddModal(false)}>Terminate Session</button>
-                <button type="submit" className="btn-primary">Finalize Enrollment</button>
+                <button type="button" className="btn-secondary" onClick={() => setShowAddModal(false)}>Cancel</button>
+                <button type="submit" className="btn-primary">Save Plant</button>
               </div>
             </form>
           </div>

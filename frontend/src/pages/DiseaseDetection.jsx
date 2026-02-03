@@ -83,9 +83,9 @@ const DiseaseDetection = () => {
 
       <div className="discovery-content animate-slide-up">
         <header className="discovery-header" style={{ textAlign: 'center', marginBottom: '4rem' }}>
-          <div className="header-badge" style={{ display: 'inline-block', padding: '0.4rem 1rem', background: 'var(--primary-subtle)', color: 'var(--primary)', borderRadius: '100px', fontSize: '0.75rem', fontWeight: 800, letterSpacing: '0.1em', marginBottom: '1.5rem' }}>AI DIAGNOSTIC SUITE</div>
-          <h1 style={{ fontSize: '3rem', fontWeight: 800, color: 'var(--secondary)', marginBottom: '1rem' }}>Pathogen Identification</h1>
-          <p style={{ maxWidth: '700px', margin: '0 auto', fontSize: '1.1rem', color: 'var(--text-muted)' }}>Utilize advanced computer vision to analyze botanical specimens for pathogenic markers and physiological abnormalities.</p>
+          <div className="header-badge" style={{ display: 'inline-block', padding: '0.4rem 1rem', background: 'var(--primary-subtle)', color: 'var(--primary)', borderRadius: '100px', fontSize: '0.75rem', fontWeight: 800, letterSpacing: '0.1em', marginBottom: '1.5rem' }}>AI DISEASE DETECTION</div>
+          <h1 style={{ fontSize: '3rem', fontWeight: 800, color: 'var(--secondary)', marginBottom: '1rem' }}>Detect Plant Disease</h1>
+          <p style={{ maxWidth: '700px', margin: '0 auto', fontSize: '1.1rem', color: 'var(--text-muted)' }}>Upload a photo of your plant to identify diseases and get expert treatment recommendations instantly.</p>
         </header>
 
         <div className="detection-layout" style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '3rem', alignItems: 'start' }}>
@@ -96,10 +96,10 @@ const DiseaseDetection = () => {
                   <div className="dropzone-icon" style={{ color: 'var(--primary)', marginBottom: '2rem' }}>
                     <Upload size={64} style={{ opacity: 0.6 }} />
                   </div>
-                  <h3 style={{ fontSize: '1.5rem', marginBottom: '0.75rem' }}>Ingest Specimen Imagery</h3>
-                  <p style={{ color: 'var(--text-muted)' }}>High-resolution JPEG/PNG format recommended (Max 5MB)</p>
+                  <h3 style={{ fontSize: '1.5rem', marginBottom: '0.75rem' }}>Upload Plant Photo</h3>
+                  <p style={{ color: 'var(--text-muted)' }}>High-resolution JPEG or PNG recommended (Max 5MB)</p>
                   <div className="btn-primary mt-6" style={{ display: 'inline-flex', marginTop: '2rem' }}>
-                    Access File System
+                    Choose Photo
                   </div>
                   <input
                     id="fileInput"
@@ -128,12 +128,12 @@ const DiseaseDetection = () => {
                         {loading ? (
                           <div className="loader-inline" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem' }}>
                             <RefreshCw className="animate-spin" size={24} />
-                            <span>Processing Neural Pipeline...</span>
+                            <span>Analyzing photo...</span>
                           </div>
                         ) : (
                           <div className="loader-inline" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem' }}>
                             <Camera size={24} />
-                            <span>Initiate AI Diagnosis</span>
+                            <span>Detect Disease</span>
                           </div>
                         )}
                       </button>
@@ -156,7 +156,7 @@ const DiseaseDetection = () => {
                 <div className="result-header" style={{ padding: '2.5rem', background: 'var(--bg-main)', borderBottom: '1px solid var(--border-light)' }}>
                   <div className={`status-pill ${result.is_healthy ? 'healthy' : 'infected'}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.4rem 0.8rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', marginBottom: '1.5rem', background: result.is_healthy ? 'var(--primary-subtle)' : '#fee2e2', color: result.is_healthy ? 'var(--primary)' : '#dc2626' }}>
                     {result.is_healthy ? <CheckCircle size={16} /> : <AlertTriangle size={16} />}
-                    {result.is_healthy ? 'Specimen Healthy' : 'Analysis: Positive'}
+                    {result.is_healthy ? 'Plant is Healthy' : 'Disease Detected'}
                   </div>
                   <h2 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '2rem' }}>{result.disease_name}</h2>
                   <div className="confidence-meter">
@@ -173,7 +173,7 @@ const DiseaseDetection = () => {
                 <div className="result-details" style={{ padding: '2.5rem' }}>
                   {!result.is_healthy && (
                     <div className="severity-info" style={{ marginBottom: '2.5rem' }}>
-                      <span className="label" style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', display: 'block', marginBottom: '0.5rem' }}>Infection Severity:</span>
+                      <span className="label" style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', display: 'block', marginBottom: '0.5rem' }}>Disease Severity:</span>
                       <span className={`value severity-${result.severity}`} style={{ fontSize: '1.25rem', fontWeight: 800, color: result.severity === 'critical' ? '#dc2626' : 'var(--secondary)' }}>
                         {result.severity.toUpperCase()}
                       </span>
@@ -182,20 +182,20 @@ const DiseaseDetection = () => {
 
                   <div className="action-steps">
                     {result.is_healthy ? (
-                      <p className="healthy-tip" style={{ color: 'var(--text-muted)', lineHeight: 1.6 }}>No pathogenic markers currenty identified. Maintain preventative care protocols and monitor for visual shifts.</p>
+                      <p className="healthy-tip" style={{ color: 'var(--text-muted)', lineHeight: 1.6 }}>No diseases detected. Keep up with your regular plant care routine and monitor for any changes.</p>
                     ) : (
                       <div className="next-steps-container">
-                        <h4 style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 800, textTransform: 'uppercase', fontSize: '0.85rem', color: 'var(--primary)', marginBottom: '1.5rem' }}><ArrowRight size={18} /> Clinical Next Steps</h4>
+                        <h4 style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 800, textTransform: 'uppercase', fontSize: '0.85rem', color: 'var(--primary)', marginBottom: '1.5rem' }}><ArrowRight size={18} /> Recommended Actions</h4>
                         <div className="treatment-preview">
                           {result.recommended_treatment ? (
                             <div className="treatment-cta" style={{ background: 'var(--bg-main)', padding: '1.5rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-light)' }}>
-                              <p style={{ fontSize: '0.95rem', marginBottom: '1.5rem', lineHeight: 1.5 }}>Identified protocol: <strong style={{ color: 'var(--secondary)' }}>{result.recommended_treatment.name}</strong></p>
+                              <p style={{ fontSize: '0.95rem', marginBottom: '1.5rem', lineHeight: 1.5 }}>Recommended treatment: <strong style={{ color: 'var(--secondary)' }}>{result.recommended_treatment.name}</strong></p>
                               <Link to="/treatment" className="btn-primary" style={{ display: 'flex', justifyContent: 'center', padding: '0.8rem', fontSize: '0.9rem', width: '100%' }}>
-                                Access Treatment Details
+                                View Treatment Guide
                               </Link>
                             </div>
                           ) : (
-                            <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>No direct protocol match. Consult the Pathology Archive for similar conditions or initialize a new treatment log.</p>
+                            <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>No specific treatment found in our database. Check the Disease Records for more information.</p>
                           )}
                         </div>
                       </div>
@@ -208,8 +208,8 @@ const DiseaseDetection = () => {
                 <div className="icon-pulse" style={{ color: 'var(--text-light)', marginBottom: '2rem' }}>
                   <Camera size={80} style={{ opacity: 0.2 }} />
                 </div>
-                <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem', color: 'var(--secondary)' }}>Awaiting Diagnostic Data</h3>
-                <p style={{ color: 'var(--text-muted)', maxWidth: '280px' }}>Diagnostic analysis and curative steps will be populated once a specimen has been processed.</p>
+                <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem', color: 'var(--secondary)' }}>Ready for Detection</h3>
+                <p style={{ color: 'var(--text-muted)', maxWidth: '280px' }}>Upload a plant photo on the left to start the AI analysis.</p>
               </div>
             )}
           </aside>

@@ -106,15 +106,15 @@ const Diseases = () => {
             <div className="page-content animate-slide-up">
                 <div className="page-header">
                     <div>
-                        <h1>Pathology Archive</h1>
-                        <p className="subtitle">Expert-verified database of plant pathogens and physiological disorders</p>
+                        <h1>Disease Database</h1>
+                        <p className="subtitle">Search for plant diseases, symptoms, and causes</p>
                     </div>
                     <button
                         className="btn-primary"
                         onClick={() => setShowAddModal(true)}
                     >
                         <Activity size={20} />
-                        <span>Log New Pathogen</span>
+                        <span>Add New Disease</span>
                     </button>
                 </div>
 
@@ -125,12 +125,12 @@ const Diseases = () => {
                             <Search className="search-icon" size={20} />
                             <input
                                 type="text"
-                                placeholder="Search pathogens, clinical symptoms or origins..."
+                                placeholder="Search by disease name, symptoms, or origin..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
                         </div>
-                        <button type="submit" className="btn-primary">Query Database</button>
+                        <button type="submit" className="btn-primary">Search Database</button>
                     </form>
                 </div>
 
@@ -138,7 +138,7 @@ const Diseases = () => {
                 {loading ? (
                     <div className="loading-spinner-container">
                         <div className="spinner"></div>
-                        <p>Synchronizing with clinical databases...</p>
+                        <p>Searching disease records...</p>
                     </div>
                 ) : (
                     <div className="diseases-grid">
@@ -162,25 +162,25 @@ const Diseases = () => {
 
                                         <div className="disease-meta" style={{ display: 'flex', gap: '1.5rem', fontSize: '0.85rem', fontWeight: 'bold' }}>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                                <Activity size={16} /> {disease.is_contagious ? 'Contagious' : 'Isolated'}
+                                                <Activity size={16} /> {disease.is_contagious ? 'Contagious' : 'Not Contagious'}
                                             </div>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                                <AlertTriangle size={16} /> {disease.affected_plant_count} Hosts
+                                                <AlertTriangle size={16} /> {disease.affected_plant_count} Host Plants
                                             </div>
                                         </div>
                                     </div>
 
                                     <div className="disease-card-footer" style={{ padding: '1.5rem 2rem', borderTop: '1px solid var(--border-light)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--primary)' }}>{disease.treatment_count} Protocols available</span>
-                                        <button className="btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}>Clinical View</button>
+                                        <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--primary)' }}>{disease.treatment_count} Treatments available</span>
+                                        <button className="btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}>View Details</button>
                                     </div>
                                 </div>
                             ))
                         ) : (
                             <div className="no-results">
                                 <Search size={64} className="text-muted" />
-                                <h3>No Pathology Records Found</h3>
-                                <p>Refine your query parameters to locate specific pathogen data.</p>
+                                <h3>No Diseases Found</h3>
+                                <p>Try different search terms to find disease data.</p>
                             </div>
                         )}
                     </div>
@@ -192,7 +192,7 @@ const Diseases = () => {
                 <div className="modal-overlay">
                     <div className="modal-content-large animate-slide-up">
                         <div className="modal-header">
-                            <h2>Log Pathogenic Specimen</h2>
+                            <h2>Add New Disease</h2>
                             <button className="close-btn" onClick={() => setShowAddModal(false)}>&times;</button>
                         </div>
 
@@ -200,7 +200,7 @@ const Diseases = () => {
                             <div className="form-grid">
                                 <div className="form-left">
                                     <div className="form-group">
-                                        <label>Taxonomic Type</label>
+                                        <label>Disease Type</label>
                                         <select
                                             value={newDisease.disease_type}
                                             onChange={(e) => setNewDisease({ ...newDisease, disease_type: e.target.value })}
@@ -208,12 +208,12 @@ const Diseases = () => {
                                             <option value="fungal">Fungal</option>
                                             <option value="bacterial">Bacterial</option>
                                             <option value="viral">Viral</option>
-                                            <option value="pest">Entomological Pest</option>
+                                            <option value="pest">Insect Pest</option>
                                             <option value="deficiency">Nutritional Deficiency</option>
                                         </select>
                                     </div>
                                     <div className="form-group">
-                                        <label>Severity Tier</label>
+                                        <label>Severity Level</label>
                                         <select
                                             value={newDisease.severity_level}
                                             onChange={(e) => setNewDisease({ ...newDisease, severity_level: e.target.value })}
@@ -233,7 +233,7 @@ const Diseases = () => {
                                                 onChange={(e) => setNewDisease({ ...newDisease, is_contagious: e.target.checked })}
                                                 style={{ width: '20px', height: '20px' }}
                                             />
-                                            CONTAGIOUS
+                                            Contagious
                                         </label>
                                     </div>
                                 </div>
@@ -241,7 +241,7 @@ const Diseases = () => {
                                 <div className="form-right">
                                     <div className="form-group-row">
                                         <div className="form-group">
-                                            <label>Pathogen Common Name</label>
+                                            <label>Disease Name</label>
                                             <input
                                                 type="text"
                                                 value={newDisease.name}
@@ -251,7 +251,7 @@ const Diseases = () => {
                                             />
                                         </div>
                                         <div className="form-group">
-                                            <label>Scientific Classification</label>
+                                            <label>Scientific Name</label>
                                             <input
                                                 type="text"
                                                 value={newDisease.scientific_name}
@@ -262,17 +262,17 @@ const Diseases = () => {
                                     </div>
 
                                     <div className="form-group">
-                                        <label>Symptomatic Observations</label>
+                                        <label>Symptoms</label>
                                         <textarea
                                             value={newDisease.symptoms}
                                             onChange={(e) => setNewDisease({ ...newDisease, symptoms: e.target.value })}
                                             rows="4"
-                                            placeholder="Detailed report of visible markers..."
+                                            placeholder="Describe the visible signs of the disease..."
                                         ></textarea>
                                     </div>
 
                                     <div className="form-group">
-                                        <label>Host Species Affiliation</label>
+                                        <label>Affected Plants</label>
                                         <div className="plant-selection-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '0.75rem', maxHeight: '160px', overflowY: 'auto', padding: '1rem', border: '1px solid var(--border-light)', borderRadius: 'var(--radius-sm)' }}>
                                             {plants.map(plant => (
                                                 <div
@@ -295,8 +295,8 @@ const Diseases = () => {
                             </div>
 
                             <div className="modal-footer" style={{ marginTop: '3rem', paddingTop: '2rem', borderTop: '1px solid var(--border-light)', display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
-                                <button type="button" className="btn-secondary" onClick={() => setShowAddModal(false)}>Discard Record</button>
-                                <button type="submit" className="btn-primary">Authenticate Log</button>
+                                <button type="button" className="btn-secondary" onClick={() => setShowAddModal(false)}>Cancel</button>
+                                <button type="submit" className="btn-primary">Save Disease</button>
                             </div>
                         </form>
                     </div>

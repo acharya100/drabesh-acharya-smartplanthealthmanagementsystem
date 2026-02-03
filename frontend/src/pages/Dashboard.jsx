@@ -40,15 +40,15 @@ const Dashboard = () => {
       <div className="page-content animate-slide-up">
         <div className="page-header">
           <div>
-            <h1>Plant Health Overview</h1>
-            <p className="subtitle">Real-time biometrics and cultivation metrics</p>
+            <h1>Plant Health Dashboard</h1>
+            <p className="subtitle">Overview of your plant collection and health status</p>
           </div>
         </div>
 
         {loading ? (
           <div className="loading-spinner-container">
             <div className="spinner"></div>
-            <p>Gathering system telemetry...</p>
+            <p>Loading your dashboard...</p>
           </div>
         ) : (
           <div className="stats-grid">
@@ -56,47 +56,47 @@ const Dashboard = () => {
               <div className="stat-icon"><Leaf size={28} /></div>
               <div>
                 <h3>{stats.totalPlants}</h3>
-                <p>Total Species</p>
+                <p>Total Plants</p>
               </div>
             </Link>
             <Link to="/plants?filter=healthy" className="stat-card card clickable">
               <div className="stat-icon"><Activity size={28} /></div>
               <div>
                 <h3>{stats.healthyPlants}</h3>
-                <p>Curated Health</p>
+                <p>Healthy Plants</p>
               </div>
             </Link>
             <Link to="/diseases" className="stat-card card clickable">
               <div className="stat-icon"><Camera size={28} /></div>
               <div>
                 <h3>{stats.diseasesDetected}</h3>
-                <p>Pathogens Found</p>
+                <p>Diseases Identified</p>
               </div>
             </Link>
             <Link to="/treatment" className="stat-card card clickable">
               <div className="stat-icon"><ShieldCheck size={28} /></div>
               <div>
                 <h3>{stats.treatmentsAvailable}</h3>
-                <p>Medical Protocols</p>
+                <p>Treatments Available</p>
               </div>
             </Link>
           </div>
         )}
 
         <div className="quick-actions mt-6">
-          <h2 className="mb-8">System Access</h2>
+          <h2 className="mb-8">Quick Actions</h2>
           <div className="stats-grid">
             <Link to="/plants" className="stat-card card clickable">
               <div className="stat-icon"><Plus size={24} /></div>
-              <h3>Enroll Specimen</h3>
+              <h3>Add New Plant</h3>
             </Link>
             <Link to="/disease" className="stat-card card clickable">
               <div className="stat-icon"><Camera size={24} /></div>
-              <h3>Active Diagnosis</h3>
+              <h3>Check Disease</h3>
             </Link>
             <Link to="/treatment" className="stat-card card clickable">
               <div className="stat-icon"><List size={24} /></div>
-              <h3>Browse Catalog</h3>
+              <h3>View Treatments</h3>
             </Link>
           </div>
         </div>
@@ -106,7 +106,3 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
-
-
-
-
