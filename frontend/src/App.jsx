@@ -4,6 +4,7 @@ import SignUp from "./pages/SignUp";
 import Dashboard from "./pages/Dashboard";
 import Plants from "./pages/Plants";
 import DiseaseDetection from "./pages/DiseaseDetection";
+import Diseases from "./pages/Diseases";
 import Treatment from "./pages/Treatment";
 import "./App.css";
 
@@ -33,6 +34,15 @@ const App = () => {
           element={
             <ProtectedRoute>
               <Plants />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/diseases"
+          element={
+            <ProtectedRoute>
+              <Diseases />
             </ProtectedRoute>
           }
         />

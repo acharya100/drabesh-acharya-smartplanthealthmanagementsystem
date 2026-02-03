@@ -11,7 +11,7 @@ const Navbar = ({ activePage }) => {
   return (
     <nav className="navbar">
       <div className="navbar-brand">
-        <h2>🌱 Plant Health System</h2>
+        <h2>🌱 Smart Plant Health Management System</h2>
       </div>
       <div className="navbar-links">
         <Link to="/dashboard" className={`nav-link ${activePage === "dashboard" ? "active" : ""}`}>
@@ -20,8 +20,11 @@ const Navbar = ({ activePage }) => {
         <Link to="/plants" className={`nav-link ${activePage === "plants" ? "active" : ""}`}>
           Plants
         </Link>
+        <Link to="/diseases" className={`nav-link ${activePage === "diseases" ? "active" : ""}`}>
+          Diseases
+        </Link>
         <Link to="/disease" className={`nav-link ${activePage === "disease" ? "active" : ""}`}>
-          Disease Detection
+          Detection
         </Link>
         <Link to="/treatment" className={`nav-link ${activePage === "treatment" ? "active" : ""}`}>
           Treatment

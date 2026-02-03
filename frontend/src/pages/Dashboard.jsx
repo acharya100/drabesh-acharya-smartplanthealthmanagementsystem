@@ -1,13 +1,16 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
+import { plantService } from "../services/api";
 
 const Dashboard = () => {
   const [stats, setStats] = useState({
     totalPlants: 0,
+    healthyPlants: 0,
     diseasesDetected: 0,
     treatmentsAvailable: 0,
-    healthyPlants: 0,
+    byDifficulty: {},
+    bySunlight: {}
   });
   const [loading, setLoading] = useState(true);
 
@@ -17,13 +20,20 @@ const Dashboard = () => {
 
   const fetchDashboardStats = async () => {
     try {
-      
-      setTimeout(() => {
-        setStats({ totalPlants: 12, diseasesDetected: 5, treatmentsAvailable: 8, healthyPlants: 7 });
-        setLoading(false);
-      }, 300);
+      setLoading(true);
+      const { data } = await plantService.getStatistics();
+
+      setStats({
+        totalPlants: data.total_plants,
+        healthyPlants: data.total_plants - data.toxic_plants, // Simple logic for demonstration
+        diseasesDetected: data.toxic_plants, // Placeholder for actual disease detection stats
+        treatmentsAvailable: data.medicinal_plants, // Placeholder
+        byDifficulty: data.by_difficulty,
+        bySunlight: data.by_sunlight
+      });
+      setLoading(false);
     } catch (error) {
-      console.error("Error:", error);
+      console.error("Dashboard stats error:", error);
       setLoading(false);
     }
   };

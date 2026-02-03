@@ -57,7 +57,7 @@ const Login = () => {
       <div className="login-card">
         <div className="login-header">
           <div className="login-logo">🌱</div>
-          <h1>Plant Health System</h1>
+          <h1>Smart Plant Health Management System</h1>
         </div>
 
         <form onSubmit={handleSubmit}>
