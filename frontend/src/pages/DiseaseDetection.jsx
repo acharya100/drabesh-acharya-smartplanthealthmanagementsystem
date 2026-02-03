@@ -94,20 +94,20 @@ const DiseaseDetection = () => {
               {!preview ? (
                 <div className="upload-dropzone" onClick={() => document.getElementById('fileInput').click()}>
                   <div className="dropzone-icon">
-                    <Upload size={40} />
+                    <Upload size={48} />
                   </div>
                   <h3>Select Plant Photo</h3>
                   <p>JPEG or PNG up to 5MB</p>
-                  <label className="btn-upload">
+                  <div className="btn-primary mt-6">
                     Browse Files
-                    <input
-                      id="fileInput"
-                      type="file"
-                      accept="image/*"
-                      onChange={handleFileChange}
-                      className="hidden"
-                    />
-                  </label>
+                  </div>
+                  <input
+                    id="fileInput"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
                 </div>
               ) : (
                 <div className="preview-stage">

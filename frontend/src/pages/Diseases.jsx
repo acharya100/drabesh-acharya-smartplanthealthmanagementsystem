@@ -110,7 +110,7 @@ const Diseases = () => {
                         <p className="subtitle">Reference for common plant ailments and pathogens</p>
                     </div>
                     <button
-                        className="btn-primary flex items-center gap-2"
+                        className="btn-primary"
                         onClick={() => setShowAddModal(true)}
                     >
                         <Activity size={20} />

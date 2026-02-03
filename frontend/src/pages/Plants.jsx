@@ -178,7 +178,7 @@ const Plants = () => {
             <p className="subtitle">Discover and learn about various plant species</p>
           </div>
           <button
-            className="btn-primary flex items-center gap-2"
+            className="btn-primary"
             onClick={() => setShowAddModal(true)}
           >
             <Plus size={20} />

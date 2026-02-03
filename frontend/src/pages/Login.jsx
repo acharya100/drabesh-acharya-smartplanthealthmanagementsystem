@@ -54,19 +54,21 @@ const Login = () => {
 
   return (
     <div className="login-container">
-      <div className="login-card">
-        <div className="login-header">
-          <div className="login-logo">🌱</div>
-          <h1>Smart Plant Health Management System</h1>
+      <div className="login-card animate-slide-up">
+        <div className="auth-header">
+          <div className="auth-logo">🌱</div>
+          <h1>Welcome Back</h1>
+          <p className="subtitle">Sign in to manage your plant health</p>
         </div>
 
         <form onSubmit={handleSubmit}>
-          {error && <div className="error-message">{error}</div>}
+          {error && <div className="error-banner mb-8">{error}</div>}
           <div className="form-group">
-            <label>Email</label>
+            <label>Email Address</label>
             <input
               type="text"
               name="username"
+              placeholder="name@company.com"
               value={formData.username}
               onChange={handleChange}
               required
@@ -79,40 +81,41 @@ const Login = () => {
               <input
                 type={showPassword ? "text" : "password"}
                 name="password"
+                placeholder="••••••••"
                 value={formData.password}
                 onChange={handleChange}
                 required
                 disabled={loading}
-                style={{ paddingRight: '40px' }}
+                style={{ paddingRight: '46px' }}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 style={{
                   position: 'absolute',
-                  right: '10px',
+                  right: '12px',
                   top: '50%',
                   transform: 'translateY(-50%)',
                   background: 'none',
                   border: 'none',
                   cursor: 'pointer',
-                  color: '#666',
+                  color: 'var(--text-light)',
                   display: 'flex',
-                  alignItems: 'center',
-                  padding: '4px'
+                  alignItems: 'center'
                 }}
               >
                 {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
             </div>
           </div>
-          <button type="submit" className="btn-primary" disabled={loading}>
-            {loading ? "Logging in..." : "Login"}
+          <button type="submit" className="btn-primary" style={{ width: '100%', marginTop: '1.5rem', height: '50px' }} disabled={loading}>
+            {loading ? "Authenticating..." : "Sign In"}
           </button>
         </form>
-        <p className="login-footer">
-          Don't have an account? <Link to="/signup" style={{ color: '#2e7d32', textDecoration: 'none', fontWeight: '500' }}>Sign Up</Link>
-        </p>
+
+        <div className="auth-footer">
+          Don't have an account? <Link to="/signup" className="nav-link" style={{ color: 'var(--primary)', display: 'inline', padding: 0 }}>Create one</Link>
+        </div>
       </div>
     </div>
   );
