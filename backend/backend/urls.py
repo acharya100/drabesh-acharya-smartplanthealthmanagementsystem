@@ -39,6 +39,7 @@ def api_root(request):
             "auth": "/api/auth/",
             "plants": "/api/plants/",
             "diseases": "/api/diseases/",
+            "predictions": "/api/predictions/",
         }
     })
 
@@ -49,6 +50,7 @@ urlpatterns = [
     path('api/auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/plants/', include('plants.urls')),
     path('api/diseases/', include('diseases.urls')),
+    path('api/predictions/', include('predictions.urls')),
     path('', api_root),
 ]
 
