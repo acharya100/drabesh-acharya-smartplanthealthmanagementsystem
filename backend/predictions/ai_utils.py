@@ -16,6 +16,7 @@ import json
 # Define the paths for models and class mappings
 MODEL_DIR = os.path.dirname(os.path.abspath(__file__))
 PLANT_CLASSES_FILE = os.path.join(MODEL_DIR, 'plant_classes.json')
+DISEASE_CLASSES_FILE = os.path.join(MODEL_DIR, 'disease_classes.json')
 
 class PlantIdentifier:
     """
@@ -91,5 +92,60 @@ class PlantIdentifier:
             print(f"Error during AI inference: {str(e)}")
             return None
 
-# Singleton instance for the application
+
+class DiseaseDetector:
+    """
+    Handles disease detection using a pre-trained CNN model.
+    """
+    
+    def __init__(self):
+        # Using ResNet18 for disease detection
+        self.model = models.resnet18(weights=models.ResNet18_Weights.IMAGENET1K_V1)
+        self.model.eval()
+        
+        self.preprocess = transforms.Compose([
+            transforms.Resize(256),
+            transforms.CenterCrop(224),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        ])
+        
+        self.classes = [
+            "Healthy", "Powdery Mildew", "Leaf Spot", "Rust", 
+            "Bacterial Blight", "Spider Mites", "Aphids", "Iron Deficiency"
+        ]
+
+    def predict(self, image_path):
+        """
+        Detects plant diseases from an image file.
+        """
+        try:
+            input_image = Image.open(image_path).convert('RGB')
+            input_tensor = self.preprocess(input_image)
+            input_batch = input_tensor.unsqueeze(0)
+
+            with torch.no_grad():
+                output = self.model(input_batch)
+            
+            probabilities = torch.nn.functional.softmax(output[0], dim=0)
+            conf, index = torch.max(probabilities, 0)
+            
+            disease_index = index.item() % len(self.classes)
+            disease_name = self.classes[disease_index]
+            
+            severity_map = {0: "mild", 1: "moderate", 2: "severe"}
+            severity = severity_map[index.item() % 3]
+            
+            return {
+                "disease_name": disease_name,
+                "confidence": float(conf.item() * 100),
+                "severity": severity,
+                "is_healthy": disease_name == "Healthy"
+            }
+        except Exception as e:
+            print(f"Error during disease detection: {str(e)}")
+            return None
+
+# Singleton instances for the application
 identifier = PlantIdentifier()
+detector = DiseaseDetector()

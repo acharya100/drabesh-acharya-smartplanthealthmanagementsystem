@@ -18,6 +18,15 @@ class PlantIdentificationSerializer(serializers.Serializer):
     confidence = serializers.FloatField()
     suggestions = serializers.DictField()
 
+class DiseaseDetectionSerializer(serializers.Serializer):
+    """
+    Serializer for the AI disease detection response.
+    """
+    disease_name = serializers.CharField()
+    confidence = serializers.FloatField()
+    severity = serializers.CharField()
+    is_healthy = serializers.BooleanField()
+
 class PredictionCreateSerializer(serializers.ModelSerializer):
     """
     Serializer for creating a new prediction entry.
@@ -40,6 +49,6 @@ class PredictionDetailSerializer(serializers.ModelSerializer):
             'id', 'user', 'user_name', 'image', 
             'predicted_plant', 'plant_name',
             'predicted_disease', 'disease_name',
-            'confidence', 'created_at'
+            'confidence', 'severity', 'is_healthy', 'created_at'
         ]
         read_only_fields = ['id', 'user', 'created_at']

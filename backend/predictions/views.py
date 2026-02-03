@@ -14,10 +14,13 @@ from rest_framework.permissions import IsAuthenticated
 from .models import Prediction
 from .serializers import (
     PlantIdentificationSerializer,
+    DiseaseDetectionSerializer,
     PredictionCreateSerializer,
     PredictionDetailSerializer
 )
-from .ai_utils import identifier
+from .ai_utils import identifier, detector
+from diseases.models import Disease
+from plants.models import Plant
 
 class PredictionViewSet(viewsets.ModelViewSet):
     """
@@ -68,6 +71,67 @@ class PredictionViewSet(viewsets.ModelViewSet):
                     return Response({
                         "success": False,
                         "message": "AI could not identify the plant in this image."
+                    }, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+            except Exception as e:
+                return Response({
+                    "success": False,
+                    "message": str(e)
+                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=['post'])
+    def detect(self, request):
+        """
+        Diagnoses plant diseases and saves a prediction record.
+        
+        Endpoint: POST /api/predictions/detect/
+        """
+        serializer = PredictionCreateSerializer(data=request.data)
+        if serializer.is_valid():
+            prediction_obj = serializer.save(user=request.user, confidence=0)
+            
+            try:
+                # Perform disease detection
+                results = detector.predict(prediction_obj.image.path)
+                
+                if results:
+                    # Update prediction object
+                    prediction_obj.confidence = results['confidence']
+                    prediction_obj.severity = results['severity']
+                    prediction_obj.is_healthy = results['is_healthy']
+                    
+                    # Try to link to a database disease entry
+                    disease_name = results['disease_name']
+                    if not results['is_healthy']:
+                        disease_obj = Disease.objects.filter(name__icontains=disease_name).first()
+                        if disease_obj:
+                            prediction_obj.predicted_disease = disease_obj
+                    
+                    prediction_obj.save()
+                    
+                    # Include recommendations if disease found
+                    response_data = results.copy()
+                    if prediction_obj.predicted_disease:
+                        response_data['disease_id'] = prediction_obj.predicted_disease.id
+                        # Get first treatment if available
+                        treatment = prediction_obj.predicted_disease.treatments.first()
+                        if treatment:
+                            response_data['recommended_treatment'] = {
+                                'id': treatment.id,
+                                'name': treatment.name,
+                                'type': treatment.treatment_type
+                            }
+                    
+                    return Response({
+                        "success": True,
+                        "data": response_data,
+                        "prediction_id": prediction_obj.id
+                    })
+                else:
+                    return Response({
+                        "success": False,
+                        "message": "AI could not process the image for disease detection."
                     }, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
             except Exception as e:
                 return Response({

@@ -1,7 +1,18 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
+import { predictionService } from "../services/api";
+import { Upload, Camera, AlertTriangle, CheckCircle, ArrowRight, RefreshCw, X } from "lucide-react";
 
+/**
+ * Disease Detection Page
+ * 
+ * Allows users to upload or capture plant photos for AI-based diagnosis.
+ * Connects to the backend Prediction API and displays results with treatment links.
+ * 
+ * Author: Smart Plant Health Management System
+ * Sprint: 4 - Disease Detection
+ */
 const DiseaseDetection = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [preview, setPreview] = useState(null);
@@ -12,7 +23,7 @@ const DiseaseDetection = () => {
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    
+
     if (!file.type.startsWith("image/")) {
       setError("Please select an image file");
       return;
@@ -41,24 +52,20 @@ const DiseaseDetection = () => {
     setError("");
 
     try {
-     
-      setTimeout(() => {
-        setResult({
-          disease: "Leaf Blight",
-          confidence: 87.5,
-          description: "Leaf blight is a common fungal disease that affects many plant species.",
-          severity: "Moderate",
-          recommendations: [
-            "Remove and destroy infected leaves",
-            "Apply fungicide containing copper",
-            "Improve air circulation",
-            "Avoid overhead watering"
-          ]
-        });
-        setLoading(false);
-      }, 1500);
+      const formData = new FormData();
+      formData.append("image", selectedFile);
+
+      const response = await predictionService.detect(formData);
+
+      if (response.data.success) {
+        setResult(response.data.data);
+      } else {
+        setError(response.data.message || "Detection failed");
+      }
     } catch (err) {
-      setError("An error occurred");
+      console.error("Detection error:", err);
+      setError(err.response?.data?.message || "An error occurred during diagnosis.");
+    } finally {
       setLoading(false);
     }
   };
@@ -71,64 +78,138 @@ const DiseaseDetection = () => {
   };
 
   return (
-    <div className="page-container">
+    <div className="discovery-page">
       <Navbar activePage="disease" />
-      <div className="page-content">
-        <div className="page-header">
-          <h1>Disease Detection</h1>
-        </div>
-        <div className="detection-container">
-          <div className="upload-card">
-            <h2>Upload Plant Image</h2>
-            {!preview ? (
-              <div className="upload-area">
-                <div className="upload-icon">📷</div>
-                <p>Select an image (JPG, PNG, Max 5MB)</p>
-                <label className="file-input-label">
-                  <input type="file" accept="image/*" onChange={handleFileChange} className="file-input" />
-                  Choose File
-                </label>
-              </div>
-            ) : (
-              <div className="preview-container">
-                <div className="image-preview">
-                  <img src={preview} alt="Preview" />
-                  <button className="remove-image-btn" onClick={handleReset}>✕</button>
+
+      <div className="discovery-content">
+        <header className="discovery-header">
+          <div className="header-badge">AI DIAGNOSTICS</div>
+          <h1>Plant Disease Detection</h1>
+          <p>Upload a photo of your plant's leaves for instant health analysis and treatment advice.</p>
+        </header>
+
+        <div className="detection-layout">
+          <div className="detection-main">
+            <div className="upload-container-v2">
+              {!preview ? (
+                <div className="upload-dropzone" onClick={() => document.getElementById('fileInput').click()}>
+                  <div className="dropzone-icon">
+                    <Upload size={40} />
+                  </div>
+                  <h3>Select Plant Photo</h3>
+                  <p>JPEG or PNG up to 5MB</p>
+                  <label className="btn-upload">
+                    Browse Files
+                    <input
+                      id="fileInput"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className="hidden"
+                    />
+                  </label>
                 </div>
-                <p>{selectedFile.name}</p>
-              </div>
-            )}
-            {error && <div className="error-message">{error}</div>}
-            <div className="detection-actions">
-              <button className="btn-primary" onClick={handleDetect} disabled={!selectedFile || loading}>
-                {loading ? "Detecting..." : "Detect Disease"}
-              </button>
-              {preview && <button className="btn-secondary" onClick={handleReset}>Reset</button>}
+              ) : (
+                <div className="preview-stage">
+                  <div className="preview-image-wrapper">
+                    <img src={preview} alt="Plant to analyze" />
+                    <button className="btn-close-preview" onClick={handleReset}>
+                      <X size={20} />
+                    </button>
+                  </div>
+                  <div className="preview-meta">
+                    <span className="file-name">{selectedFile.name}</span>
+                    <div className="preview-actions">
+                      <button
+                        className="btn-primary flex-1 py-3"
+                        onClick={handleDetect}
+                        disabled={loading}
+                      >
+                        {loading ? (
+                          <div className="loader-inline">
+                            <RefreshCw className="animate-spin" size={20} />
+                            <span>Analyzing...</span>
+                          </div>
+                        ) : (
+                          <div className="loader-inline">
+                            <Camera size={20} />
+                            <span>Run Diagnosis</span>
+                          </div>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+              {error && (
+                <div className="error-banner">
+                  <AlertTriangle size={20} />
+                  <span>{error}</span>
+                </div>
+              )}
             </div>
           </div>
 
-          {result && (
-            <div className="result-card">
-              <h2>Detection Results</h2>
-              <div className="result-header">
-                <div>
-                  <h3>{result.disease}</h3>
-                  <p>{result.confidence}% confidence</p>
+          <aside className="detection-sidebar">
+            {result ? (
+              <div className="result-card-v2 animate-fade-in">
+                <div className="result-header">
+                  <div className={`status-pill ${result.is_healthy ? 'healthy' : 'infected'}`}>
+                    {result.is_healthy ? <CheckCircle size={16} /> : <AlertTriangle size={16} />}
+                    {result.is_healthy ? 'Plant is Healthy' : 'Infection Detected'}
+                  </div>
+                  <h2>{result.disease_name}</h2>
+                  <div className="confidence-meter">
+                    <div className="meter-label">AI Confidence: {result.confidence.toFixed(1)}%</div>
+                    <div className="meter-bar">
+                      <div className="meter-fill" style={{ width: `${result.confidence}%` }}></div>
+                    </div>
+                  </div>
                 </div>
-                <span className={`severity-badge severity-${result.severity.toLowerCase()}`}>
-                  {result.severity}
-                </span>
+
+                <div className="result-details">
+                  {!result.is_healthy && (
+                    <div className="severity-info">
+                      <span className="label">Severity Level:</span>
+                      <span className={`value severity-${result.severity}`}>
+                        {result.severity.toUpperCase()}
+                      </span>
+                    </div>
+                  )}
+
+                  <div className="action-steps">
+                    {result.is_healthy ? (
+                      <p className="healthy-tip">Your plant looks great! Continue your current care routine to maintain its health.</p>
+                    ) : (
+                      <div className="next-steps-container">
+                        <h4 className="flex items-center gap-2"><ArrowRight size={18} /> Next Steps</h4>
+                        <div className="treatment-preview">
+                          {result.recommended_treatment ? (
+                            <div className="treatment-cta">
+                              <p>We found a treatment protocol: <strong>{result.recommended_treatment.name}</strong></p>
+                              <Link to="/treatment" className="btn-link">
+                                View Full Protocol <ArrowRight size={16} />
+                              </Link>
+                            </div>
+                          ) : (
+                            <p>Suggested Action: Search for treatments in our database or consult our plant experts.</p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
-              <div className="result-content">
-                <p>{result.description}</p>
-                <h4>Recommendations:</h4>
-                <ul className="recommendations-list">
-                  {result.recommendations.map((rec, i) => <li key={i}>{rec}</li>)}
-                </ul>
-                <Link to="/treatment" className="btn-primary">View Treatments</Link>
+            ) : (
+              <div className="empty-result-state">
+                <div className="icon-pulse">
+                  <Camera size={48} />
+                </div>
+                <h3>Awaiting Analysis</h3>
+                <p>Diagnostic results and treatment steps will appear here after you run the analysis.</p>
               </div>
-            </div>
-          )}
+            )}
+          </aside>
         </div>
       </div>
     </div>

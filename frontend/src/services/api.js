@@ -110,6 +110,9 @@ export const predictionService = {
     identify: (formData) => api.post('/predictions/identify/', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
     }),
+    detect: (formData) => api.post('/predictions/detect/', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+    }),
     getHistory: () => api.get('/predictions/'),
     getDetails: (id) => api.get(`/predictions/${id}/`),
 };
