@@ -1,12 +1,13 @@
 import { useState } from "react";
-
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { login } from "../api";
+import { Eye, EyeOff } from "lucide-react";
 
 const Login = () => {
   const [formData, setFormData] = useState({ username: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -36,7 +37,7 @@ const Login = () => {
       // So sending JSON { "username": "user@example.com", "password": "..." } should work even if the field is 'email'.
 
       const { data } = await login({
-        email: formData.username, // mapping to 'email' key as expected by backend model
+        username: formData.username, // TokenObtainPairView expects 'username' key
         password: formData.password
       });
 
@@ -74,20 +75,44 @@ const Login = () => {
           </div>
           <div className="form-group">
             <label>Password</label>
-            <input
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              required
-              disabled={loading}
-            />
+            <div style={{ position: 'relative' }}>
+              <input
+                type={showPassword ? "text" : "password"}
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                required
+                disabled={loading}
+                style={{ paddingRight: '40px' }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{
+                  position: 'absolute',
+                  right: '10px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: '#666',
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: '4px'
+                }}
+              >
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
           </div>
           <button type="submit" className="btn-primary" disabled={loading}>
             {loading ? "Logging in..." : "Login"}
           </button>
         </form>
-        <p className="login-footer">Default: admin@example.com / superuser</p>
+        <p className="login-footer">
+          Don't have an account? <Link to="/signup" style={{ color: '#2e7d32', textDecoration: 'none', fontWeight: '500' }}>Sign Up</Link>
+        </p>
       </div>
     </div>
   );
