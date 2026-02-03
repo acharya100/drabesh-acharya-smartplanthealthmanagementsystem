@@ -44,7 +44,6 @@ class Disease(models.Model):
     # Basic identification
     name = models.CharField(
         max_length=150,
-        unique=True,
         help_text="Common name of the disease (e.g., 'Tomato Late Blight')"
     )
     

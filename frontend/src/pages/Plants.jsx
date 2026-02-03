@@ -147,7 +147,8 @@ const Plants = () => {
     } catch (error) {
       console.error("Error creating plant:", error);
       setLoading(false);
-      alert("Failed to create plant. Check console for details.");
+      const errorMsg = error.response?.data ? JSON.stringify(error.response.data) : "Make sure the name is unique and image is valid.";
+      alert(`Failed to create plant: ${errorMsg}`);
     }
   };
 

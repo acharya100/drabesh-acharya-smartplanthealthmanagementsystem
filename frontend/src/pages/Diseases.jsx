@@ -30,7 +30,7 @@ const Diseases = () => {
         spread_rate: "moderate",
         symptoms: "",
         causes: "",
-        affected_plants: []
+        affected_plant_ids: []
     });
 
     useEffect(() => {
@@ -47,8 +47,8 @@ const Diseases = () => {
             const { data } = await diseaseService.getAll(params);
             setDiseases(data.results || data);
 
-            // Also load plants for the selection dropdown
-            const plantData = await (await fetch('http://localhost:8000/api/plants/')).json();
+            // Use existing service for consistency
+            const { data: plantData } = await (await import('../services/api')).plantService.getAll();
             setPlants(plantData.results || plantData);
 
             setLoading(false);
@@ -79,17 +79,18 @@ const Diseases = () => {
         } catch (error) {
             console.error("Error creating disease:", error);
             setLoading(false);
-            alert("Failed to create disease.");
+            const errorMsg = error.response?.data ? JSON.stringify(error.response.data) : "Check if name is unique and all fields valid.";
+            alert(`Failed to create disease: ${errorMsg}`);
         }
     };
 
     const handlePlantToggle = (plantId) => {
         setNewDisease(prev => {
-            const current = [...prev.affected_plants];
+            const current = [...prev.affected_plant_ids];
             if (current.includes(plantId)) {
-                return { ...prev, affected_plants: current.filter(id => id !== plantId) };
+                return { ...prev, affected_plant_ids: current.filter(id => id !== plantId) };
             } else {
-                return { ...prev, affected_plants: [...current, plantId] };
+                return { ...prev, affected_plant_ids: [...current, plantId] };
             }
         });
     };
@@ -309,7 +310,7 @@ const Diseases = () => {
                                             {plants.map(plant => (
                                                 <div
                                                     key={plant.id}
-                                                    className={`selection-item ${newDisease.affected_plants.includes(plant.id) ? 'selected' : ''}`}
+                                                    className={`selection-item ${newDisease.affected_plant_ids?.includes(plant.id) ? 'selected' : ''}`}
                                                     onClick={() => handlePlantToggle(plant.id)}
                                                 >
                                                     {plant.name}

@@ -48,7 +48,6 @@ class Plant(models.Model):
     # Basic identification fields
     name = models.CharField(
         max_length=100, 
-        unique=True, 
         help_text="Common name of the plant (e.g., 'Tomato', 'Rose')"
     )
     
