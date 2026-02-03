@@ -19,6 +19,19 @@ const Diseases = () => {
     const [searchTerm, setSearchTerm] = useState("");
     const [severityFilter, setSeverityFilter] = useState("");
     const [showFilters, setShowFilters] = useState(false);
+    const [showAddModal, setShowAddModal] = useState(false);
+    const [plants, setPlants] = useState([]);
+    const [newDisease, setNewDisease] = useState({
+        name: "",
+        scientific_name: "",
+        disease_type: "fungal",
+        severity_level: "moderate",
+        is_contagious: false,
+        spread_rate: "moderate",
+        symptoms: "",
+        causes: "",
+        affected_plants: []
+    });
 
     useEffect(() => {
         loadDiseases();
@@ -33,11 +46,52 @@ const Diseases = () => {
             };
             const { data } = await diseaseService.getAll(params);
             setDiseases(data.results || data);
+
+            // Also load plants for the selection dropdown
+            const plantData = await (await fetch('http://localhost:8000/api/plants/')).json();
+            setPlants(plantData.results || plantData);
+
             setLoading(false);
         } catch (error) {
             console.error("Error loading diseases:", error);
             setLoading(false);
         }
+    };
+
+    const handleSubmitNewDisease = async (e) => {
+        e.preventDefault();
+        try {
+            setLoading(true);
+            await diseaseService.create(newDisease);
+            setShowAddModal(false);
+            setNewDisease({
+                name: "",
+                scientific_name: "",
+                disease_type: "fungal",
+                severity_level: "moderate",
+                is_contagious: false,
+                spread_rate: "moderate",
+                symptoms: "",
+                causes: "",
+                affected_plants: []
+            });
+            loadDiseases();
+        } catch (error) {
+            console.error("Error creating disease:", error);
+            setLoading(false);
+            alert("Failed to create disease.");
+        }
+    };
+
+    const handlePlantToggle = (plantId) => {
+        setNewDisease(prev => {
+            const current = [...prev.affected_plants];
+            if (current.includes(plantId)) {
+                return { ...prev, affected_plants: current.filter(id => id !== plantId) };
+            } else {
+                return { ...prev, affected_plants: [...current, plantId] };
+            }
+        });
     };
 
     const handleSearch = (e) => {
@@ -54,6 +108,13 @@ const Diseases = () => {
                         <h1>Disease Database</h1>
                         <p className="subtitle">Reference for common plant ailments and pathogens</p>
                     </div>
+                    <button
+                        className="btn-primary flex items-center gap-2"
+                        onClick={() => setShowAddModal(true)}
+                    >
+                        <Activity size={20} />
+                        <span>Log New Disease</span>
+                    </button>
                 </div>
 
                 {/* Search and Filter */}
@@ -143,6 +204,130 @@ const Diseases = () => {
                     </div>
                 )}
             </div>
+
+            {/* Add Disease Modal */}
+            {showAddModal && (
+                <div className="modal-overlay animate-fade-in">
+                    <div className="modal-content-large animate-slide-up">
+                        <div className="modal-header">
+                            <h2>Log New Disease</h2>
+                            <button className="close-btn" onClick={() => setShowAddModal(false)}>&times;</button>
+                        </div>
+
+                        <form onSubmit={handleSubmitNewDisease} className="add-plant-form">
+                            <div className="form-grid">
+                                <div className="form-left">
+                                    <div className="form-group">
+                                        <label>Disease Type</label>
+                                        <select
+                                            value={newDisease.disease_type}
+                                            onChange={(e) => setNewDisease({ ...newDisease, disease_type: e.target.value })}
+                                        >
+                                            <option value="fungal">Fungal</option>
+                                            <option value="bacterial">Bacterial</option>
+                                            <option value="viral">Viral</option>
+                                            <option value="pest">Pest</option>
+                                            <option value="deficiency">Nutrient Deficiency</option>
+                                        </select>
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Severity Level</label>
+                                        <select
+                                            value={newDisease.severity_level}
+                                            onChange={(e) => setNewDisease({ ...newDisease, severity_level: e.target.value })}
+                                        >
+                                            <option value="mild">Mild</option>
+                                            <option value="moderate">Moderate</option>
+                                            <option value="severe">Severe</option>
+                                            <option value="critical">Critical</option>
+                                        </select>
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Contagious?</label>
+                                        <div className="form-checkbox-group" style={{ background: 'none', padding: 0 }}>
+                                            <label>
+                                                <input
+                                                    type="checkbox"
+                                                    checked={newDisease.is_contagious}
+                                                    onChange={(e) => setNewDisease({ ...newDisease, is_contagious: e.target.checked })}
+                                                /> Yes
+                                            </label>
+                                        </div>
+                                    </div>
+                                    {newDisease.is_contagious && (
+                                        <div className="form-group">
+                                            <label>Spread Rate</label>
+                                            <select
+                                                value={newDisease.spread_rate}
+                                                onChange={(e) => setNewDisease({ ...newDisease, spread_rate: e.target.value })}
+                                            >
+                                                <option value="low">Low</option>
+                                                <option value="moderate">Moderate</option>
+                                                <option value="high">High</option>
+                                                <option value="extreme">Extreme</option>
+                                            </select>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="form-right">
+                                    <div className="form-group-row">
+                                        <div className="form-group">
+                                            <label>Disease Name</label>
+                                            <input
+                                                type="text"
+                                                value={newDisease.name}
+                                                onChange={(e) => setNewDisease({ ...newDisease, name: e.target.value })}
+                                                required
+                                                placeholder="e.g. Powdery Mildew"
+                                            />
+                                        </div>
+                                        <div className="form-group">
+                                            <label>Scientific Name</label>
+                                            <input
+                                                type="text"
+                                                value={newDisease.scientific_name}
+                                                onChange={(e) => setNewDisease({ ...newDisease, scientific_name: e.target.value })}
+                                                placeholder="e.g. Podosphaera xanthii"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label>Symptoms</label>
+                                        <textarea
+                                            value={newDisease.symptoms}
+                                            onChange={(e) => setNewDisease({ ...newDisease, symptoms: e.target.value })}
+                                            rows="3"
+                                            placeholder="Describe visible signs..."
+                                        ></textarea>
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label>Affected Plants (Select Multiple)</label>
+                                        <div className="plant-selection-grid">
+                                            {plants.map(plant => (
+                                                <div
+                                                    key={plant.id}
+                                                    className={`selection-item ${newDisease.affected_plants.includes(plant.id) ? 'selected' : ''}`}
+                                                    onClick={() => handlePlantToggle(plant.id)}
+                                                >
+                                                    {plant.name}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="modal-footer">
+                                <button type="button" className="btn-secondary" onClick={() => setShowAddModal(false)}>Cancel</button>
+                                <button type="submit" className="btn-primary">Save Disease Record</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

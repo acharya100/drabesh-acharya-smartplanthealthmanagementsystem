@@ -20,6 +20,18 @@ const Treatment = () => {
   const [selectedDisease, setSelectedDisease] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newTreatment, setNewTreatment] = useState({
+    name: "",
+    disease: "",
+    treatment_type: "organic",
+    description: "",
+    instructions: "",
+    products_needed: "",
+    effectiveness_rate: 85,
+    is_preventive: false,
+    cost_estimate: "Low"
+  });
 
   useEffect(() => {
     loadData();
@@ -59,6 +71,31 @@ const Treatment = () => {
     loadTreatments();
   };
 
+  const handleSubmitNewTreatment = async (e) => {
+    e.preventDefault();
+    try {
+      setLoading(true);
+      await treatmentService.create(newTreatment);
+      setShowAddModal(false);
+      setNewTreatment({
+        name: "",
+        disease: "",
+        treatment_type: "organic",
+        description: "",
+        instructions: "",
+        products_needed: "",
+        effectiveness_rate: 85,
+        is_preventive: false,
+        cost_estimate: "Low"
+      });
+      loadTreatments();
+    } catch (error) {
+      console.error("Error creating treatment:", error);
+      setLoading(false);
+      alert("Failed to create treatment record.");
+    }
+  };
+
   return (
     <div className="page-container">
       <Navbar activePage="treatment" />
@@ -68,6 +105,13 @@ const Treatment = () => {
             <h1>Treatment Protocols</h1>
             <p className="subtitle">Expert-verified methods for plant recovery</p>
           </div>
+          <button
+            className="btn-primary flex items-center gap-2"
+            onClick={() => setShowAddModal(true)}
+          >
+            <ShieldCheck size={20} />
+            <span>Add New Protocol</span>
+          </button>
         </div>
 
         <div className="search-filter-section mb-8">
@@ -160,6 +204,134 @@ const Treatment = () => {
           </div>
         )}
       </div>
+
+      {/* Add Treatment Modal */}
+      {showAddModal && (
+        <div className="modal-overlay animate-fade-in">
+          <div className="modal-content-large animate-slide-up">
+            <div className="modal-header">
+              <h2>Add New Treatment Protocol</h2>
+              <button className="close-btn" onClick={() => setShowAddModal(false)}>&times;</button>
+            </div>
+
+            <form onSubmit={handleSubmitNewTreatment} className="add-plant-form">
+              <div className="form-grid">
+                <div className="form-left">
+                  <div className="form-group">
+                    <label>Target Disease</label>
+                    <select
+                      value={newTreatment.disease}
+                      onChange={(e) => setNewTreatment({ ...newTreatment, disease: e.target.value })}
+                      required
+                    >
+                      <option value="">Select Disease...</option>
+                      {diseases.map(d => (
+                        <option key={d.id} value={d.id}>{d.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Treatment Type</label>
+                    <select
+                      value={newTreatment.treatment_type}
+                      onChange={(e) => setNewTreatment({ ...newTreatment, treatment_type: e.target.value })}
+                    >
+                      <option value="organic">Organic</option>
+                      <option value="chemical">Chemical</option>
+                      <option value="biological">Biological</option>
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Effectiveness Rate (%)</label>
+                    <input
+                      type="number"
+                      min="0" max="100"
+                      value={newTreatment.effectiveness_rate}
+                      onChange={(e) => setNewTreatment({ ...newTreatment, effectiveness_rate: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>Preventive?</label>
+                    <div className="form-checkbox-group" style={{ background: 'none', padding: 0 }}>
+                      <label>
+                        <input
+                          type="checkbox"
+                          checked={newTreatment.is_preventive}
+                          onChange={(e) => setNewTreatment({ ...newTreatment, is_preventive: e.target.checked })}
+                        /> Yes
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="form-right">
+                  <div className="form-group-row">
+                    <div className="form-group">
+                      <label>Protocol Name</label>
+                      <input
+                        type="text"
+                        value={newTreatment.name}
+                        onChange={(e) => setNewTreatment({ ...newTreatment, name: e.target.value })}
+                        required
+                        placeholder="e.g. Neem Oil Solution"
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Cost Estimate</label>
+                      <select
+                        value={newTreatment.cost_estimate}
+                        onChange={(e) => setNewTreatment({ ...newTreatment, cost_estimate: e.target.value })}
+                      >
+                        <option value="Low">Low Cost</option>
+                        <option value="Medium">Medium Cost</option>
+                        <option value="High">High Cost</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Overview / Description</label>
+                    <textarea
+                      value={newTreatment.description}
+                      onChange={(e) => setNewTreatment({ ...newTreatment, description: e.target.value })}
+                      rows="2"
+                      placeholder="Brief summary of the treatment..."
+                    ></textarea>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Application Steps (Newline separated)</label>
+                    <textarea
+                      value={newTreatment.instructions}
+                      onChange={(e) => setNewTreatment({ ...newTreatment, instructions: e.target.value })}
+                      rows="3"
+                      placeholder="1. Mix ingredients&#10;2. Spray at dusk..."
+                    ></textarea>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Products Needed (Comma separated)</label>
+                    <input
+                      type="text"
+                      value={newTreatment.products_needed}
+                      onChange={(e) => setNewTreatment({ ...newTreatment, products_needed: e.target.value })}
+                      placeholder="e.g. Neem oil, Water, Soap"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="modal-footer">
+                <button type="button" className="btn-secondary" onClick={() => setShowAddModal(false)}>Cancel</button>
+                <button type="submit" className="btn-primary">Save Protocol</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

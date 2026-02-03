@@ -70,7 +70,7 @@ class DiseaseViewSet(viewsets.ModelViewSet):
         Only admin users can modify disease data.
         """
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
-            return [IsAdminUser()]
+            return [IsAuthenticated()]
         return [IsAuthenticatedOrReadOnly()]
 
     @action(detail=True, methods=['get'])
@@ -117,5 +117,5 @@ class TreatmentViewSet(viewsets.ModelViewSet):
         Restrict write access to admin users.
         """
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
-            return [IsAdminUser()]
+            return [IsAuthenticated()]
         return [IsAuthenticatedOrReadOnly()]

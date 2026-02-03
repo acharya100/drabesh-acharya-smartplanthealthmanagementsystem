@@ -110,7 +110,7 @@ class PlantViewSet(viewsets.ModelViewSet):
             List of permission instances
         """
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
-            return [IsAdminUser()]
+            return [IsAuthenticated()]
         return [IsAuthenticatedOrReadOnly()]
     
     def get_queryset(self):
