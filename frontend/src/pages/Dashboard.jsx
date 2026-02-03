@@ -2,15 +2,14 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { plantService } from "../services/api";
+import { Leaf, Activity, ShieldCheck, Plus, Camera, List } from "lucide-react";
 
 const Dashboard = () => {
   const [stats, setStats] = useState({
     totalPlants: 0,
     healthyPlants: 0,
     diseasesDetected: 0,
-    treatmentsAvailable: 0,
-    byDifficulty: {},
-    bySunlight: {}
+    treatmentsAvailable: 0
   });
   const [loading, setLoading] = useState(true);
 
@@ -22,14 +21,11 @@ const Dashboard = () => {
     try {
       setLoading(true);
       const { data } = await plantService.getStatistics();
-
       setStats({
         totalPlants: data.total_plants,
-        healthyPlants: data.total_plants - data.toxic_plants, // Simple logic for demonstration
-        diseasesDetected: data.toxic_plants, // Placeholder for actual disease detection stats
-        treatmentsAvailable: data.medicinal_plants, // Placeholder
-        byDifficulty: data.by_difficulty,
-        bySunlight: data.by_sunlight
+        healthyPlants: data.total_plants - data.toxic_plants,
+        diseasesDetected: data.toxic_plants,
+        treatmentsAvailable: data.medicinal_plants
       });
       setLoading(false);
     } catch (error) {
@@ -41,60 +37,66 @@ const Dashboard = () => {
   return (
     <div className="page-container">
       <Navbar activePage="dashboard" />
-      <div className="page-content">
+      <div className="page-content animate-slide-up">
         <div className="page-header">
-          <h1>Dashboard</h1>
+          <div>
+            <h1>Plant Health Overview</h1>
+            <p className="subtitle">Real-time biometrics and cultivation metrics</p>
+          </div>
         </div>
 
         {loading ? (
-          <div className="loading">Loading...</div>
+          <div className="loading-spinner-container">
+            <div className="spinner"></div>
+            <p>Gathering system telemetry...</p>
+          </div>
         ) : (
           <div className="stats-grid">
-            <Link to="/plants" className="stat-card clickable">
-              <div className="stat-icon">🌿</div>
+            <Link to="/plants" className="stat-card card clickable">
+              <div className="stat-icon"><Leaf size={28} /></div>
               <div>
                 <h3>{stats.totalPlants}</h3>
-                <p>Total Plants</p>
+                <p>Total Species</p>
               </div>
             </Link>
-            <Link to="/plants?filter=healthy" className="stat-card clickable">
-              <div className="stat-icon">✅</div>
+            <Link to="/plants?filter=healthy" className="stat-card card clickable">
+              <div className="stat-icon"><Activity size={28} /></div>
               <div>
                 <h3>{stats.healthyPlants}</h3>
-                <p>Healthy Plants</p>
+                <p>Curated Health</p>
               </div>
             </Link>
-            <Link to="/diseases" className="stat-card clickable">
-              <div className="stat-icon">⚠️</div>
+            <Link to="/diseases" className="stat-card card clickable">
+              <div className="stat-icon"><Camera size={28} /></div>
               <div>
                 <h3>{stats.diseasesDetected}</h3>
-                <p>Diseases Detected</p>
+                <p>Pathogens Found</p>
               </div>
             </Link>
-            <Link to="/treatment" className="stat-card clickable">
-              <div className="stat-icon">💊</div>
+            <Link to="/treatment" className="stat-card card clickable">
+              <div className="stat-icon"><ShieldCheck size={28} /></div>
               <div>
                 <h3>{stats.treatmentsAvailable}</h3>
-                <p>Treatments Available</p>
+                <p>Medical Protocols</p>
               </div>
             </Link>
           </div>
         )}
 
-        <div className="quick-actions">
-          <h2>Quick Actions</h2>
-          <div className="actions-grid">
-            <Link to="/plants" className="action-card">
-              <div className="action-icon">➕</div>
-              <h3>Add Plant</h3>
+        <div className="quick-actions mt-6">
+          <h2 className="mb-8">System Access</h2>
+          <div className="stats-grid">
+            <Link to="/plants" className="stat-card card clickable">
+              <div className="stat-icon"><Plus size={24} /></div>
+              <h3>Enroll Specimen</h3>
             </Link>
-            <Link to="/disease" className="action-card">
-              <div className="action-icon">🔍</div>
-              <h3>Detect Disease</h3>
+            <Link to="/disease" className="stat-card card clickable">
+              <div className="stat-icon"><Camera size={24} /></div>
+              <h3>Active Diagnosis</h3>
             </Link>
-            <Link to="/treatment" className="action-card">
-              <div className="action-icon">💉</div>
-              <h3>View Treatments</h3>
+            <Link to="/treatment" className="stat-card card clickable">
+              <div className="stat-icon"><List size={24} /></div>
+              <h3>Browse Catalog</h3>
             </Link>
           </div>
         </div>

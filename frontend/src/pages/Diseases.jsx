@@ -103,18 +103,18 @@ const Diseases = () => {
     return (
         <div className="page-container">
             <Navbar activePage="disease" />
-            <div className="page-content">
+            <div className="page-content animate-slide-up">
                 <div className="page-header">
                     <div>
-                        <h1>Disease Database</h1>
-                        <p className="subtitle">Reference for common plant ailments and pathogens</p>
+                        <h1>Pathology Archive</h1>
+                        <p className="subtitle">Expert-verified database of plant pathogens and physiological disorders</p>
                     </div>
                     <button
                         className="btn-primary"
                         onClick={() => setShowAddModal(true)}
                     >
                         <Activity size={20} />
-                        <span>Log New Disease</span>
+                        <span>Log New Pathogen</span>
                     </button>
                 </div>
 
@@ -125,23 +125,12 @@ const Diseases = () => {
                             <Search className="search-icon" size={20} />
                             <input
                                 type="text"
-                                placeholder="Search diseases, symptoms or causes..."
+                                placeholder="Search pathogens, clinical symptoms or origins..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
                         </div>
-                        <button type="submit" className="btn-search">Search</button>
-                        <select
-                            className="filter-select-v2"
-                            value={severityFilter}
-                            onChange={(e) => setSeverityFilter(e.target.value)}
-                        >
-                            <option value="">All Severities</option>
-                            <option value="mild">Mild</option>
-                            <option value="moderate">Moderate</option>
-                            <option value="severe">Severe</option>
-                            <option value="critical">Critical</option>
-                        </select>
+                        <button type="submit" className="btn-primary">Query Database</button>
                     </form>
                 </div>
 
@@ -149,69 +138,61 @@ const Diseases = () => {
                 {loading ? (
                     <div className="loading-spinner-container">
                         <div className="spinner"></div>
-                        <p>Scanning disease encyclopedia...</p>
+                        <p>Synchronizing with clinical databases...</p>
                     </div>
                 ) : (
                     <div className="diseases-grid">
                         {diseases.length > 0 ? (
                             diseases.map(disease => (
                                 <div key={disease.id} className="disease-card-v2 animate-slide-up">
-                                    <div className="disease-header-info">
-                                        <div className="disease-title-row">
-                                            <h3>{disease.name}</h3>
-                                            <div className={`severity-indicator severity-${disease.severity_level}`}>
-                                                {disease.severity_display?.split(' - ')[0]}
+                                    <div className="disease-header-info" style={{ padding: '2rem' }}>
+                                        <div className="disease-title-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                            <h3 style={{ margin: 0 }}>{disease.name}</h3>
+                                            <div className={`badge ${disease.severity_level === 'critical' ? 'badge-toxic' : 'badge-edible'}`} style={{ borderRadius: '4px' }}>
+                                                {disease.severity_level}
                                             </div>
                                         </div>
                                         <span className="scientific-name">{disease.scientific_name}</span>
                                     </div>
 
-                                    <div className="disease-body-info">
-                                        <div className="disease-type-badge">
-                                            {disease.disease_type_display}
-                                        </div>
-                                        <p className="symptoms-preview">
-                                            <strong>Symptoms:</strong> {disease.symptoms?.substring(0, 120)}...
+                                    <div className="disease-body-info" style={{ padding: '0 2rem 2rem 2rem' }}>
+                                        <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
+                                            {disease.symptoms?.substring(0, 140)}...
                                         </p>
 
-                                        <div className="disease-meta">
-                                            <div className="meta-item">
-                                                <Activity size={16} />
-                                                <span>{disease.is_contagious ? `Contagious (${disease.spread_rate})` : 'Non-contagious'}</span>
+                                        <div className="disease-meta" style={{ display: 'flex', gap: '1.5rem', fontSize: '0.85rem', fontWeight: 'bold' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                <Activity size={16} /> {disease.is_contagious ? 'Contagious' : 'Isolated'}
                                             </div>
-                                            <div className="meta-item">
-                                                <AlertTriangle size={16} />
-                                                <span>{disease.affected_plant_count} Species Affected</span>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                <AlertTriangle size={16} /> {disease.affected_plant_count} Hosts
                                             </div>
                                         </div>
                                     </div>
 
-                                    <div className="disease-card-footer">
-                                        <span className="treatment-count">{disease.treatment_count} Treatments Available</span>
-                                        <button className="btn-detail-link">
-                                            <span>Full Profile</span>
-                                            <Info size={16} />
-                                        </button>
+                                    <div className="disease-card-footer" style={{ padding: '1.5rem 2rem', borderTop: '1px solid var(--border-light)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--primary)' }}>{disease.treatment_count} Protocols available</span>
+                                        <button className="btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}>Clinical View</button>
                                     </div>
                                 </div>
                             ))
                         ) : (
                             <div className="no-results">
-                                <Search size={48} />
-                                <h3>No Diseases Found</h3>
-                                <p>We couldn't find any diseases matching your criteria.</p>
+                                <Search size={64} className="text-muted" />
+                                <h3>No Pathology Records Found</h3>
+                                <p>Refine your query parameters to locate specific pathogen data.</p>
                             </div>
                         )}
                     </div>
                 )}
             </div>
 
-            {/* Add Disease Modal */}
+            {/* Senior Standard Modal */}
             {showAddModal && (
-                <div className="modal-overlay animate-fade-in">
+                <div className="modal-overlay">
                     <div className="modal-content-large animate-slide-up">
                         <div className="modal-header">
-                            <h2>Log New Disease</h2>
+                            <h2>Log Pathogenic Specimen</h2>
                             <button className="close-btn" onClick={() => setShowAddModal(false)}>&times;</button>
                         </div>
 
@@ -219,7 +200,7 @@ const Diseases = () => {
                             <div className="form-grid">
                                 <div className="form-left">
                                     <div className="form-group">
-                                        <label>Disease Type</label>
+                                        <label>Taxonomic Type</label>
                                         <select
                                             value={newDisease.disease_type}
                                             onChange={(e) => setNewDisease({ ...newDisease, disease_type: e.target.value })}
@@ -227,54 +208,40 @@ const Diseases = () => {
                                             <option value="fungal">Fungal</option>
                                             <option value="bacterial">Bacterial</option>
                                             <option value="viral">Viral</option>
-                                            <option value="pest">Pest</option>
-                                            <option value="deficiency">Nutrient Deficiency</option>
+                                            <option value="pest">Entomological Pest</option>
+                                            <option value="deficiency">Nutritional Deficiency</option>
                                         </select>
                                     </div>
                                     <div className="form-group">
-                                        <label>Severity Level</label>
+                                        <label>Severity Tier</label>
                                         <select
                                             value={newDisease.severity_level}
                                             onChange={(e) => setNewDisease({ ...newDisease, severity_level: e.target.value })}
                                         >
-                                            <option value="mild">Mild</option>
-                                            <option value="moderate">Moderate</option>
-                                            <option value="severe">Severe</option>
-                                            <option value="critical">Critical</option>
+                                            <option value="mild">Low (Tier 1)</option>
+                                            <option value="moderate">Medium (Tier 2)</option>
+                                            <option value="severe">High (Tier 3)</option>
+                                            <option value="critical">Critical (Tier 4)</option>
                                         </select>
                                     </div>
-                                    <div className="form-group">
-                                        <label>Contagious?</label>
-                                        <div className="form-checkbox-group" style={{ background: 'none', padding: 0 }}>
-                                            <label>
-                                                <input
-                                                    type="checkbox"
-                                                    checked={newDisease.is_contagious}
-                                                    onChange={(e) => setNewDisease({ ...newDisease, is_contagious: e.target.checked })}
-                                                /> Yes
-                                            </label>
-                                        </div>
+
+                                    <div className="form-checkbox-group" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', border: '1px solid var(--border-light)', padding: '1.5rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-main)' }}>
+                                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 'bold' }}>
+                                            <input
+                                                type="checkbox"
+                                                checked={newDisease.is_contagious}
+                                                onChange={(e) => setNewDisease({ ...newDisease, is_contagious: e.target.checked })}
+                                                style={{ width: '20px', height: '20px' }}
+                                            />
+                                            CONTAGIOUS
+                                        </label>
                                     </div>
-                                    {newDisease.is_contagious && (
-                                        <div className="form-group">
-                                            <label>Spread Rate</label>
-                                            <select
-                                                value={newDisease.spread_rate}
-                                                onChange={(e) => setNewDisease({ ...newDisease, spread_rate: e.target.value })}
-                                            >
-                                                <option value="low">Low</option>
-                                                <option value="moderate">Moderate</option>
-                                                <option value="high">High</option>
-                                                <option value="extreme">Extreme</option>
-                                            </select>
-                                        </div>
-                                    )}
                                 </div>
 
                                 <div className="form-right">
                                     <div className="form-group-row">
                                         <div className="form-group">
-                                            <label>Disease Name</label>
+                                            <label>Pathogen Common Name</label>
                                             <input
                                                 type="text"
                                                 value={newDisease.name}
@@ -284,7 +251,7 @@ const Diseases = () => {
                                             />
                                         </div>
                                         <div className="form-group">
-                                            <label>Scientific Name</label>
+                                            <label>Scientific Classification</label>
                                             <input
                                                 type="text"
                                                 value={newDisease.scientific_name}
@@ -295,23 +262,29 @@ const Diseases = () => {
                                     </div>
 
                                     <div className="form-group">
-                                        <label>Symptoms</label>
+                                        <label>Symptomatic Observations</label>
                                         <textarea
                                             value={newDisease.symptoms}
                                             onChange={(e) => setNewDisease({ ...newDisease, symptoms: e.target.value })}
-                                            rows="3"
-                                            placeholder="Describe visible signs..."
+                                            rows="4"
+                                            placeholder="Detailed report of visible markers..."
                                         ></textarea>
                                     </div>
 
                                     <div className="form-group">
-                                        <label>Affected Plants (Select Multiple)</label>
-                                        <div className="plant-selection-grid">
+                                        <label>Host Species Affiliation</label>
+                                        <div className="plant-selection-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '0.75rem', maxHeight: '160px', overflowY: 'auto', padding: '1rem', border: '1px solid var(--border-light)', borderRadius: 'var(--radius-sm)' }}>
                                             {plants.map(plant => (
                                                 <div
                                                     key={plant.id}
                                                     className={`selection-item ${newDisease.affected_plant_ids?.includes(plant.id) ? 'selected' : ''}`}
                                                     onClick={() => handlePlantToggle(plant.id)}
+                                                    style={{
+                                                        padding: '0.5rem', border: '1px solid var(--border-light)', borderRadius: '4px', cursor: 'pointer', textAlign: 'center', fontSize: '0.8rem', fontWeight: 600,
+                                                        background: newDisease.affected_plant_ids?.includes(plant.id) ? 'var(--primary-subtle)' : 'white',
+                                                        color: newDisease.affected_plant_ids?.includes(plant.id) ? 'var(--primary)' : 'inherit',
+                                                        borderColor: newDisease.affected_plant_ids?.includes(plant.id) ? 'var(--primary)' : 'var(--border-light)'
+                                                    }}
                                                 >
                                                     {plant.name}
                                                 </div>
@@ -321,9 +294,9 @@ const Diseases = () => {
                                 </div>
                             </div>
 
-                            <div className="modal-footer">
-                                <button type="button" className="btn-secondary" onClick={() => setShowAddModal(false)}>Cancel</button>
-                                <button type="submit" className="btn-primary">Save Disease Record</button>
+                            <div className="modal-footer" style={{ marginTop: '3rem', paddingTop: '2rem', borderTop: '1px solid var(--border-light)', display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
+                                <button type="button" className="btn-secondary" onClick={() => setShowAddModal(false)}>Discard Record</button>
+                                <button type="submit" className="btn-primary">Authenticate Log</button>
                             </div>
                         </form>
                     </div>

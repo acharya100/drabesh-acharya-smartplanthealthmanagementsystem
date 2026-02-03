@@ -99,18 +99,18 @@ const Treatment = () => {
   return (
     <div className="page-container">
       <Navbar activePage="treatment" />
-      <div className="page-content">
+      <div className="page-content animate-slide-up">
         <div className="page-header">
           <div>
-            <h1>Treatment Protocols</h1>
-            <p className="subtitle">Expert-verified methods for plant recovery</p>
+            <h1>Curative Protocols</h1>
+            <p className="subtitle">Expert-verified methodologies for botanical recovery and restoration</p>
           </div>
           <button
             className="btn-primary"
             onClick={() => setShowAddModal(true)}
           >
             <ShieldCheck size={20} />
-            <span>Add New Protocol</span>
+            <span>Enroll New Protocol</span>
           </button>
         </div>
 
@@ -120,97 +120,63 @@ const Treatment = () => {
               <Search className="search-icon" size={20} />
               <input
                 type="text"
-                placeholder="Search by treatment name or product..."
+                placeholder="Search protocols, medical agents or application steps..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            <button type="submit" className="btn-search">Search</button>
-            <select
-              className="filter-select-v2"
-              value={selectedDisease}
-              onChange={(e) => setSelectedDisease(e.target.value)}
-            >
-              <option value="">All Diseases</option>
-              {diseases.map(d => (
-                <option key={d.id} value={d.id}>{d.name}</option>
-              ))}
-            </select>
+            <button type="submit" className="btn-primary">Execute Search</button>
           </form>
         </div>
 
         {loading ? (
           <div className="loading-spinner-container">
             <div className="spinner"></div>
-            <p>Loading medical protocols...</p>
+            <p>Accessing medical and chemical archives...</p>
           </div>
         ) : (
           <div className="treatments-grid">
             {treatments.length > 0 ? (
               treatments.map(t => (
                 <div key={t.id} className="treatment-card-v2 animate-slide-up">
-                  <div className="treatment-header-v2">
-                    <div className="treatment-badge">
-                      {t.is_preventive ? 'Preventive' : 'Curative'}
+                  <div className="treatment-main" style={{ padding: '2.5rem' }}>
+                    <div className="disease-ctx" style={{ color: 'var(--primary)', fontWeight: 800, fontSize: '0.75rem', textTransform: 'uppercase', marginBottom: '0.5rem' }}>
+                      Target: {t.disease_name}
                     </div>
-                    <div className={`effectiveness-meter efficacy-${Math.floor((t.effectiveness_rate || 0) / 20) * 20}`}>
-                      {t.effectiveness_rate}% Effective
-                    </div>
-                  </div>
+                    <h3 style={{ marginBottom: '1rem' }}>{t.name}</h3>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginBottom: '2rem' }}>{t.description}</p>
 
-                  <div className="treatment-main">
-                    <div className="disease-ctx">{t.disease_name}</div>
-                    <h3>{t.name}</h3>
-                    <p className="treatment-desc">{t.description}</p>
-                  </div>
-
-                  <div className="treatment-details-v2">
-                    <div className="detail-section">
-                      <h4><List size={16} /> Application Steps</h4>
-                      <ul className="v2-steps-list">
-                        {t.instruction_steps?.slice(0, 3).map((step, i) => (
-                          <li key={i}>{step}</li>
-                        ))}
-                        {t.instruction_steps?.length > 3 && <li className="more-steps">+{t.instruction_steps.length - 3} more steps...</li>}
-                      </ul>
-                    </div>
-
-                    <div className="detail-section">
-                      <h4><Package size={16} /> Products Needed</h4>
-                      <div className="product-pills-v2">
-                        {t.products_list?.map((p, i) => (
-                          <span key={i} className="prod-pill">{p}</span>
-                        ))}
+                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                      <div className={`badge ${t.effectiveness_rate > 80 ? 'badge-edible' : 'badge-toxic'}`} style={{ borderRadius: '4px' }}>
+                        {t.effectiveness_rate}% Efficacy
                       </div>
+                      <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600 }}>Est. Cost: {t.cost_estimate}</span>
                     </div>
                   </div>
 
-                  <div className="treatment-footer-v2">
-                    <div className="cost-est">Est. Cost: {t.cost_estimate || 'N/A'}</div>
-                    <button className="btn-primary-sm">
-                      <span>Full Protocol</span>
-                      <ArrowRight size={16} />
-                    </button>
+                  <div className="treatment-footer-v2" style={{ padding: '1.5rem 2.5rem', borderTop: '1px solid var(--border-light)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-main)' }}>
+                    <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--secondary)' }}>{t.treatment_type} Protocol</span>
+                    <button className="btn-secondary" style={{ padding: '0.4rem 1rem', fontSize: '0.8rem' }}>View Steps</button>
                   </div>
                 </div>
               ))
             ) : (
               <div className="no-results">
-                <ShieldCheck size={48} />
-                <h3>No Treatments Found</h3>
-                <p>We don't have a protocol matching your search yet.</p>
+                <ShieldCheck size={64} className="text-muted" />
+                <h3>No Protocols Found</h3>
+                <p>Verify your target pathogen or expand search parameters.</p>
               </div>
             )}
           </div>
         )}
       </div>
 
-      {/* Add Treatment Modal */}
+      {/* Senior Standard Modal */}
       {showAddModal && (
-        <div className="modal-overlay animate-fade-in">
+        <div className="modal-overlay">
           <div className="modal-content-large animate-slide-up">
             <div className="modal-header">
-              <h2>Add New Treatment Protocol</h2>
+              <h2>Enroll Curative Protocol</h2>
               <button className="close-btn" onClick={() => setShowAddModal(false)}>&times;</button>
             </div>
 
@@ -218,13 +184,13 @@ const Treatment = () => {
               <div className="form-grid">
                 <div className="form-left">
                   <div className="form-group">
-                    <label>Target Disease</label>
+                    <label>Target Pathogen</label>
                     <select
                       value={newTreatment.disease}
                       onChange={(e) => setNewTreatment({ ...newTreatment, disease: e.target.value })}
                       required
                     >
-                      <option value="">Select Disease...</option>
+                      <option value="">Select Pathogen...</option>
                       {diseases.map(d => (
                         <option key={d.id} value={d.id}>{d.name}</option>
                       ))}
@@ -232,19 +198,19 @@ const Treatment = () => {
                   </div>
 
                   <div className="form-group">
-                    <label>Treatment Type</label>
+                    <label>Protocol Methodology</label>
                     <select
                       value={newTreatment.treatment_type}
                       onChange={(e) => setNewTreatment({ ...newTreatment, treatment_type: e.target.value })}
                     >
-                      <option value="organic">Organic</option>
-                      <option value="chemical">Chemical</option>
-                      <option value="biological">Biological</option>
+                      <option value="organic">Organic/Natural</option>
+                      <option value="chemical">Chemical/Synthetic</option>
+                      <option value="biological">Biological Agent</option>
                     </select>
                   </div>
 
                   <div className="form-group">
-                    <label>Effectiveness Rate (%)</label>
+                    <label>Measured Efficacy (%)</label>
                     <input
                       type="number"
                       min="0" max="100"
@@ -253,80 +219,79 @@ const Treatment = () => {
                     />
                   </div>
 
-                  <div className="form-group">
-                    <label>Preventive?</label>
-                    <div className="form-checkbox-group" style={{ background: 'none', padding: 0 }}>
-                      <label>
-                        <input
-                          type="checkbox"
-                          checked={newTreatment.is_preventive}
-                          onChange={(e) => setNewTreatment({ ...newTreatment, is_preventive: e.target.checked })}
-                        /> Yes
-                      </label>
-                    </div>
+                  <div className="form-checkbox-group" style={{ border: '1px solid var(--border-light)', padding: '1.5rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-main)' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 'bold' }}>
+                      <input
+                        type="checkbox"
+                        checked={newTreatment.is_preventive}
+                        onChange={(e) => setNewTreatment({ ...newTreatment, is_preventive: e.target.checked })}
+                        style={{ width: '20px', height: '20px' }}
+                      />
+                      PREVENTIVE ACTION
+                    </label>
                   </div>
                 </div>
 
                 <div className="form-right">
                   <div className="form-group-row">
                     <div className="form-group">
-                      <label>Protocol Name</label>
+                      <label>Protocol Title</label>
                       <input
                         type="text"
                         value={newTreatment.name}
                         onChange={(e) => setNewTreatment({ ...newTreatment, name: e.target.value })}
                         required
-                        placeholder="e.g. Neem Oil Solution"
+                        placeholder="e.g. Concentrated Neem Spray"
                       />
                     </div>
                     <div className="form-group">
-                      <label>Cost Estimate</label>
+                      <label>Fiscal Impact</label>
                       <select
                         value={newTreatment.cost_estimate}
                         onChange={(e) => setNewTreatment({ ...newTreatment, cost_estimate: e.target.value })}
                       >
-                        <option value="Low">Low Cost</option>
-                        <option value="Medium">Medium Cost</option>
-                        <option value="High">High Cost</option>
+                        <option value="Low">Low (Economic)</option>
+                        <option value="Medium">Medium (Standard)</option>
+                        <option value="High">High (Professional)</option>
                       </select>
                     </div>
                   </div>
 
                   <div className="form-group">
-                    <label>Overview / Description</label>
+                    <label>Clinical Overview</label>
                     <textarea
                       value={newTreatment.description}
                       onChange={(e) => setNewTreatment({ ...newTreatment, description: e.target.value })}
                       rows="2"
-                      placeholder="Brief summary of the treatment..."
+                      placeholder="Brief clinical summary of the treatment..."
                     ></textarea>
                   </div>
 
                   <div className="form-group">
-                    <label>Application Steps (Newline separated)</label>
+                    <label>Administrative Steps (Sequential)</label>
                     <textarea
                       value={newTreatment.instructions}
                       onChange={(e) => setNewTreatment({ ...newTreatment, instructions: e.target.value })}
-                      rows="3"
-                      placeholder="1. Mix ingredients&#10;2. Spray at dusk..."
+                      rows="4"
+                      placeholder="1. Calibrate dosage&#10;2. Apply to foliage underside..."
                     ></textarea>
                   </div>
 
                   <div className="form-group">
-                    <label>Products Needed (Comma separated)</label>
+                    <label>Required Agents / Products</label>
                     <input
                       type="text"
                       value={newTreatment.products_needed}
                       onChange={(e) => setNewTreatment({ ...newTreatment, products_needed: e.target.value })}
-                      placeholder="e.g. Neem oil, Water, Soap"
+                      placeholder="e.g. Cold-pressed Neem oil, Castile soap, Purified water"
                     />
                   </div>
                 </div>
               </div>
 
-              <div className="modal-footer">
-                <button type="button" className="btn-secondary" onClick={() => setShowAddModal(false)}>Cancel</button>
-                <button type="submit" className="btn-primary">Save Protocol</button>
+              <div className="modal-footer" style={{ marginTop: '3rem', paddingTop: '2rem', borderTop: '1px solid var(--border-light)', display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
+                <button type="button" className="btn-secondary" onClick={() => setShowAddModal(false)}>Discard Session</button>
+                <button type="submit" className="btn-primary">Verify & Save Protocol</button>
               </div>
             </form>
           </div>

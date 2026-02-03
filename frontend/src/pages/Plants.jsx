@@ -171,18 +171,18 @@ const Plants = () => {
   return (
     <div className="page-container">
       <Navbar activePage="plants" />
-      <div className="page-content">
+      <div className="page-content animate-slide-up">
         <div className="page-header">
           <div>
-            <h1>Plant Database</h1>
-            <p className="subtitle">Discover and learn about various plant species</p>
+            <h1>Specimen Archive</h1>
+            <p className="subtitle">A curated database of botanical intelligence and health data</p>
           </div>
           <button
             className="btn-primary"
             onClick={() => setShowAddModal(true)}
           >
             <Plus size={20} />
-            <span>Add New Species</span>
+            <span>Enroll New Species</span>
           </button>
         </div>
 
@@ -193,120 +193,51 @@ const Plants = () => {
               <Search className="search-icon" size={20} />
               <input
                 type="text"
-                placeholder="Search by name, scientific name or description..."
+                placeholder="Search botanical names or scientific profiles..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            <button type="submit" className="btn-search">Search</button>
-            <button
-              type="button"
-              className={`btn-filter-toggle ${showFilters ? 'active' : ''}`}
-              onClick={() => setShowFilters(!showFilters)}
-            >
-              <Filter size={20} />
-            </button>
+            <button type="submit" className="btn-primary">Execute Search</button>
           </form>
-
-          {showFilters && (
-            <div className="filters-dropdown animate-fade-in">
-              <div className="filter-group">
-                <h3>Sunlight</h3>
-                <div className="filter-pills">
-                  {['full_sun', 'partial_sun', 'partial_shade', 'full_shade'].map(opt => (
-                    <button
-                      key={opt}
-                      className={`filter-pill ${filters.sunlight === opt ? 'active' : ''}`}
-                      onClick={() => toggleFilter('sunlight', opt)}
-                    >
-                      {opt.replace('_', ' ')}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div className="filter-group">
-                <h3>Watering</h3>
-                <div className="filter-pills">
-                  {['daily', 'every_2_days', 'weekly', 'bi_weekly'].map(opt => (
-                    <button
-                      key={opt}
-                      className={`filter-pill ${filters.water === opt ? 'active' : ''}`}
-                      onClick={() => toggleFilter('water', opt)}
-                    >
-                      {opt.replace('_', ' ')}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div className="filter-group">
-                <h3>Difficulty</h3>
-                <div className="filter-pills">
-                  {['beginner', 'intermediate', 'advanced', 'expert'].map(opt => (
-                    <button
-                      key={opt}
-                      className={`filter-pill ${filters.difficulty === opt ? 'active' : ''}`}
-                      onClick={() => toggleFilter('difficulty', opt)}
-                    >
-                      {opt}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Plants Grid */}
         {loading ? (
           <div className="loading-spinner-container">
             <div className="spinner"></div>
-            <p>Loading curated plants...</p>
+            <p>Accessing encrypted botanical records...</p>
           </div>
         ) : (
           <div className="plants-grid">
             {plants.length > 0 ? (
               plants.map(plant => (
-                <div key={plant.id} className="plant-card-v2 animate-slide-up">
+                <div key={plant.id} className="plant-card-v2">
                   <div className="plant-image-container">
                     <img
-                      src={plant.image || "/default-plant.jpg"}
+                      src={plant.image || "https://images.unsplash.com/photo-1545239351-ef35f43d514b?q=80&w=500&h=400&auto=format&fit=crop"}
                       alt={plant.name}
-                      onError={(e) => e.target.src = "https://images.unsplash.com/photo-1545239351-ef35f43d514b?q=80&w=300&h=200&auto=format&fit=crop"}
+                      onError={(e) => e.target.src = "https://images.unsplash.com/photo-1545239351-ef35f43d514b?q=80&w=500&h=400&auto=format&fit=crop"}
                     />
-                    <div className="plant-difficulty-badge" data-level={plant.difficulty_level}>
-                      {plant.difficulty_display}
-                    </div>
                   </div>
                   <div className="plant-info">
                     <div className="plant-header">
                       <h3>{plant.name}</h3>
                       <span className="scientific-name">{plant.scientific_name}</span>
                     </div>
-                    <p className="plant-desc-short">{plant.description?.substring(0, 100)}...</p>
 
                     <div className="plant-specs">
-                      <div className="spec-item">
-                        <Sun size={16} />
-                        <span>{plant.sunlight_display}</span>
-                      </div>
-                      <div className="spec-item">
-                        <Droplets size={16} />
-                        <span>{plant.water_frequency_display}</span>
-                      </div>
-                      <div className="spec-item">
-                        <Thermometer size={16} />
-                        <span>{plant.temperature_range || "Ambient"}</span>
-                      </div>
+                      <div className="spec-item"><Sun size={16} />{plant.sunlight_display}</div>
+                      <div className="spec-item"><Droplets size={16} />{plant.water_frequency_display}</div>
                     </div>
 
                     <div className="plant-footer">
                       <div className="plant-badges">
-                        {plant.is_edible && <span className="badge badge-edible">Edible</span>}
-                        {plant.is_medicinal && <span className="badge badge-medicinal">Medicinal</span>}
+                        {plant.is_edible && <span className="badge badge-edible">Food Safe</span>}
                         {plant.is_toxic && <span className="badge badge-toxic">Toxic</span>}
                       </div>
-                      <button className="btn-icon-link">
-                        <Info size={18} />
+                      <button className="btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}>
+                        Profile Details
                       </button>
                     </div>
                   </div>
@@ -314,145 +245,128 @@ const Plants = () => {
               ))
             ) : (
               <div className="no-results">
-                <Search size={48} />
-                <h3>No Plants Found</h3>
-                <p>Try adjusting your filters or search term to find what you're looking for.</p>
-                <button className="btn-secondary mt-4" onClick={() => {
-                  setSearchTerm("");
-                  setFilters({ sunlight: "", water: "", difficulty: "" });
-                }}>Clear All Filters</button>
+                <Search size={64} className="text-muted" />
+                <h3>No Specimen Matches</h3>
+                <p>Adjust your search architecture to find hidden records.</p>
               </div>
             )}
           </div>
         )}
       </div>
 
-      {/* Add New Plant Modal */}
+      {/* Senior Standard Modal */}
       {showAddModal && (
-        <div className="modal-overlay animate-fade-in">
+        <div className="modal-overlay">
           <div className="modal-content-large animate-slide-up">
             <div className="modal-header">
-              <h2>Add New Plant Species</h2>
+              <h2>Enroll Botanical Identity</h2>
               <button className="close-btn" onClick={() => setShowAddModal(false)}>&times;</button>
             </div>
 
             <form onSubmit={handleSubmitNewPlant} className="add-plant-form">
               <div className="form-grid">
                 <div className="form-left">
-                  <div className="image-upload-area">
+                  <div className="image-upload-area" onClick={() => document.getElementById('plant-image-input').click()}>
                     {imagePreview ? (
-                      <div className="preview-container">
-                        <img src={imagePreview} alt="Preview" />
-                        <button type="button" className="btn-reupload" onClick={() => { setPlantImage(null); setImagePreview(null); }}>Change Image</button>
+                      <div className="preview-container" style={{ width: '100%', height: '100%' }}>
+                        <img src={imagePreview} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'var(--radius-md)' }} />
                       </div>
                     ) : (
-                      <label className="upload-placeholder">
-                        <Plus size={40} />
-                        <span>Upload Plant Image</span>
-                        <input type="file" accept="image/*" onChange={handleImageChange} hidden />
-                      </label>
+                      <>
+                        <Plus size={40} className="text-muted" />
+                        <span className="mt-4 text-muted font-bold text-center">DRAG & DROP<br />OR BROWSE</span>
+                      </>
                     )}
+                    <input id="plant-image-input" type="file" accept="image/*" onChange={handleImageChange} hidden />
                   </div>
 
                   <button
                     type="button"
-                    className="btn-ai-analyze mt-4"
+                    className="btn-primary"
+                    style={{ width: '100%', marginTop: '2rem' }}
                     onClick={handleAnalyzeAI}
                     disabled={isAnalyzing || !plantImage}
                   >
-                    {isAnalyzing ? "Analyzing Species..." : "Analyze with AI (PyTorch)"}
+                    {isAnalyzing ? "AI Engine Running..." : "Execute AI Identification"}
                   </button>
-                  {isAnalyzing && <div className="ai-loader-bar"></div>}
                 </div>
 
                 <div className="form-right">
                   <div className="form-group-row">
                     <div className="form-group">
-                      <label>Plant Name</label>
+                      <label>Common Identity</label>
                       <input
                         type="text"
                         value={newPlant.name}
                         onChange={(e) => setNewPlant({ ...newPlant, name: e.target.value })}
                         required
-                        placeholder="e.g. Aloe Vera"
+                        placeholder="e.g. Fiddle Leaf Fig"
                       />
                     </div>
                     <div className="form-group">
-                      <label>Scientific Name</label>
+                      <label>Scientific Nomenclature</label>
                       <input
                         type="text"
                         value={newPlant.scientific_name}
                         onChange={(e) => setNewPlant({ ...newPlant, scientific_name: e.target.value })}
-                        placeholder="e.g. Aloe barbadensis"
+                        placeholder="e.g. Ficus lyrata"
                       />
                     </div>
                   </div>
 
                   <div className="form-group">
-                    <label>Description</label>
+                    <label>Botanical Profile / Description</label>
                     <textarea
                       value={newPlant.description}
                       onChange={(e) => setNewPlant({ ...newPlant, description: e.target.value })}
-                      rows="3"
+                      rows="4"
+                      placeholder="Enter a comprehensive description of the species..."
                     ></textarea>
                   </div>
 
                   <div className="form-group-row">
                     <div className="form-group">
-                      <label>Sunlight Requirement</label>
+                      <label>Luminous Intakes</label>
                       <select
                         value={newPlant.sunlight_requirement}
                         onChange={(e) => setNewPlant({ ...newPlant, sunlight_requirement: e.target.value })}
                       >
-                        <option value="full_sun">Full Sun</option>
-                        <option value="partial_sun">Partial Sun</option>
-                        <option value="partial_shade">Partial Shade</option>
-                        <option value="full_shade">Full Shade</option>
+                        <option value="full_sun">High Exposure</option>
+                        <option value="partial_sun">Moderate Exposure</option>
+                        <option value="partial_shade">Filtered Exposure</option>
+                        <option value="full_shade">Low Exposure</option>
                       </select>
                     </div>
                     <div className="form-group">
-                      <label>Water Frequency</label>
+                      <label>Hydration Hydrology</label>
                       <select
                         value={newPlant.water_frequency}
                         onChange={(e) => setNewPlant({ ...newPlant, water_frequency: e.target.value })}
                       >
-                        <option value="daily">Daily</option>
-                        <option value="every_2_days">Every 2 Days</option>
-                        <option value="weekly">Weekly</option>
-                        <option value="bi_weekly">Bi-Weekly</option>
+                        <option value="daily">High Frequency</option>
+                        <option value="every_2_days">Frequent</option>
+                        <option value="weekly">Standard</option>
+                        <option value="bi_weekly">Periodic</option>
                       </select>
                     </div>
                   </div>
 
-                  <div className="form-group">
-                    <label>Difficulty level</label>
-                    <div className="difficulty-radio-group">
-                      {['beginner', 'intermediate', 'advanced', 'expert'].map(level => (
-                        <label key={level} className={`difficulty-label ${newPlant.difficulty_level === level ? 'active' : ''}`}>
-                          <input
-                            type="radio"
-                            name="difficulty"
-                            value={level}
-                            checked={newPlant.difficulty_level === level}
-                            onChange={(e) => setNewPlant({ ...newPlant, difficulty_level: e.target.value })}
-                          />
-                          {level}
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="form-checkbox-group">
-                    <label><input type="checkbox" checked={newPlant.is_edible} onChange={(e) => setNewPlant({ ...newPlant, is_edible: e.target.checked })} /> Edible</label>
-                    <label><input type="checkbox" checked={newPlant.is_medicinal} onChange={(e) => setNewPlant({ ...newPlant, is_medicinal: e.target.checked })} /> Medicinal</label>
-                    <label><input type="checkbox" checked={newPlant.is_toxic} onChange={(e) => setNewPlant({ ...newPlant, is_toxic: e.target.checked })} /> Toxic</label>
+                  <div className="form-checkbox-group" style={{ display: 'flex', gap: '2rem', border: '1px solid var(--border-light)', padding: '1.5rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-main)' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 'bold' }}>
+                      <input type="checkbox" checked={newPlant.is_edible} onChange={(e) => setNewPlant({ ...newPlant, is_edible: e.target.checked })} style={{ width: '20px', height: '20px' }} />
+                      EDIBLE
+                    </label>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 'bold' }}>
+                      <input type="checkbox" checked={newPlant.is_toxic} onChange={(e) => setNewPlant({ ...newPlant, is_toxic: e.target.checked })} style={{ width: '20px', height: '20px' }} />
+                      TOXIC
+                    </label>
                   </div>
                 </div>
               </div>
 
-              <div className="modal-footer">
-                <button type="button" className="btn-secondary" onClick={() => setShowAddModal(false)}>Cancel</button>
-                <button type="submit" className="btn-primary">Save Plant Species</button>
+              <div className="modal-footer" style={{ marginTop: '3rem', paddingTop: '2rem', borderTop: '1px solid var(--border-light)', display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
+                <button type="button" className="btn-secondary" onClick={() => setShowAddModal(false)}>Terminate Session</button>
+                <button type="submit" className="btn-primary">Finalize Enrollment</button>
               </div>
             </form>
           </div>

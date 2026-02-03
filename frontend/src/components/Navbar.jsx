@@ -1,4 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
+import { LayoutDashboard, Leaf, Activity, Camera, ShieldCheck, LogOut } from "lucide-react";
 
 const Navbar = ({ activePage }) => {
   const navigate = useNavigate();
@@ -11,25 +12,36 @@ const Navbar = ({ activePage }) => {
   return (
     <nav className="navbar">
       <div className="navbar-brand">
-        <h2>🌱 Smart Plant Health Management System</h2>
+        <h2>
+          <Leaf size={28} className="text-primary" />
+          <span>FloralIQ</span>
+        </h2>
       </div>
       <div className="navbar-links">
         <Link to="/dashboard" className={`nav-link ${activePage === "dashboard" ? "active" : ""}`}>
-          Dashboard
+          <LayoutDashboard size={18} />
+          <span>Dashboard</span>
         </Link>
         <Link to="/plants" className={`nav-link ${activePage === "plants" ? "active" : ""}`}>
-          Plants
+          <Leaf size={18} />
+          <span>Plants</span>
         </Link>
         <Link to="/diseases" className={`nav-link ${activePage === "diseases" ? "active" : ""}`}>
-          Diseases
+          <Activity size={18} />
+          <span>Diseases</span>
         </Link>
         <Link to="/disease" className={`nav-link ${activePage === "disease" ? "active" : ""}`}>
-          Detection
+          <Camera size={18} />
+          <span>Detection</span>
         </Link>
         <Link to="/treatment" className={`nav-link ${activePage === "treatment" ? "active" : ""}`}>
-          Treatment
+          <ShieldCheck size={18} />
+          <span>Treatment</span>
         </Link>
-        <button className="logout-btn" onClick={logout}>Logout</button>
+        <button className="logout-btn" onClick={logout}>
+          <LogOut size={18} />
+          <span>Logout</span>
+        </button>
       </div>
     </nav>
   );

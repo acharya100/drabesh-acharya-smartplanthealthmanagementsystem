@@ -56,65 +56,75 @@ const Login = () => {
     <div className="login-container">
       <div className="login-card animate-slide-up">
         <div className="auth-header">
-          <div className="auth-logo">🌱</div>
-          <h1>Welcome Back</h1>
-          <p className="subtitle">Sign in to manage your plant health</p>
+          <div className="auth-logo" style={{ fontSize: '3rem', marginBottom: '1rem' }}>�</div>
+          <h1 style={{ fontSize: '2.25rem', fontWeight: 800, letterSpacing: '-0.025em', color: 'var(--secondary)' }}>FloralIQ</h1>
+          <p className="subtitle" style={{ fontSize: '1rem', opacity: 0.8 }}>Advanced Botanical Health Management</p>
         </div>
 
-        <form onSubmit={handleSubmit}>
-          {error && <div className="error-banner mb-8">{error}</div>}
-          <div className="form-group">
-            <label>Email Address</label>
-            <input
-              type="text"
-              name="username"
-              placeholder="name@company.com"
-              value={formData.username}
-              onChange={handleChange}
-              required
-              disabled={loading}
-            />
-          </div>
-          <div className="form-group">
-            <label>Password</label>
-            <div style={{ position: 'relative' }}>
+        <div style={{ marginTop: '2.5rem' }}>
+          <form onSubmit={handleSubmit}>
+            {error && (
+              <div className="error-banner mb-8" style={{ background: '#fef2f2', border: '1px solid #fee2e2', color: '#dc2626', padding: '1rem', borderRadius: 'var(--radius-sm)', fontSize: '0.875rem', fontWeight: 600 }}>
+                {error}
+              </div>
+            )}
+
+            <div className="form-group">
+              <label style={{ color: 'var(--secondary)', fontWeight: 700, textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '0.05em' }}>User Identifier</label>
               <input
-                type={showPassword ? "text" : "password"}
-                name="password"
-                placeholder="••••••••"
-                value={formData.password}
+                type="text"
+                name="username"
+                placeholder="registered@email.com"
+                value={formData.username}
                 onChange={handleChange}
                 required
                 disabled={loading}
-                style={{ paddingRight: '46px' }}
+                style={{ height: '52px', fontSize: '1rem' }}
               />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                style={{
-                  position: 'absolute',
-                  right: '12px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  color: 'var(--text-light)',
-                  display: 'flex',
-                  alignItems: 'center'
-                }}
-              >
-                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-              </button>
             </div>
-          </div>
-          <button type="submit" className="btn-primary" style={{ width: '100%', marginTop: '1.5rem', height: '50px' }} disabled={loading}>
-            {loading ? "Authenticating..." : "Sign In"}
-          </button>
-        </form>
 
-        <div className="auth-footer">
-          Don't have an account? <Link to="/signup" className="nav-link" style={{ color: 'var(--primary)', display: 'inline', padding: 0 }}>Create one</Link>
+            <div className="form-group" style={{ marginBottom: '2rem' }}>
+              <label style={{ color: 'var(--secondary)', fontWeight: 700, textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '0.05em' }}>Security Credential</label>
+              <div style={{ position: 'relative' }}>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  placeholder="••••••••"
+                  value={formData.password}
+                  onChange={handleChange}
+                  required
+                  disabled={loading}
+                  style={{ paddingRight: '46px', height: '52px', fontSize: '1rem' }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  style={{
+                    position: 'absolute',
+                    right: '12px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    color: 'var(--primary)',
+                    display: 'flex',
+                    alignItems: 'center'
+                  }}
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
+            </div>
+
+            <button type="submit" className="btn-primary" style={{ width: '100%', height: '56px', fontSize: '1rem', fontWeight: 700 }} disabled={loading}>
+              {loading ? "Authenticating Architecture..." : "Establish Session"}
+            </button>
+          </form>
+        </div>
+
+        <div className="auth-footer" style={{ marginTop: '2.5rem', paddingTop: '1.5rem', borderTop: '1px solid var(--border-light)', fontSize: '0.9rem', color: 'var(--text-light)' }}>
+          System enrollment pending? <Link to="/signup" className="nav-link" style={{ color: 'var(--primary)', fontWeight: 700, textDecoration: 'none', marginLeft: '0.5rem' }}>Initialize Account</Link>
         </div>
       </div>
     </div>

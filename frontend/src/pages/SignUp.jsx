@@ -74,119 +74,127 @@ const SignUp = () => {
 
     return (
         <div className="login-container">
-            <div className="login-card">
-                <div className="login-header">
-                    <div className="login-logo">🌱</div>
-                    <h1>Create Account</h1>
+            <div className="login-card animate-slide-up">
+                <div className="auth-header">
+                    <div className="auth-logo" style={{ fontSize: '3rem', marginBottom: '1rem' }}>🌿</div>
+                    <h1 style={{ fontSize: '2.25rem', fontWeight: 800, letterSpacing: '-0.025em', color: 'var(--secondary)' }}>FloralIQ</h1>
+                    <p className="subtitle" style={{ fontSize: '1rem', opacity: 0.8 }}>Initialize Botanical Management Account</p>
                 </div>
 
-                <form onSubmit={handleSubmit}>
-                    {error && <div className="error-message">{error}</div>}
+                <div style={{ marginTop: '2.5rem' }}>
+                    <form onSubmit={handleSubmit}>
+                        {error && (
+                            <div className="error-banner mb-8" style={{ background: '#fef2f2', border: '1px solid #fee2e2', color: '#dc2626', padding: '1rem', borderRadius: 'var(--radius-sm)', fontSize: '0.875rem', fontWeight: 600 }}>
+                                {error}
+                            </div>
+                        )}
 
-                    <div className="form-group">
-                        <label>Email</label>
-                        <input
-                            type="email"
-                            name="email"
-                            value={formData.email}
-                            onChange={handleChange}
-                            required
-                            disabled={loading}
-                            placeholder="Enter your email"
-                        />
-                    </div>
-
-                    <div className="form-group">
-                        <label>Username</label>
-                        <input
-                            type="text"
-                            name="username"
-                            value={formData.username}
-                            onChange={handleChange}
-                            required
-                            disabled={loading}
-                            placeholder="Choose a username"
-                        />
-                    </div>
-
-                    <div className="form-group">
-                        <label>Password</label>
-                        <div style={{ position: 'relative' }}>
-                            <input
-                                type={showPassword ? "text" : "password"}
-                                name="password"
-                                value={formData.password}
-                                onChange={handleChange}
-                                required
-                                disabled={loading}
-                                placeholder="Create a password"
-                                style={{ paddingRight: '40px' }}
-                            />
-                            <button
-                                type="button"
-                                onClick={() => setShowPassword(!showPassword)}
-                                style={{
-                                    position: 'absolute',
-                                    right: '10px',
-                                    top: '50%',
-                                    transform: 'translateY(-50%)',
-                                    background: 'none',
-                                    border: 'none',
-                                    cursor: 'pointer',
-                                    color: '#666',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    padding: '4px'
-                                }}
-                            >
-                                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                            </button>
+                        <div className="form-group-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                            <div className="form-group">
+                                <label style={{ color: 'var(--secondary)', fontWeight: 700, textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '0.05em' }}>Access ID (Username)</label>
+                                <input
+                                    type="text"
+                                    name="username"
+                                    value={formData.username}
+                                    onChange={handleChange}
+                                    required
+                                    disabled={loading}
+                                    placeholder="Username"
+                                    style={{ height: '52px' }}
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label style={{ color: 'var(--secondary)', fontWeight: 700, textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '0.05em' }}>Electronic Mail</label>
+                                <input
+                                    type="email"
+                                    name="email"
+                                    value={formData.email}
+                                    onChange={handleChange}
+                                    required
+                                    disabled={loading}
+                                    placeholder="name@company.com"
+                                    style={{ height: '52px' }}
+                                />
+                            </div>
                         </div>
-                    </div>
 
-                    <div className="form-group">
-                        <label>Confirm Password</label>
-                        <div style={{ position: 'relative' }}>
-                            <input
-                                type={showConfirmPassword ? "text" : "password"}
-                                name="confirmPassword"
-                                value={formData.confirmPassword}
-                                onChange={handleChange}
-                                required
-                                disabled={loading}
-                                placeholder="Confirm your password"
-                                style={{ paddingRight: '40px' }}
-                            />
-                            <button
-                                type="button"
-                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                style={{
-                                    position: 'absolute',
-                                    right: '10px',
-                                    top: '50%',
-                                    transform: 'translateY(-50%)',
-                                    background: 'none',
-                                    border: 'none',
-                                    cursor: 'pointer',
-                                    color: '#666',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    padding: '4px'
-                                }}
-                            >
-                                {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                            </button>
+                        <div className="form-group">
+                            <label style={{ color: 'var(--secondary)', fontWeight: 700, textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '0.05em' }}>Security Passphrase</label>
+                            <div style={{ position: 'relative' }}>
+                                <input
+                                    type={showPassword ? "text" : "password"}
+                                    name="password"
+                                    value={formData.password}
+                                    onChange={handleChange}
+                                    required
+                                    disabled={loading}
+                                    placeholder="Minimum 8 characters"
+                                    style={{ paddingRight: '46px', height: '52px' }}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    style={{
+                                        position: 'absolute',
+                                        right: '12px',
+                                        top: '50%',
+                                        transform: 'translateY(-50%)',
+                                        background: 'none',
+                                        border: 'none',
+                                        cursor: 'pointer',
+                                        color: 'var(--primary)',
+                                        display: 'flex',
+                                        alignItems: 'center'
+                                    }}
+                                >
+                                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                </button>
+                            </div>
                         </div>
-                    </div>
 
-                    <button type="submit" className="btn-primary" disabled={loading}>
-                        {loading ? "Creating Account..." : "Sign Up"}
-                    </button>
-                </form>
+                        <div className="form-group" style={{ marginBottom: '2rem' }}>
+                            <label style={{ color: 'var(--secondary)', fontWeight: 700, textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '0.05em' }}>Authentication Verification</label>
+                            <div style={{ position: 'relative' }}>
+                                <input
+                                    type={showConfirmPassword ? "text" : "password"}
+                                    name="confirmPassword"
+                                    value={formData.confirmPassword}
+                                    onChange={handleChange}
+                                    required
+                                    disabled={loading}
+                                    placeholder="Repeat passphrase"
+                                    style={{ paddingRight: '46px', height: '52px' }}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                    style={{
+                                        position: 'absolute',
+                                        right: '12px',
+                                        top: '50%',
+                                        transform: 'translateY(-50%)',
+                                        background: 'none',
+                                        border: 'none',
+                                        cursor: 'pointer',
+                                        color: 'var(--primary)',
+                                        display: 'flex',
+                                        alignItems: 'center'
+                                    }}
+                                >
+                                    {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                </button>
+                            </div>
+                        </div>
 
-                <p className="login-footer">
-                    Already have an account? <Link to="/" style={{ color: '#2e7d32', textDecoration: 'none', fontWeight: '500' }}>Login</Link>
-                </p>
+                        <button type="submit" className="btn-primary" style={{ width: '100%', height: '56px', fontSize: '1rem', fontWeight: 700 }} disabled={loading}>
+                            {loading ? "Constructing Profile..." : "Finalize Enrollment"}
+                        </button>
+                    </form>
+                </div>
+
+                <div className="auth-footer" style={{ marginTop: '2.5rem', paddingTop: '1.5rem', borderTop: '1px solid var(--border-light)', fontSize: '0.9rem', color: 'var(--text-light)' }}>
+                    Existing operative? <Link to="/" style={{ color: 'var(--primary)', fontWeight: 700, textDecoration: 'none', marginLeft: '0.5rem' }}>Authorize Session</Link>
+                </div>
             </div>
         </div>
     );
