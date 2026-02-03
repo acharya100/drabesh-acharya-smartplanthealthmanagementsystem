@@ -1,5 +1,5 @@
 
 
-This provides a minimal setup to get React working 
+This provides a minimal setup to get React working properly
 
 
