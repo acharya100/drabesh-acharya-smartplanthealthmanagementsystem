@@ -50,34 +50,34 @@ const Dashboard = () => {
           <div className="loading">Loading...</div>
         ) : (
           <div className="stats-grid">
-            <div className="stat-card">
+            <Link to="/plants" className="stat-card clickable">
               <div className="stat-icon">🌿</div>
               <div>
                 <h3>{stats.totalPlants}</h3>
                 <p>Total Plants</p>
               </div>
-            </div>
-            <div className="stat-card">
+            </Link>
+            <Link to="/plants?filter=healthy" className="stat-card clickable">
               <div className="stat-icon">✅</div>
               <div>
                 <h3>{stats.healthyPlants}</h3>
                 <p>Healthy Plants</p>
               </div>
-            </div>
-            <div className="stat-card">
+            </Link>
+            <Link to="/diseases" className="stat-card clickable">
               <div className="stat-icon">⚠️</div>
               <div>
                 <h3>{stats.diseasesDetected}</h3>
                 <p>Diseases Detected</p>
               </div>
-            </div>
-            <div className="stat-card">
+            </Link>
+            <Link to="/treatment" className="stat-card clickable">
               <div className="stat-icon">💊</div>
               <div>
                 <h3>{stats.treatmentsAvailable}</h3>
                 <p>Treatments Available</p>
               </div>
-            </div>
+            </Link>
           </div>
         )}
 

@@ -9,8 +9,9 @@
  */
 
 import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import Navbar from "../components/Navbar";
-import { plantService } from "../services/api";
+import { plantService, predictionService } from "../services/api";
 import { Search, Filter, Plus, Thermometer, Droplets, Sun, Info } from "lucide-react";
 
 const Plants = () => {
@@ -40,21 +41,36 @@ const Plants = () => {
   const [plantImage, setPlantImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
 
+  const location = useLocation();
+
   useEffect(() => {
-    loadPlants();
-  }, [filters]);
+    const queryParams = new URLSearchParams(location.search);
+    if (queryParams.get('filter') === 'healthy') {
+      // Logic for "healthy" - in this system, it might mean non-toxic or just showing everything if no diseases marked
+      // For now, let's just ensure we load the list
+      loadPlants();
+    } else {
+      loadPlants();
+    }
+  }, [filters, location]);
 
   const loadPlants = async () => {
     try {
       setLoading(true);
+      const queryParams = new URLSearchParams(location.search);
       const params = {
         search: searchTerm,
         sunlight_requirement: filters.sunlight,
         water_frequency: filters.water,
         difficulty_level: filters.difficulty
       };
+
+      // Handle "healthy" filter from dashboard
+      if (queryParams.get('filter') === 'healthy') {
+        params.is_toxic = false; // Showing non-toxic as "healthy" for now
+      }
+
       const { data } = await plantService.getAll(params);
-      // DRF returns results in data.results when paginated
       setPlants(data.results || data);
       setLoading(false);
     } catch (error) {
