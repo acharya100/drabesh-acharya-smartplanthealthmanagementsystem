@@ -111,9 +111,9 @@ const DiseaseDetection = () => {
                 </div>
               ) : (
                 <div className="preview-stage">
-                  <div className="preview-image-wrapper" style={{ position: 'relative', borderRadius: 'var(--radius-md)', overflow: 'hidden', boxShadow: '0 10px 30px rgba(0,0,0,0.1)', marginBottom: '2rem' }}>
-                    <img src={preview} alt="Plant to analyze" style={{ width: '100%', display: 'block' }} />
-                    <button className="btn-close-preview" onClick={handleReset} style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'rgba(0,0,0,0.5)', color: 'white', border: 'none', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', backdropFilter: 'blur(4px)' }}>
+                  <div className="preview-image-wrapper">
+                    <img src={preview} alt="Plant to analyze" />
+                    <button className="btn-close-preview" onClick={handleReset}>
                       <X size={20} />
                     </button>
                   </div>
