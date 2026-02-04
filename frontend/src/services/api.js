@@ -66,8 +66,10 @@ api.interceptors.response.use(
 export const authService = {
     login: (credentials) => api.post('/auth/login/', credentials),
     register: (userData) => api.post('/auth/register/', userData),
-    updateProfile: (data) => api.patch('/auth/update-profile/', data),
+    getProfile: () => api.get('/auth/update-profile/'),
+    updateProfile: (data) => api.post('/auth/update-profile/', data),
     changePassword: (data) => api.post('/auth/change-password/', data),
+    deleteAccount: () => api.delete('/auth/delete-account/'),
 };
 
 // --- Plant Services ---

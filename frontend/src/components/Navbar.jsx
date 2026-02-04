@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Leaf, Activity, Camera, ShieldCheck, LogOut } from "lucide-react";
+import { LayoutDashboard, Leaf, Activity, Camera, ShieldCheck, LogOut, Settings as SettingsIcon } from "lucide-react";
 
 const Navbar = ({ activePage }) => {
   const navigate = useNavigate();
@@ -17,10 +17,12 @@ const Navbar = ({ activePage }) => {
   return (
     <nav className="navbar">
       <div className="navbar-brand">
-        <h2>
-          <Leaf size={28} className="text-primary" />
-          <span>Smart Plant Health</span>
-        </h2>
+        <Link to="/dashboard" style={{ textDecoration: 'none' }}>
+          <h2>
+            <Leaf size={28} className="text-primary" />
+            <span>Smart Plant Health</span>
+          </h2>
+        </Link>
       </div>
       <div className="navbar-links">
         <Link to="/dashboard" className={`nav-link ${activePage === "dashboard" ? "active" : ""}`}>
@@ -43,7 +45,12 @@ const Navbar = ({ activePage }) => {
           <ShieldCheck size={18} />
           <span>Treatments</span>
         </Link>
-        <div className="nav-user-greeting" style={{ marginRight: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-muted)', fontWeight: 600, fontSize: '0.9rem' }}>
+        <Link to="/settings" className={`nav-link ${activePage === "settings" ? "active" : ""}`}>
+          <SettingsIcon size={18} />
+          <span>Settings</span>
+        </Link>
+
+        <div className="nav-user-greeting" style={{ marginLeft: '1rem', marginRight: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-muted)', fontWeight: 600, fontSize: '0.9rem' }}>
           <span>Welcome,</span>
           <span style={{ color: 'var(--primary)', fontWeight: 800 }}>{username}</span>
         </div>

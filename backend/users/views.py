@@ -49,13 +49,19 @@ class ChangePasswordView(APIView):
 class UpdateProfileView(APIView):
     permission_classes = [IsAuthenticated]
 
+    def get(self, request):
+        user = request.user
+        return Response({
+            'username': user.username,
+            'email': user.email
+        })
+
     def post(self, request):
         user = request.user
         email = request.data.get('email')
         username = request.data.get('username')
 
         if email:
-            # Check if email is already taken by another user
             if User.objects.filter(email=email).exclude(id=user.id).exists():
                 return Response(
                     {'error': 'Email is already in use'},
@@ -64,7 +70,6 @@ class UpdateProfileView(APIView):
             user.email = email
 
         if username:
-            # Check if username is already taken by another user
             if User.objects.filter(username=username).exclude(id=user.id).exists():
                 return Response(
                     {'error': 'Username is already in use'},
@@ -81,4 +86,15 @@ class UpdateProfileView(APIView):
                 'username': user.username
             },
             status=status.HTTP_200_OK
+        )
+
+class DeleteAccountView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request):
+        user = request.user
+        user.delete()
+        return Response(
+            {'message': 'Account deleted successfully'},
+            status=status.HTTP_204_NO_CONTENT
         )

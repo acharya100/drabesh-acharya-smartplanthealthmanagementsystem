@@ -6,6 +6,8 @@ import Plants from "./pages/Plants";
 import DiseaseDetection from "./pages/DiseaseDetection";
 import Diseases from "./pages/Diseases";
 import Treatment from "./pages/Treatment";
+import Settings from "./pages/Settings";
+import { useEffect } from "react";
 import "./App.css";
 
 const ProtectedRoute = ({ children }) => {
@@ -14,6 +16,11 @@ const ProtectedRoute = ({ children }) => {
 };
 
 const App = () => {
+  useEffect(() => {
+    const theme = localStorage.getItem("theme") || "light";
+    document.documentElement.setAttribute("data-theme", theme);
+  }, []);
+
   return (
     <BrowserRouter>
       <Routes>
@@ -61,6 +68,15 @@ const App = () => {
           element={
             <ProtectedRoute>
               <Treatment />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <Settings />
             </ProtectedRoute>
           }
         />
