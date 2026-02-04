@@ -28,38 +28,6 @@ A sophisticated AI-powered platform designed to empower gardeners and farmers wi
 - **Icons**: Lucide React
 - **API Client**: Axios with automatic token refresh interceptors
 
-## 🚀 Getting Started
-
-### Prerequisites
-- Python 3.10+
-- Node.js 18+
-- PostgreSQL database
-
-### Installation
-
-1. **Clone the repository**:
-   ```bash
-   git clone https://github.com/acharya100/drabesh-acharya-smartplanthealthmanagementsystem.git
-   cd SmartPlantHealthManagementSystem
-   ```
-
-2. **Backend Setup**:
-   ```bash
-   cd backend
-   python -m venv venv
-   source venv/bin/activate # or venv\Scripts\activate on Windows
-   pip install -r requirements.txt
-   # Configure your .env file with DB_NAME, DB_USER, DB_PASSWORD, etc.
-   python manage.py migrate
-   python manage.py runserver
-   ```
-
-3. **Frontend Setup**:
-   ```bash
-   cd ../frontend
-   npm install
-   npm run dev
-   ```
 
 ## 📝 Usage
 
