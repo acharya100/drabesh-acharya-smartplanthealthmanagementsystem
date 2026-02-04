@@ -25,6 +25,9 @@ const Plants = () => {
   });
   const [showFilters, setShowFilters] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [selectedPlant, setSelectedPlant] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [newPlant, setNewPlant] = useState({
     name: "",
@@ -44,14 +47,7 @@ const Plants = () => {
   const location = useLocation();
 
   useEffect(() => {
-    const queryParams = new URLSearchParams(location.search);
-    if (queryParams.get('filter') === 'healthy') {
-      // Logic for "healthy" - in this system, it might mean non-toxic or just showing everything if no diseases marked
-      // For now, let's just ensure we load the list
-      loadPlants();
-    } else {
-      loadPlants();
-    }
+    loadPlants();
   }, [filters, location]);
 
   const loadPlants = async () => {
@@ -65,9 +61,8 @@ const Plants = () => {
         difficulty_level: filters.difficulty
       };
 
-      // Handle "healthy" filter from dashboard
       if (queryParams.get('filter') === 'healthy') {
-        params.is_toxic = false; // Showing non-toxic as "healthy" for now
+        params.is_toxic = false;
       }
 
       const { data } = await plantService.getAll(params);
@@ -130,6 +125,30 @@ const Plants = () => {
     }
   };
 
+  const handleEdit = (plant) => {
+    setSelectedPlant(plant);
+    setIsEditing(true);
+    setNewPlant({
+      name: plant.name,
+      scientific_name: plant.scientific_name || "",
+      family: plant.family || "",
+      description: plant.description || "",
+      sunlight_requirement: plant.sunlight_requirement,
+      water_frequency: plant.water_frequency,
+      difficulty_level: plant.difficulty_level,
+      is_edible: plant.is_edible,
+      is_medicinal: plant.is_medicinal,
+      is_toxic: plant.is_toxic
+    });
+    setImagePreview(plant.image);
+    setShowAddModal(true);
+  };
+
+  const handleViewDetails = (plant) => {
+    setSelectedPlant(plant);
+    setShowViewModal(true);
+  };
+
   const handleSubmitNewPlant = async (e) => {
     e.preventDefault();
     try {
@@ -138,34 +157,44 @@ const Plants = () => {
       Object.keys(newPlant).forEach(key => {
         formData.append(key, newPlant[key]);
       });
-      if (plantImage) {
+      if (plantImage && typeof plantImage !== 'string') {
         formData.append('image', plantImage);
       }
 
-      await plantService.create(formData);
+      if (isEditing) {
+        await plantService.update(selectedPlant.id, formData);
+      } else {
+        await plantService.create(formData);
+      }
+
       setShowAddModal(false);
-      // Reset form
-      setNewPlant({
-        name: "",
-        scientific_name: "",
-        family: "",
-        description: "",
-        sunlight_requirement: "partial_sun",
-        water_frequency: "weekly",
-        difficulty_level: "beginner",
-        is_edible: false,
-        is_medicinal: false,
-        is_toxic: false
-      });
-      setPlantImage(null);
-      setImagePreview(null);
+      resetForm();
       loadPlants();
     } catch (error) {
-      console.error("Error creating plant:", error);
+      console.error("Error saving plant:", error);
       setLoading(false);
-      const errorMsg = error.response?.data ? JSON.stringify(error.response.data) : "Make sure the name is unique and image is valid.";
-      alert(`Failed to create plant: ${errorMsg}`);
+      const errorMsg = error.response?.data ? JSON.stringify(error.response.data) : "Check if name is unique and image is valid.";
+      alert(`Failed to save plant: ${errorMsg}`);
     }
+  };
+
+  const resetForm = () => {
+    setNewPlant({
+      name: "",
+      scientific_name: "",
+      family: "",
+      description: "",
+      sunlight_requirement: "partial_sun",
+      water_frequency: "weekly",
+      difficulty_level: "beginner",
+      is_edible: false,
+      is_medicinal: false,
+      is_toxic: false
+    });
+    setPlantImage(null);
+    setImagePreview(null);
+    setIsEditing(false);
+    setSelectedPlant(null);
   };
 
   return (
@@ -179,7 +208,7 @@ const Plants = () => {
           </div>
           <button
             className="btn-primary"
-            onClick={() => setShowAddModal(true)}
+            onClick={() => { resetForm(); setShowAddModal(true); }}
           >
             <Plus size={20} />
             <span>Add New Plant</span>
@@ -236,9 +265,14 @@ const Plants = () => {
                         {plant.is_edible && <span className="badge badge-edible">Edible</span>}
                         {plant.is_toxic && <span className="badge badge-toxic">Toxic</span>}
                       </div>
-                      <button className="btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}>
-                        View Details
-                      </button>
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <button className="btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }} onClick={() => handleEdit(plant)}>
+                          Edit
+                        </button>
+                        <button className="btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }} onClick={() => handleViewDetails(plant)}>
+                          View Details
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -254,12 +288,12 @@ const Plants = () => {
         )}
       </div>
 
-      {/* Senior Standard Modal */}
+      {/* Senior Standard Modal - Add/Edit */}
       {showAddModal && (
         <div className="modal-overlay">
           <div className="modal-content-large animate-slide-up">
             <div className="modal-header">
-              <h2>Add New Plant</h2>
+              <h2>{isEditing ? "Edit Plant" : "Add New Plant"}</h2>
               <button className="close-btn" onClick={() => setShowAddModal(false)}>&times;</button>
             </div>
 
@@ -269,7 +303,7 @@ const Plants = () => {
                   <div className="image-upload-area" onClick={() => document.getElementById('plant-image-input').click()}>
                     {imagePreview ? (
                       <div className="preview-container" style={{ width: '100%', height: '100%' }}>
-                        <img src={imagePreview} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'var(--radius-md)' }} />
+                        <img src={imagePreview} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: 'var(--radius-md)' }} />
                       </div>
                     ) : (
                       <>
@@ -280,15 +314,17 @@ const Plants = () => {
                     <input id="plant-image-input" type="file" accept="image/*" onChange={handleImageChange} hidden />
                   </div>
 
-                  <button
-                    type="button"
-                    className="btn-primary"
-                    style={{ width: '100%', marginTop: '2rem' }}
-                    onClick={handleAnalyzeAI}
-                    disabled={isAnalyzing || !plantImage}
-                  >
-                    {isAnalyzing ? "Identifying..." : "Identify with AI"}
-                  </button>
+                  {!isEditing && (
+                    <button
+                      type="button"
+                      className="btn-primary"
+                      style={{ width: '100%', marginTop: '2rem' }}
+                      onClick={handleAnalyzeAI}
+                      disabled={isAnalyzing || !plantImage}
+                    >
+                      {isAnalyzing ? "Identifying..." : "Identify with AI"}
+                    </button>
+                  )}
                 </div>
 
                 <div className="form-right">
@@ -366,9 +402,68 @@ const Plants = () => {
 
               <div className="modal-footer" style={{ marginTop: '3rem', paddingTop: '2rem', borderTop: '1px solid var(--border-light)', display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
                 <button type="button" className="btn-secondary" onClick={() => setShowAddModal(false)}>Cancel</button>
-                <button type="submit" className="btn-primary">Save Plant</button>
+                <button type="submit" className="btn-primary">{isEditing ? "Update Plant" : "Save Plant"}</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Senior Standard Modal - View Details */}
+      {showViewModal && selectedPlant && (
+        <div className="modal-overlay">
+          <div className="modal-content-large animate-slide-up">
+            <div className="modal-header">
+              <h2>Plant Details</h2>
+              <button className="close-btn" onClick={() => setShowViewModal(false)}>&times;</button>
+            </div>
+            <div className="add-plant-form">
+              <div className="form-grid">
+                <div className="form-left">
+                  <div className="preview-image-wrapper">
+                    <img src={selectedPlant.image || "https://images.unsplash.com/photo-1545239351-ef35f43d514b?q=80&w=500&h=400&auto=format&fit=crop"} alt={selectedPlant.name} />
+                  </div>
+                  <div style={{ background: 'var(--bg-main)', padding: '1.5rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-light)' }}>
+                    <h4 style={{ marginBottom: '1rem', color: 'var(--primary)' }}>Quick Stats</h4>
+                    <div style={{ fontSize: '0.9rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ fontWeight: 700 }}>Sunlight:</span>
+                        <span>{selectedPlant.sunlight_display}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ fontWeight: 700 }}>Watering:</span>
+                        <span>{selectedPlant.water_frequency_display}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ fontWeight: 700 }}>Difficulty:</span>
+                        <span>{selectedPlant.difficulty_level_display}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="form-right">
+                  <div style={{ marginBottom: '2rem' }}>
+                    <h1 style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>{selectedPlant.name}</h1>
+                    <p className="scientific-name" style={{ fontSize: '1.2rem' }}>{selectedPlant.scientific_name}</p>
+                  </div>
+
+                  <div style={{ marginBottom: '2rem' }}>
+                    <h4 style={{ color: 'var(--primary)', marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Description</h4>
+                    <p style={{ lineHeight: 1.8, color: 'var(--text-main)' }}>{selectedPlant.description || "No description available for this plant."}</p>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '1rem' }}>
+                    {selectedPlant.is_edible && <span className="badge badge-edible" style={{ padding: '0.6rem 1.2rem' }}>Edible Species</span>}
+                    {selectedPlant.is_toxic && <span className="badge badge-toxic" style={{ padding: '0.6rem 1.2rem' }}>Toxic Species</span>}
+                    {selectedPlant.is_medicinal && <span className="badge" style={{ padding: '0.6rem 1.2rem', background: '#e0f2fe', color: '#0369a1' }}>Medicinal Use</span>}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="modal-footer" style={{ padding: '2rem 3rem', borderTop: '1px solid var(--border-light)', display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
+              <button className="btn-secondary" onClick={() => setShowViewModal(false)}>Close View</button>
+              <button className="btn-primary" onClick={() => { setShowViewModal(false); handleEdit(selectedPlant); }}>Edit Record</button>
+            </div>
           </div>
         </div>
       )}

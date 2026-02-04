@@ -73,9 +73,13 @@ class PredictionViewSet(viewsets.ModelViewSet):
                         "message": "AI could not identify the plant in this image."
                     }, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
             except Exception as e:
+                import traceback
+                error_trace = traceback.format_exc()
+                print(f"Identification Error: {str(e)}\n{error_trace}")
                 return Response({
                     "success": False,
-                    "message": str(e)
+                    "message": f"Identification Error: {str(e)}",
+                    "details": error_trace if request.user.is_staff else None
                 }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -134,9 +138,13 @@ class PredictionViewSet(viewsets.ModelViewSet):
                         "message": "AI could not process the image for disease detection."
                     }, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
             except Exception as e:
+                import traceback
+                error_trace = traceback.format_exc()
+                print(f"Prediction Error: {str(e)}\n{error_trace}")
                 return Response({
                     "success": False,
-                    "message": str(e)
+                    "message": f"Inference Error: {str(e)}",
+                    "details": error_trace if request.user.is_staff else None
                 }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

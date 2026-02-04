@@ -21,6 +21,9 @@ const Treatment = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [selectedTreatment, setSelectedTreatment] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
   const [newTreatment, setNewTreatment] = useState({
     name: "",
     disease: "",
@@ -66,34 +69,66 @@ const Treatment = () => {
     }
   };
 
+  const handleEdit = (treatment) => {
+    setSelectedTreatment(treatment);
+    setIsEditing(true);
+    setNewTreatment({
+      name: treatment.name,
+      disease: treatment.disease,
+      treatment_type: treatment.treatment_type,
+      description: treatment.description || "",
+      instructions: treatment.instructions || "",
+      products_needed: treatment.products_needed || "",
+      effectiveness_rate: treatment.effectiveness_rate,
+      is_preventive: treatment.is_preventive,
+      cost_estimate: treatment.cost_estimate
+    });
+    setShowAddModal(true);
+  };
+
+  const handleViewDetails = (treatment) => {
+    setSelectedTreatment(treatment);
+    setShowViewModal(true);
+  };
+
   const handleSearch = (e) => {
     e.preventDefault();
     loadTreatments();
   };
 
-  const handleSubmitNewTreatment = async (e) => {
+  const handleSubmitTreatment = async (e) => {
     e.preventDefault();
     try {
       setLoading(true);
-      await treatmentService.create(newTreatment);
+      if (isEditing) {
+        await treatmentService.update(selectedTreatment.id, newTreatment);
+      } else {
+        await treatmentService.create(newTreatment);
+      }
       setShowAddModal(false);
-      setNewTreatment({
-        name: "",
-        disease: "",
-        treatment_type: "organic",
-        description: "",
-        instructions: "",
-        products_needed: "",
-        effectiveness_rate: 85,
-        is_preventive: false,
-        cost_estimate: "Low"
-      });
+      resetForm();
       loadTreatments();
     } catch (error) {
-      console.error("Error creating treatment:", error);
+      console.error("Error saving treatment:", error);
       setLoading(false);
-      alert("Failed to create treatment record.");
+      alert("Failed to save treatment record.");
     }
+  };
+
+  const resetForm = () => {
+    setNewTreatment({
+      name: "",
+      disease: "",
+      treatment_type: "organic",
+      description: "",
+      instructions: "",
+      products_needed: "",
+      effectiveness_rate: 85,
+      is_preventive: false,
+      cost_estimate: "Low"
+    });
+    setIsEditing(false);
+    setSelectedTreatment(null);
   };
 
   return (
@@ -107,7 +142,7 @@ const Treatment = () => {
           </div>
           <button
             className="btn-primary"
-            onClick={() => setShowAddModal(true)}
+            onClick={() => { resetForm(); setShowAddModal(true); }}
           >
             <ShieldCheck size={20} />
             <span>Add Treatment</span>
@@ -156,7 +191,10 @@ const Treatment = () => {
 
                   <div className="treatment-footer-v2" style={{ padding: '1.5rem 2.5rem', borderTop: '1px solid var(--border-light)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-main)' }}>
                     <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--secondary)' }}>{t.treatment_type} Type</span>
-                    <button className="btn-secondary" style={{ padding: '0.4rem 1rem', fontSize: '0.8rem' }}>View Steps</button>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <button className="btn-secondary" style={{ padding: '0.4rem 1rem', fontSize: '0.8rem' }} onClick={() => handleEdit(t)}>Edit</button>
+                      <button className="btn-secondary" style={{ padding: '0.4rem 1rem', fontSize: '0.8rem' }} onClick={() => handleViewDetails(t)}>View Details</button>
+                    </div>
                   </div>
                 </div>
               ))
@@ -171,16 +209,16 @@ const Treatment = () => {
         )}
       </div>
 
-      {/* Senior Standard Modal */}
+      {/* Senior Standard Modal - Add/Edit */}
       {showAddModal && (
         <div className="modal-overlay">
           <div className="modal-content-large animate-slide-up">
             <div className="modal-header">
-              <h2>Add Treatment Plan</h2>
+              <h2>{isEditing ? "Edit Treatment Plan" : "Add Treatment Plan"}</h2>
               <button className="close-btn" onClick={() => setShowAddModal(false)}>&times;</button>
             </div>
 
-            <form onSubmit={handleSubmitNewTreatment} className="add-plant-form">
+            <form onSubmit={handleSubmitTreatment} className="add-plant-form">
               <div className="form-grid">
                 <div className="form-left">
                   <div className="form-group">
@@ -291,9 +329,75 @@ const Treatment = () => {
 
               <div className="modal-footer" style={{ marginTop: '3rem', paddingTop: '2rem', borderTop: '1px solid var(--border-light)', display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
                 <button type="button" className="btn-secondary" onClick={() => setShowAddModal(false)}>Cancel</button>
-                <button type="submit" className="btn-primary">Save Treatment</button>
+                <button type="submit" className="btn-primary">{isEditing ? "Update Treatment" : "Save Treatment"}</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Senior Standard Modal - View Details */}
+      {showViewModal && selectedTreatment && (
+        <div className="modal-overlay">
+          <div className="modal-content-large animate-slide-up">
+            <div className="modal-header">
+              <h2>Treatment Protocol</h2>
+              <button className="close-btn" onClick={() => setShowViewModal(false)}>&times;</button>
+            </div>
+            <div className="add-plant-form">
+              <div className="form-grid">
+                <div className="form-left">
+                  <div style={{ background: 'var(--bg-main)', padding: '2rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-light)' }}>
+                    <h4 style={{ marginBottom: '1.5rem', color: 'var(--primary)', textTransform: 'uppercase', fontSize: '0.8rem', letterSpacing: '0.1em' }}>Metrics</h4>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                      <div>
+                        <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700 }}>SUCCESS RATE</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <span style={{ fontSize: '1.2rem', fontWeight: 800 }}>{selectedTreatment.effectiveness_rate}%</span>
+                          <div style={{ flex: 1, height: '8px', background: '#e2e8f0', borderRadius: '4px', overflow: 'hidden' }}>
+                            <div style={{ height: '100%', width: `${selectedTreatment.effectiveness_rate}%`, background: 'var(--secondary)' }}></div>
+                          </div>
+                        </div>
+                      </div>
+                      <div>
+                        <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700 }}>COST LEVEL</span>
+                        <span style={{ fontSize: '1rem', fontWeight: 800 }}>{selectedTreatment.cost_estimate}</span>
+                      </div>
+                      <div>
+                        <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700 }}>TYPE</span>
+                        <span style={{ fontSize: '1rem', fontWeight: 800 }}>{selectedTreatment.treatment_type.toUpperCase()}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="form-right">
+                  <div style={{ marginBottom: '2rem' }}>
+                    <div style={{ color: 'var(--primary)', fontWeight: 800, fontSize: '0.8rem', textTransform: 'uppercase', marginBottom: '0.5rem' }}>PROTOCOL FOR {selectedTreatment.disease_name}</div>
+                    <h1 style={{ fontSize: '2.5rem', marginBottom: '1rem', fontWeight: 800 }}>{selectedTreatment.name}</h1>
+                    <p style={{ lineHeight: 1.8, color: 'var(--text-main)', fontSize: '1.1rem' }}>{selectedTreatment.description}</p>
+                  </div>
+
+                  <div style={{ marginBottom: '2rem' }}>
+                    <h4 style={{ color: 'var(--primary)', marginBottom: '1rem', textTransform: 'uppercase', fontSize: '0.8rem', fontWeight: 800 }}>Application Instructions</h4>
+                    <div style={{ background: '#f8fafc', padding: '1.5rem', borderRadius: '8px', borderLeft: '4px solid var(--secondary)', whiteSpace: 'pre-line', lineHeight: 1.7 }}>
+                      {selectedTreatment.instructions || "Contact an expert for detailed application steps."}
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 style={{ color: 'var(--primary)', marginBottom: '0.75rem', textTransform: 'uppercase', fontSize: '0.8rem', fontWeight: 800 }}>Inventory Required</h4>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 600 }}>
+                      <Package size={20} className="text-secondary" />
+                      <span>{selectedTreatment.products_needed || "General gardening tools"}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="modal-footer" style={{ padding: '2rem 3rem', borderTop: '1px solid var(--border-light)', display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
+              <button className="btn-secondary" onClick={() => setShowViewModal(false)}>Close Protocol</button>
+              <button className="btn-primary" onClick={() => { setShowViewModal(false); handleEdit(selectedTreatment); }}>Update Plan</button>
+            </div>
           </div>
         </div>
       )}

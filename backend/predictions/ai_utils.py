@@ -89,7 +89,9 @@ class PlantIdentifier:
                 }
             }
         except Exception as e:
-            print(f"Error during AI inference: {str(e)}")
+            import traceback
+            print(f"Error during AI inference (Plant Identification): {str(e)}")
+            print(traceback.format_exc())
             return None
 
 
@@ -143,7 +145,9 @@ class DiseaseDetector:
                 "is_healthy": disease_name == "Healthy"
             }
         except Exception as e:
+            import traceback
             print(f"Error during disease detection: {str(e)}")
+            print(traceback.format_exc())
             return None
 
 # Singleton instances for the application

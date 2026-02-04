@@ -20,6 +20,9 @@ const Diseases = () => {
     const [severityFilter, setSeverityFilter] = useState("");
     const [showFilters, setShowFilters] = useState(false);
     const [showAddModal, setShowAddModal] = useState(false);
+    const [showViewModal, setShowViewModal] = useState(false);
+    const [selectedDiseaseDetail, setSelectedDiseaseDetail] = useState(null);
+    const [isEditing, setIsEditing] = useState(false);
     const [plants, setPlants] = useState([]);
     const [newDisease, setNewDisease] = useState({
         name: "",
@@ -58,30 +61,62 @@ const Diseases = () => {
         }
     };
 
-    const handleSubmitNewDisease = async (e) => {
+    const handleEdit = (disease) => {
+        setSelectedDiseaseDetail(disease);
+        setIsEditing(true);
+        setNewDisease({
+            name: disease.name,
+            scientific_name: disease.scientific_name || "",
+            disease_type: disease.disease_type,
+            severity_level: disease.severity_level,
+            is_contagious: disease.is_contagious,
+            spread_rate: disease.spread_rate || "moderate",
+            symptoms: disease.symptoms || "",
+            causes: disease.causes || "",
+            affected_plant_ids: disease.affected_plant_ids || []
+        });
+        setShowAddModal(true);
+    };
+
+    const handleViewDetails = (disease) => {
+        setSelectedDiseaseDetail(disease);
+        setShowViewModal(true);
+    };
+
+    const handleSubmitDisease = async (e) => {
         e.preventDefault();
         try {
             setLoading(true);
-            await diseaseService.create(newDisease);
+            if (isEditing) {
+                await diseaseService.update(selectedDiseaseDetail.id, newDisease);
+            } else {
+                await diseaseService.create(newDisease);
+            }
             setShowAddModal(false);
-            setNewDisease({
-                name: "",
-                scientific_name: "",
-                disease_type: "fungal",
-                severity_level: "moderate",
-                is_contagious: false,
-                spread_rate: "moderate",
-                symptoms: "",
-                causes: "",
-                affected_plants: []
-            });
+            resetForm();
             loadDiseases();
         } catch (error) {
-            console.error("Error creating disease:", error);
+            console.error("Error saving disease:", error);
             setLoading(false);
             const errorMsg = error.response?.data ? JSON.stringify(error.response.data) : "Check if name is unique and all fields valid.";
-            alert(`Failed to create disease: ${errorMsg}`);
+            alert(`Failed to save disease: ${errorMsg}`);
         }
+    };
+
+    const resetForm = () => {
+        setNewDisease({
+            name: "",
+            scientific_name: "",
+            disease_type: "fungal",
+            severity_level: "moderate",
+            is_contagious: false,
+            spread_rate: "moderate",
+            symptoms: "",
+            causes: "",
+            affected_plant_ids: []
+        });
+        setIsEditing(false);
+        setSelectedDiseaseDetail(null);
     };
 
     const handlePlantToggle = (plantId) => {
@@ -111,7 +146,7 @@ const Diseases = () => {
                     </div>
                     <button
                         className="btn-primary"
-                        onClick={() => setShowAddModal(true)}
+                        onClick={() => { resetForm(); setShowAddModal(true); }}
                     >
                         <Activity size={20} />
                         <span>Add New Disease</span>
@@ -155,7 +190,7 @@ const Diseases = () => {
                                         <span className="scientific-name">{disease.scientific_name}</span>
                                     </div>
 
-                                    <div className="disease-body-info" style={{ padding: '0 2rem 2rem 2rem' }}>
+                                    <div className="disease-body-info" style={{ padding: '0 2rem 1.5rem 2rem' }}>
                                         <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
                                             {disease.symptoms?.substring(0, 140)}...
                                         </p>
@@ -171,8 +206,11 @@ const Diseases = () => {
                                     </div>
 
                                     <div className="disease-card-footer" style={{ padding: '1.5rem 2rem', borderTop: '1px solid var(--border-light)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--primary)' }}>{disease.treatment_count} Treatments available</span>
-                                        <button className="btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}>View Details</button>
+                                        <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--primary)' }}>{disease.treatment_count} Treatments</span>
+                                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                            <button className="btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }} onClick={() => handleEdit(disease)}>Edit</button>
+                                            <button className="btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }} onClick={() => handleViewDetails(disease)}>View Details</button>
+                                        </div>
                                     </div>
                                 </div>
                             ))
@@ -187,16 +225,16 @@ const Diseases = () => {
                 )}
             </div>
 
-            {/* Senior Standard Modal */}
+            {/* Senior Standard Modal - Add/Edit */}
             {showAddModal && (
                 <div className="modal-overlay">
                     <div className="modal-content-large animate-slide-up">
                         <div className="modal-header">
-                            <h2>Add New Disease</h2>
+                            <h2>{isEditing ? "Edit Disease" : "Add New Disease"}</h2>
                             <button className="close-btn" onClick={() => setShowAddModal(false)}>&times;</button>
                         </div>
 
-                        <form onSubmit={handleSubmitNewDisease} className="add-plant-form">
+                        <form onSubmit={handleSubmitDisease} className="add-plant-form">
                             <div className="form-grid">
                                 <div className="form-left">
                                     <div className="form-group">
@@ -266,8 +304,18 @@ const Diseases = () => {
                                         <textarea
                                             value={newDisease.symptoms}
                                             onChange={(e) => setNewDisease({ ...newDisease, symptoms: e.target.value })}
-                                            rows="4"
+                                            rows="3"
                                             placeholder="Describe the visible signs of the disease..."
+                                        ></textarea>
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label>Cause of Disease</label>
+                                        <textarea
+                                            value={newDisease.causes}
+                                            onChange={(e) => setNewDisease({ ...newDisease, causes: e.target.value })}
+                                            rows="2"
+                                            placeholder="Environmental or biological causes..."
                                         ></textarea>
                                     </div>
 
@@ -296,9 +344,73 @@ const Diseases = () => {
 
                             <div className="modal-footer" style={{ marginTop: '3rem', paddingTop: '2rem', borderTop: '1px solid var(--border-light)', display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
                                 <button type="button" className="btn-secondary" onClick={() => setShowAddModal(false)}>Cancel</button>
-                                <button type="submit" className="btn-primary">Save Disease</button>
+                                <button type="submit" className="btn-primary">{isEditing ? "Update Disease" : "Save Disease"}</button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Senior Standard Modal - View Details */}
+            {showViewModal && selectedDiseaseDetail && (
+                <div className="modal-overlay">
+                    <div className="modal-content-large animate-slide-up">
+                        <div className="modal-header">
+                            <h2>Disease Details</h2>
+                            <button className="close-btn" onClick={() => setShowViewModal(false)}>&times;</button>
+                        </div>
+                        <div className="add-plant-form">
+                            <div className="form-grid">
+                                <div className="form-left">
+                                    <div style={{ background: 'var(--bg-main)', padding: '2rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-light)' }}>
+                                        <h4 style={{ marginBottom: '1.5rem', color: 'var(--primary)', textTransform: 'uppercase', fontSize: '0.8rem', letterSpacing: '0.1em' }}>Profile Summary</h4>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                                            <div>
+                                                <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700 }}>SEVERITY</span>
+                                                <span style={{ fontSize: '1rem', fontWeight: 800, color: selectedDiseaseDetail.severity_level === 'critical' ? '#dc2626' : 'var(--secondary)' }}>{selectedDiseaseDetail.severity_level.toUpperCase()}</span>
+                                            </div>
+                                            <div>
+                                                <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700 }}>TYPE</span>
+                                                <span style={{ fontSize: '1rem', fontWeight: 800 }}>{selectedDiseaseDetail.disease_type.toUpperCase()}</span>
+                                            </div>
+                                            <div>
+                                                <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700 }}>CONTAGIOUS</span>
+                                                <span style={{ fontSize: '1rem', fontWeight: 800 }}>{selectedDiseaseDetail.is_contagious ? 'YES' : 'NO'}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="form-right">
+                                    <div style={{ marginBottom: '2.5rem' }}>
+                                        <h1 style={{ fontSize: '2.5rem', marginBottom: '0.5rem', fontWeight: 800 }}>{selectedDiseaseDetail.name}</h1>
+                                        <p className="scientific-name" style={{ fontSize: '1.2rem', opacity: 0.7 }}>{selectedDiseaseDetail.scientific_name}</p>
+                                    </div>
+
+                                    <div style={{ marginBottom: '2rem' }}>
+                                        <h4 style={{ color: 'var(--primary)', marginBottom: '0.75rem', textTransform: 'uppercase', fontSize: '0.8rem', fontWeight: 800 }}>Symptoms</h4>
+                                        <p style={{ lineHeight: 1.8, background: '#f8fafc', padding: '1.5rem', borderRadius: '8px', borderLeft: '4px solid var(--primary)' }}>{selectedDiseaseDetail.symptoms || "Detailed symptoms not recorded."}</p>
+                                    </div>
+
+                                    <div style={{ marginBottom: '2rem' }}>
+                                        <h4 style={{ color: 'var(--primary)', marginBottom: '0.75rem', textTransform: 'uppercase', fontSize: '0.8rem', fontWeight: 800 }}>Causes</h4>
+                                        <p style={{ lineHeight: 1.8 }}>{selectedDiseaseDetail.causes || "No causes documented."}</p>
+                                    </div>
+
+                                    <div>
+                                        <h4 style={{ color: 'var(--primary)', marginBottom: '1rem', textTransform: 'uppercase', fontSize: '0.8rem', fontWeight: 800 }}>Commonly Affected Plants</h4>
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                                            {selectedDiseaseDetail.affected_plant_names?.map((name, i) => (
+                                                <span key={i} style={{ padding: '0.4rem 0.8rem', background: 'var(--bg-main)', border: '1px solid var(--border-light)', borderRadius: '4px', fontSize: '0.85rem' }}>{name}</span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="modal-footer" style={{ padding: '2rem 3rem', borderTop: '1px solid var(--border-light)', display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
+                            <button className="btn-secondary" onClick={() => setShowViewModal(false)}>Close Archive</button>
+                            <button className="btn-primary" onClick={() => { setShowViewModal(false); handleEdit(selectedDiseaseDetail); }}>Update Record</button>
+                        </div>
                     </div>
                 </div>
             )}
