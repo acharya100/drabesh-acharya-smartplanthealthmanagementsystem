@@ -1,9 +1,11 @@
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Leaf, Activity, Camera, ShieldCheck, LogOut, Settings as SettingsIcon } from "lucide-react";
+import { LayoutDashboard, Leaf, Activity, Camera, ShieldCheck, LogOut, Settings as SettingsIcon, Users } from "lucide-react";
+import SwitchAccountModal from "./SwitchAccountModal";
 
 const Navbar = ({ activePage }) => {
   const navigate = useNavigate();
-
+  const [isSwitchModalOpen, setIsSwitchModalOpen] = useState(false);
   const username = localStorage.getItem("username") || "User";
 
   // This function handles user logout, clearing session data and redirecting to the login page.
@@ -55,11 +57,35 @@ const Navbar = ({ activePage }) => {
           {/* We show a warm greeting to the user to make the platform feel friendly */}
           <span>Welcome,</span>
           <span style={{ color: 'var(--primary)', fontWeight: 800 }}>{username}</span>
+
+          <button
+            onClick={() => setIsSwitchModalOpen(true)}
+            title="Switch Account"
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: 'var(--text-muted)',
+              cursor: 'pointer',
+              display: 'flex',
+              padding: '0.2rem',
+              marginLeft: '0.5rem',
+              transition: 'color 0.2s'
+            }}
+            onMouseOver={(e) => e.currentTarget.style.color = 'var(--primary)'}
+            onMouseOut={(e) => e.currentTarget.style.color = 'var(--text-muted)'}
+          >
+            <Users size={16} />
+          </button>
         </div>
         <button onClick={handleLogout} className="logout-btn">
           <LogOut size={18} />
           <span>Logout</span>
         </button>
+
+        <SwitchAccountModal
+          isOpen={isSwitchModalOpen}
+          onClose={() => setIsSwitchModalOpen(false)}
+        />
       </div>
     </nav>
   );

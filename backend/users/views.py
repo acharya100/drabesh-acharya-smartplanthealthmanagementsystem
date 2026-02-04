@@ -120,3 +120,40 @@ class DeleteAccountView(APIView):
             {'message': 'Your account has been permanently removed. We hope to see you again!'},
             status=status.HTTP_204_NO_CONTENT
         )
+
+class UserListView(APIView):
+    """
+    Provides a list of all registered users.
+    Useful for the 'Switch Account' feature to see available identities.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        users = User.objects.all().values('id', 'username', 'email')
+        return Response(list(users))
+
+class SwitchUserView(APIView):
+    """
+    Allows an authenticated user to switch to another account by obtaining its token.
+    This facilitates easy testing and multi-account management.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user_id = request.data.get('user_id')
+        if not user_id:
+            return Response({'error': 'User ID is required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            target_user = User.objects.get(id=user_id)
+            from rest_framework_simplejwt.tokens import RefreshToken
+            refresh = RefreshToken.for_user(target_user)
+            
+            return Response({
+                'refresh': str(refresh),
+                'access': str(refresh.access_token),
+                'username': target_user.username,
+                'email': target_user.email
+            })
+        except User.DoesNotExist:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)

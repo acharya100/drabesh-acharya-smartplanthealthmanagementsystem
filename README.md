@@ -1,4 +1,4 @@
-# Smart Plant Health Management System 🌿
+# Smart Plant Health Management System made by Drabesh Acharya 🌿
 
 A sophisticated AI-powered platform designed to empower gardeners and farmers with instant plant identification and disease diagnosis. This project combines a robust Django backend with a modern, glassmorphic React frontend to provide a premium user experience.
 
@@ -69,4 +69,4 @@ A sophisticated AI-powered platform designed to empower gardeners and farmers wi
 
 ---
 
-*Developed by Smart Plant Health Management Team.*
+*Developed by Drabesh Acharya*

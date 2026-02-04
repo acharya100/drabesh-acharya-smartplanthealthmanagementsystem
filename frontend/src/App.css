@@ -100,6 +100,23 @@
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
 }
 
+[data-theme='dark'] .page-container,
+[data-theme='dark'] .page-content,
+[data-theme='dark'] .discovery-page {
+  background: var(--bg-main);
+  min-height: 100vh;
+}
+
+[data-theme='dark'] .page-header h1,
+[data-theme='dark'] .discovery-header h1 {
+  color: var(--secondary);
+  /* Ensuring h1 is bright slate/white in dark mode */
+}
+
+[data-theme='dark'] .subtitle {
+  color: var(--text-muted);
+}
+
 
 /* --- Base & Reset --- */
 * {

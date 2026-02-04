@@ -70,6 +70,8 @@ export const authService = {
     updateProfile: (data) => api.post('/auth/update-profile/', data),
     changePassword: (data) => api.post('/auth/change-password/', data),
     deleteAccount: () => api.delete('/auth/delete-account/'),
+    listUsers: () => api.get('/auth/list/'),
+    switchUser: (userId) => api.post('/auth/switch/', { user_id: userId }),
 };
 
 // --- Plant Services ---
