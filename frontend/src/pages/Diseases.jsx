@@ -11,7 +11,7 @@
 import { useState, useEffect } from "react";
 import Navbar from "../components/Navbar";
 import { diseaseService } from "../services/api";
-import { Search, Filter, AlertTriangle, Activity, Info } from "lucide-react";
+import { Search, Filter, AlertTriangle, Activity, Info, Trash2 } from "lucide-react";
 
 const Diseases = () => {
     const [diseases, setDiseases] = useState([]);
@@ -81,6 +81,20 @@ const Diseases = () => {
     const handleViewDetails = (disease) => {
         setSelectedDiseaseDetail(disease);
         setShowViewModal(true);
+    };
+
+    const handleDelete = async (id) => {
+        if (window.confirm("Are you sure you want to delete this disease record? This cannot be undone.")) {
+            try {
+                setLoading(true);
+                await diseaseService.delete(id);
+                await loadDiseases();
+            } catch (error) {
+                console.error("Error deleting disease:", error);
+                alert("Failed to delete disease record. Check your permissions.");
+                setLoading(false);
+            }
+        }
     };
 
     const handleSubmitDisease = async (e) => {
@@ -210,6 +224,9 @@ const Diseases = () => {
                                         <div style={{ display: 'flex', gap: '0.5rem' }}>
                                             <button className="btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }} onClick={() => handleEdit(disease)}>Edit</button>
                                             <button className="btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }} onClick={() => handleViewDetails(disease)}>View Details</button>
+                                            <button className="btn-secondary" style={{ padding: '0.4rem', fontSize: '0.8rem', color: 'var(--danger)', borderColor: 'var(--danger)' }} onClick={() => handleDelete(disease.id)} title="Delete Disease">
+                                                <Trash2 size={16} />
+                                            </button>
                                         </div>
                                     </div>
                                 </div>

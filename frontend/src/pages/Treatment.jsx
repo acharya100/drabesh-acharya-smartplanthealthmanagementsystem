@@ -12,7 +12,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { treatmentService, diseaseService } from "../services/api";
-import { Search, Filter, ShieldCheck, List, Package, ArrowRight } from "lucide-react";
+import { Search, Filter, ShieldCheck, List, Package, ArrowRight, Trash2 } from "lucide-react";
 
 const Treatment = () => {
   const [treatments, setTreatments] = useState([]);
@@ -89,6 +89,20 @@ const Treatment = () => {
   const handleViewDetails = (treatment) => {
     setSelectedTreatment(treatment);
     setShowViewModal(true);
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm("Are you sure you want to delete this treatment plan? This action cannot be undone.")) {
+      try {
+        setLoading(true);
+        await treatmentService.delete(id);
+        await loadTreatments();
+      } catch (error) {
+        console.error("Error deleting treatment:", error);
+        alert("Failed to delete treatment plan. Check your permissions.");
+        setLoading(false);
+      }
+    }
   };
 
   const handleSearch = (e) => {
@@ -194,6 +208,9 @@ const Treatment = () => {
                     <div style={{ display: 'flex', gap: '0.5rem' }}>
                       <button className="btn-secondary" style={{ padding: '0.4rem 1rem', fontSize: '0.8rem' }} onClick={() => handleEdit(t)}>Edit</button>
                       <button className="btn-secondary" style={{ padding: '0.4rem 1rem', fontSize: '0.8rem' }} onClick={() => handleViewDetails(t)}>View Details</button>
+                      <button className="btn-secondary" style={{ padding: '0.4rem', fontSize: '0.8rem', color: 'var(--danger)', borderColor: 'var(--danger)' }} onClick={() => handleDelete(t.id)} title="Delete Treatment">
+                        <Trash2 size={16} />
+                      </button>
                     </div>
                   </div>
                 </div>

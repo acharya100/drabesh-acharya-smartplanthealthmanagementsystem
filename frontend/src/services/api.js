@@ -103,6 +103,9 @@ export const diseaseService = {
 export const treatmentService = {
     getAll: (params) => api.get('/diseases/treatments/', { params }),
     getById: (id) => api.get(`/diseases/treatments/${id}/`),
+    create: (data) => api.post('/diseases/treatments/', data),
+    update: (id, data) => api.patch(`/diseases/treatments/${id}/`, data),
+    delete: (id) => api.delete(`/diseases/treatments/${id}/`),
 };
 
 // --- AI & Prediction Services ---

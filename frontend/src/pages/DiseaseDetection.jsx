@@ -64,7 +64,9 @@ const DiseaseDetection = () => {
       }
     } catch (err) {
       console.error("Detection error:", err);
-      setError(err.response?.data?.message || "An error occurred during diagnosis.");
+      const serverData = err.response?.data;
+      const errorMsg = serverData?.message || serverData?.error || (serverData ? JSON.stringify(serverData) : null);
+      setError(errorMsg || "An error occurred during diagnosis.");
     } finally {
       setLoading(false);
     }

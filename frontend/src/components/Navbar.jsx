@@ -4,8 +4,13 @@ import { LayoutDashboard, Leaf, Activity, Camera, ShieldCheck, LogOut } from "lu
 const Navbar = ({ activePage }) => {
   const navigate = useNavigate();
 
+  const username = localStorage.getItem("username") || "User";
+
   const logout = () => {
     localStorage.removeItem("isAuthenticated");
+    localStorage.removeItem("username");
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
     navigate("/");
   };
 
@@ -38,6 +43,10 @@ const Navbar = ({ activePage }) => {
           <ShieldCheck size={18} />
           <span>Treatments</span>
         </Link>
+        <div className="nav-user-greeting" style={{ marginRight: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-muted)', fontWeight: 600, fontSize: '0.9rem' }}>
+          <span>Welcome,</span>
+          <span style={{ color: 'var(--primary)', fontWeight: 800 }}>{username}</span>
+        </div>
         <button className="logout-btn" onClick={logout}>
           <LogOut size={18} />
           <span>Logout</span>

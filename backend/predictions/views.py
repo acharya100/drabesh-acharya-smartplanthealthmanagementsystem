@@ -75,11 +75,12 @@ class PredictionViewSet(viewsets.ModelViewSet):
             except Exception as e:
                 import traceback
                 error_trace = traceback.format_exc()
-                print(f"Identification Error: {str(e)}\n{error_trace}")
+                with open('inference.log', 'a') as f:
+                    f.write(f"--- Identification Error ---\n{str(e)}\n{error_trace}\n")
                 return Response({
                     "success": False,
                     "message": f"Identification Error: {str(e)}",
-                    "details": error_trace if request.user.is_staff else None
+                    "details": error_trace
                 }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -140,11 +141,12 @@ class PredictionViewSet(viewsets.ModelViewSet):
             except Exception as e:
                 import traceback
                 error_trace = traceback.format_exc()
-                print(f"Prediction Error: {str(e)}\n{error_trace}")
+                with open('inference.log', 'a') as f:
+                    f.write(f"--- Detection Error ---\n{str(e)}\n{error_trace}\n")
                 return Response({
                     "success": False,
                     "message": f"Inference Error: {str(e)}",
-                    "details": error_trace if request.user.is_staff else None
+                    "details": error_trace
                 }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

@@ -12,7 +12,7 @@ import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { plantService, predictionService } from "../services/api";
-import { Search, Filter, Plus, Thermometer, Droplets, Sun, Info } from "lucide-react";
+import { Search, Filter, Plus, Thermometer, Droplets, Sun, Info, Trash2 } from "lucide-react";
 
 const Plants = () => {
   const [plants, setPlants] = useState([]);
@@ -149,6 +149,20 @@ const Plants = () => {
     setShowViewModal(true);
   };
 
+  const handleDelete = async (id) => {
+    if (window.confirm("Are you sure you want to delete this plant? This action cannot be undone.")) {
+      try {
+        setLoading(true);
+        await plantService.delete(id);
+        await loadPlants();
+      } catch (error) {
+        console.error("Error deleting plant:", error);
+        alert("Failed to delete plant. Check your permissions or network connection.");
+        setLoading(false);
+      }
+    }
+  };
+
   const handleSubmitNewPlant = async (e) => {
     e.preventDefault();
     try {
@@ -265,12 +279,15 @@ const Plants = () => {
                         {plant.is_edible && <span className="badge badge-edible">Edible</span>}
                         {plant.is_toxic && <span className="badge badge-toxic">Toxic</span>}
                       </div>
-                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <div style={{ display: 'flex', gap: '0.5rem', width: '100%', justifyContent: 'flex-end' }}>
                         <button className="btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }} onClick={() => handleEdit(plant)}>
                           Edit
                         </button>
                         <button className="btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }} onClick={() => handleViewDetails(plant)}>
                           View Details
+                        </button>
+                        <button className="btn-secondary" style={{ padding: '0.4rem', fontSize: '0.8rem', color: 'var(--danger)', borderColor: 'var(--danger)' }} onClick={() => handleDelete(plant.id)} title="Delete Plant">
+                          <Trash2 size={16} />
                         </button>
                       </div>
                     </div>
