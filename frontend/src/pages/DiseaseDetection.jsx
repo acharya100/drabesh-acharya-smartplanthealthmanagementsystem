@@ -84,23 +84,23 @@ const DiseaseDetection = () => {
       <Navbar activePage="disease" />
 
       <div className="discovery-content animate-slide-up">
-        <header className="discovery-header" style={{ textAlign: 'center', marginBottom: '4rem' }}>
-          <div className="header-badge" style={{ display: 'inline-block', padding: '0.4rem 1rem', background: 'var(--primary-subtle)', color: 'var(--primary)', borderRadius: '100px', fontSize: '0.75rem', fontWeight: 800, letterSpacing: '0.1em', marginBottom: '1.5rem' }}>AI DISEASE DETECTION</div>
-          <h1 style={{ fontSize: '3rem', fontWeight: 800, color: 'var(--secondary)', marginBottom: '1rem' }}>Detect Plant Disease</h1>
-          <p style={{ maxWidth: '700px', margin: '0 auto', fontSize: '1.1rem', color: 'var(--text-muted)' }}>Upload a photo of your plant to identify diseases and get expert treatment recommendations instantly.</p>
+        <header className="discovery-header mb-8" style={{ textAlign: 'center' }}>
+          <div className="header-badge" style={{ display: 'inline-block', padding: '0.4rem 1rem', background: 'var(--primary-subtle)', color: 'var(--primary)', borderRadius: '100px', fontSize: '0.75rem', fontWeight: 800, letterSpacing: '0.1em', marginBottom: '1rem' }}>AI DISEASE DETECTION</div>
+          <h1 style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--secondary)', marginBottom: '0.5rem' }}>Detect Plant Disease</h1>
+          <p style={{ maxWidth: '600px', margin: '0 auto', fontSize: '1rem', color: 'var(--text-muted)' }}>Upload a photo of your plant for instant AI-based diagnosis.</p>
         </header>
 
-        <div className="detection-layout" style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '3rem', alignItems: 'start' }}>
+        <div className="detection-layout">
           <div className="detection-main">
-            <div className="upload-container-v2" style={{ background: 'white', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--glass-shadow)', padding: '2rem', border: '1px solid var(--border-light)' }}>
+            <div className="upload-container-v2">
               {!preview ? (
-                <div className="upload-dropzone" onClick={() => document.getElementById('fileInput').click()} style={{ border: '2px dashed var(--border-light)', borderRadius: 'var(--radius-md)', padding: '5rem 2rem', textAlign: 'center', cursor: 'pointer', transition: 'all 0.3s ease' }}>
-                  <div className="dropzone-icon" style={{ color: 'var(--primary)', marginBottom: '2rem' }}>
-                    <Upload size={64} style={{ opacity: 0.6 }} />
+                <div className="upload-dropzone" onClick={() => document.getElementById('fileInput').click()} style={{ border: '2px dashed var(--border-light)', borderRadius: 'var(--radius-md)', padding: '4rem 2rem', textAlign: 'center', cursor: 'pointer', transition: 'all 0.3s ease' }}>
+                  <div className="dropzone-icon" style={{ color: 'var(--primary)', marginBottom: '1.5rem' }}>
+                    <Upload size={56} style={{ opacity: 0.6 }} />
                   </div>
-                  <h3 style={{ fontSize: '1.5rem', marginBottom: '0.75rem' }}>Upload Plant Photo</h3>
-                  <p style={{ color: 'var(--text-muted)' }}>High-resolution JPEG or PNG recommended (Max 5MB)</p>
-                  <div className="btn-primary mt-6" style={{ display: 'inline-flex', marginTop: '2rem' }}>
+                  <h3 style={{ fontSize: '1.4rem', marginBottom: '0.5rem' }}>Upload Plant Photo</h3>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>JPEG or PNG (Max 5MB)</p>
+                  <div className="btn-primary mt-4" style={{ display: 'inline-flex' }}>
                     Choose Photo
                   </div>
                   <input
@@ -119,22 +119,22 @@ const DiseaseDetection = () => {
                       <X size={20} />
                     </button>
                   </div>
-                  <div className="preview-meta">
+                  <div className="preview-meta" style={{ width: '100%', maxWidth: '450px' }}>
                     <div className="preview-actions">
                       <button
                         className="btn-primary"
                         onClick={handleDetect}
                         disabled={loading}
-                        style={{ width: '100%', height: '60px', fontSize: '1.1rem', fontWeight: 700 }}
+                        style={{ width: '100%', height: '54px', fontSize: '1rem', fontWeight: 700 }}
                       >
                         {loading ? (
                           <div className="loader-inline" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem' }}>
-                            <RefreshCw className="animate-spin" size={24} />
-                            <span>Analyzing photo...</span>
+                            <RefreshCw className="animate-spin" size={20} />
+                            <span>Analyzing...</span>
                           </div>
                         ) : (
                           <div className="loader-inline" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem' }}>
-                            <Camera size={24} />
+                            <Camera size={20} />
                             <span>Detect Disease</span>
                           </div>
                         )}

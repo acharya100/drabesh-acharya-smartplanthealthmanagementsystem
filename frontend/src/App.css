@@ -451,21 +451,49 @@ textarea:focus {
 .preview-image-wrapper {
   position: relative;
   width: 100%;
+  max-width: 450px;
+  max-height: 450px;
   aspect-ratio: 1 / 1;
   background: #f1f5f9;
   border-radius: var(--radius-md);
   overflow: hidden;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-  margin-bottom: 2rem;
+  box-shadow: var(--shadow-md);
+  margin: 0 auto 1.5rem auto;
   display: flex;
   align-items: center;
   justify-content: center;
+  border: 1px solid var(--border-light);
 }
 
 .preview-image-wrapper img {
-  max-width: 100%;
-  max-height: 100%;
+  width: 100%;
+  height: 100%;
   object-fit: contain;
+}
+
+.btn-close-preview {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: white;
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  color: var(--text-muted);
+  z-index: 10;
+  transition: all 0.2s ease;
+}
+
+.btn-close-preview:hover {
+  background: var(--danger);
+  color: white;
+  transform: scale(1.1);
 }
 
 .plant-card-v2:hover .plant-image-container img {
@@ -562,17 +590,45 @@ textarea:focus {
   text-align: center;
 }
 
-/* Responsive adjustments */
-@media (max-width: 1024px) {
-  .navbar {
-    padding: 0 2rem;
-  }
+/* --- Disease Detection Page Styles --- */
+.discovery-page {
+  min-height: 100vh;
+  background: var(--bg-main);
+}
 
-  .form-grid {
-    grid-template-columns: 1fr;
-  }
+.discovery-content {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 4rem 2rem;
+}
 
-  .image-upload-area {
-    aspect-ratio: 16/9;
+.upload-dropzone:hover {
+  background: var(--primary-subtle);
+  border-color: var(--primary) !important;
+}
+
+.detection-layout {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 3rem;
+  align-items: start;
+}
+
+@media (max-width: 992px) {
+  .detection-layout {
+    grid-template-columns: 1fr !important;
+    gap: 2rem;
   }
+}
+
+.upload-container-v2 {
+  background: white;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--glass-shadow);
+  padding: 2.5rem;
+  border: 1px solid var(--border-light);
+}
+
+.hidden {
+  display: none;
 }
