@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Leaf, Activity, Camera, ShieldCheck, LogOut, Settings as SettingsIcon, Users } from "lucide-react";
+import { LayoutDashboard, Leaf, Activity, Camera, ShieldCheck, LogOut, Settings as SettingsIcon, Users, History as HistoryIcon } from "lucide-react";
 import SwitchAccountModal from "./SwitchAccountModal";
 
 const Navbar = ({ activePage }) => {
@@ -43,6 +43,10 @@ const Navbar = ({ activePage }) => {
         <Link to="/disease" className={`nav-link ${activePage === "disease" ? "active" : ""}`}>
           <Camera size={18} />
           <span>Detection</span>
+        </Link>
+        <Link to="/history" className={`nav-link ${activePage === "history" ? "active" : ""}`}>
+          <HistoryIcon size={18} />
+          <span>History</span>
         </Link>
         <Link to="/treatment" className={`nav-link ${activePage === "treatment" ? "active" : ""}`}>
           <ShieldCheck size={18} />
