@@ -56,91 +56,115 @@ const SwitchAccountModal = ({ isOpen, onClose }) => {
     if (!isOpen) return null;
 
     return (
-        <div className="modal-overlay">
-            <div className="modal-content animate-slide-up" style={{ maxWidth: '500px' }}>
-                <div className="modal-header">
+        <div className="modal-overlay" onClick={onClose}>
+            <div
+                className="modal-content animate-slide-up"
+                style={{
+                    maxWidth: '500px',
+                    width: '90%',
+                    background: 'var(--bg-card)',
+                    borderRadius: 'var(--radius-lg)',
+                    boxShadow: 'var(--shadow-xl)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    maxHeight: '85vh',
+                    position: 'relative'
+                }}
+                onClick={e => e.stopPropagation()}
+            >
+                <div className="modal-header" style={{ padding: '1.5rem', borderBottom: '1px solid var(--border-light)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                        <div className="status-pill" style={{ background: 'var(--primary-subtle)', color: 'var(--primary)', padding: '0.5rem', borderRadius: '10px' }}>
-                            <ShieldCheck size={20} />
+                        <div className="status-pill" style={{ background: 'var(--primary-subtle)', color: 'var(--primary)', padding: '0.6rem', borderRadius: '12px' }}>
+                            <ShieldCheck size={24} />
                         </div>
                         <div>
-                            <h2 style={{ fontSize: '1.5rem', color: 'var(--text-main)' }}>Switch Identity</h2>
-                            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Quickly jump between your accounts</p>
+                            <h2 style={{ fontSize: '1.25rem', color: 'var(--text-main)', margin: 0, fontWeight: 700 }}>Switch Identity</h2>
+                            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0 }}>Select an account to continue</p>
                         </div>
                     </div>
                     <button
                         className="close-btn"
                         onClick={onClose}
+                        title="Close"
                         style={{
-                            background: 'var(--bg-card)',
-                            border: '1px solid var(--border-light)',
-                            color: 'var(--text-main)',
-                            borderRadius: '8px',
-                            padding: '4px',
+                            background: 'transparent',
+                            border: 'none',
+                            color: 'var(--text-muted)',
+                            borderRadius: '50%',
+                            padding: '0.5rem',
+                            cursor: 'pointer',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            cursor: 'pointer'
+                            width: '40px',
+                            height: '40px',
+                            transition: 'all 0.2s'
                         }}
+                        onMouseOver={(e) => { e.currentTarget.style.background = 'var(--bg-main)'; e.currentTarget.style.color = 'var(--danger)'; }}
+                        onMouseOut={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-muted)'; }}
                     >
-                        <X size={20} />
+                        <X size={24} />
                     </button>
                 </div>
 
-                <div className="modal-body" style={{ padding: '1.5rem 0' }}>
+                <div className="modal-body" style={{ padding: '0', overflowY: 'auto' }}>
                     {loading ? (
-                        <div style={{ padding: '2rem', textAlign: 'center' }}>
-                            <RefreshCw className="animate-spin text-primary" size={32} />
-                            <p className="mt-4">Loading accounts...</p>
+                        <div style={{ padding: '3rem', textAlign: 'center' }}>
+                            <RefreshCw className="animate-spin text-primary" size={32} style={{ margin: '0 auto' }} />
+                            <p className="mt-4" style={{ color: 'var(--text-muted)' }}>Loading accounts...</p>
                         </div>
                     ) : (
-                        <div className="account-list" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                            {users.map(user => (
+                        <div className="account-list" style={{ display: 'flex', flexDirection: 'column' }}>
+                            {users.map((user, index) => (
                                 <div
                                     key={user.id}
-                                    className={`account-item ${user.username === currentUsername ? 'active' : ''}`}
                                     style={{
                                         display: 'flex',
                                         alignItems: 'center',
                                         justifyContent: 'space-between',
-                                        padding: '1rem 1.5rem',
-                                        background: user.username === currentUsername ? 'var(--primary-subtle)' : 'var(--bg-main)',
-                                        border: '1px solid',
-                                        borderColor: user.username === currentUsername ? 'var(--primary)' : 'var(--border-light)',
-                                        borderRadius: 'var(--radius-sm)',
-                                        transition: 'all 0.2s ease'
+                                        padding: '1.25rem 1.5rem',
+                                        background: user.username === currentUsername ? 'var(--primary-subtle)' : 'transparent',
+                                        borderBottom: index !== users.length - 1 ? '1px solid var(--border-light)' : 'none',
+                                        transition: 'background 0.2s'
                                     }}
+                                    className="account-item-hover"
                                 >
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                                        <div style={{ background: 'var(--bg-card)', padding: '0.75rem', borderRadius: '50%', color: 'var(--text-muted)', border: '1px solid var(--border-light)' }}>
-                                            <User size={18} />
+                                        <div style={{
+                                            width: '40px', height: '40px',
+                                            background: user.username === currentUsername ? 'var(--primary)' : 'var(--bg-main)',
+                                            color: user.username === currentUsername ? 'white' : 'var(--text-muted)',
+                                            borderRadius: '50%',
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            border: user.username === currentUsername ? 'none' : '1px solid var(--border-light)'
+                                        }}>
+                                            <User size={20} />
                                         </div>
                                         <div>
-                                            <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>{user.username}</div>
-                                            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                                                <Mail size={12} /> {user.email}
-                                            </div>
+                                            <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-main)' }}>{user.username}</div>
+                                            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{user.email}</div>
                                         </div>
                                     </div>
 
                                     {user.username === currentUsername ? (
-                                        <div style={{
-                                            fontSize: '0.75rem',
+                                        <span style={{
+                                            fontSize: '0.7rem',
                                             fontWeight: 800,
-                                            color: '#fff',
-                                            background: 'var(--primary)',
+                                            color: 'var(--primary)',
+                                            background: 'rgba(255,255,255,0.5)',
                                             padding: '4px 8px',
                                             borderRadius: '6px',
-                                            textTransform: 'uppercase'
-                                        }}>Current</div>
+                                            textTransform: 'uppercase',
+                                            letterSpacing: '0.05em'
+                                        }}>Current</span>
                                     ) : (
                                         <button
                                             className="btn-primary"
-                                            style={{ padding: '0.4rem 1rem', fontSize: '0.8rem' }}
+                                            style={{ padding: '0.4rem 1rem', fontSize: '0.8rem', minWidth: '80px' }}
                                             onClick={() => handleSwitch(user.id)}
                                             disabled={switchingId === user.id}
                                         >
-                                            {switchingId === user.id ? "Switching..." : "Switch"}
+                                            {switchingId === user.id ? "..." : "Switch"}
                                         </button>
                                     )}
                                 </div>
@@ -149,16 +173,19 @@ const SwitchAccountModal = ({ isOpen, onClose }) => {
                     )}
 
                     {error && (
-                        <div style={{ marginTop: '1rem', color: 'var(--danger)', fontSize: '0.85rem', textAlign: 'center', background: '#fee2e2', padding: '0.75rem', borderRadius: 'var(--radius-sm)' }}>
+                        <div style={{ margin: '1rem', color: '#991b1b', fontSize: '0.85rem', textAlign: 'center', background: '#fee2e2', padding: '0.75rem', borderRadius: 'var(--radius-sm)' }}>
                             {error}
                         </div>
                     )}
                 </div>
 
-                <div className="modal-footer" style={{ borderTop: 'none', padding: '1rem 1.5rem 2rem' }}>
-                    <p style={{ fontSize: '0.85rem', color: 'var(--text-main)', opacity: 0.8, textAlign: 'center', fontWeight: 500 }}>
-                        Data isolation ensures each identity sees only their own plants.
-                    </p>
+                <div className="modal-footer" style={{ borderTop: '1px solid var(--border-light)', padding: '1rem', background: 'var(--bg-main)' }}>
+                    <button
+                        onClick={onClose}
+                        style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border-light)', background: 'white', borderRadius: 'var(--radius-sm)', cursor: 'pointer', color: 'var(--text-muted)', fontWeight: 600 }}
+                    >
+                        Cancel
+                    </button>
                 </div>
             </div>
         </div>
