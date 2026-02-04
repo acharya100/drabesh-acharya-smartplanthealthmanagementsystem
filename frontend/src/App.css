@@ -50,29 +50,56 @@
 }
 
 [data-theme='dark'] {
-  --primary: #22c55e;
-  /* Brighter green for dark mode contrast */
-  --primary-light: #4ade80;
+  /* High-end Dark Mode Palette - Using Slate and Emerald */
+  --primary: #10b981;
+  --primary-light: #34d399;
   --primary-subtle: #064e3b;
   --secondary: #f8fafc;
   --accent: #1e293b;
 
-  --bg-main: #0b0f1a;
-  --bg-card: #151c2c;
+  --bg-main: #0f172a;
+  /* Deep Slate - professional and calm */
+  --bg-card: #1e293b;
+  /* Slightly lighter slate for cards */
   --text-main: #f1f5f9;
   --text-muted: #94a3b8;
-  --border-light: #1e293b;
-  --border-focus: #22c55e;
+  --border-light: #334155;
+  --border-focus: #10b981;
 
-  --glass-bg: rgba(15, 28, 44, 0.85);
-  --glass-border: rgba(255, 255, 255, 0.05);
+  --glass-bg: rgba(30, 41, 59, 0.8);
+  --glass-border: rgba(255, 255, 255, 0.1);
 
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.6);
+  --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.7);
 
-  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
 }
+
+/* Global Dark Mode Overrides for consistency across all pages */
+[data-theme='dark'] input,
+[data-theme='dark'] select,
+[data-theme='dark'] textarea {
+  background: #0f172a;
+  /* Keeping inputs dark to match the theme */
+  color: #f1f5f9;
+  border-color: #334155;
+}
+
+[data-theme='dark'] .btn-secondary {
+  background: #1e293b;
+  color: #f1f5f9;
+  border-color: #334155;
+}
+
+[data-theme='dark'] .btn-secondary:hover {
+  background: #334155;
+}
+
+[data-theme='dark'] .navbar {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
 
 /* --- Base & Reset --- */
 * {

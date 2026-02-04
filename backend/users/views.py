@@ -47,9 +47,17 @@ class ChangePasswordView(APIView):
         )
 
 class UpdateProfileView(APIView):
+    """
+    Handles fetching and updating the user's personal profile information.
+    
+    This is where users can come to change their display name (username) or 
+    update their email address if it changes. We make sure to check for 
+    duplicates so nobody accidentally takes someone else's username or email!
+    """
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
+        # Simply return the current user's details so the frontend can pre-fill the form
         user = request.user
         return Response({
             'username': user.username,
@@ -61,27 +69,32 @@ class UpdateProfileView(APIView):
         email = request.data.get('email')
         username = request.data.get('username')
 
+        # If a new email is provided, we need to make sure it's not already in use
         if email:
+            # Check if email is already taken by another user
             if User.objects.filter(email=email).exclude(id=user.id).exists():
                 return Response(
-                    {'error': 'Email is already in use'},
+                    {'error': 'Whoops! That email is already registered to another account.'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
             user.email = email
 
+        # Same goes for the username - it needs to be unique across our platform
         if username:
+            # Check if username is already taken by another user
             if User.objects.filter(username=username).exclude(id=user.id).exists():
                 return Response(
-                    {'error': 'Username is already in use'},
+                    {'error': 'Sorry, that username is already taken. Try something more unique!'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
             user.username = username
 
+        # Save the changes to our database
         user.save()
 
         return Response(
             {
-                'message': 'Profile updated successfully',
+                'message': 'Your profile has been updated successfully! ✨',
                 'email': user.email,
                 'username': user.username
             },
@@ -89,12 +102,21 @@ class UpdateProfileView(APIView):
         )
 
 class DeleteAccountView(APIView):
+    """
+    The 'Danger Zone' view. This allows a user to permanently say goodbye
+    and remove their account from our system.
+    
+    WARNING: This action is destructive and removes all plants and history
+    associated with the user.
+    """
     permission_classes = [IsAuthenticated]
 
     def delete(self, request):
+        # We find the requesting user and let them delete themselves
         user = request.user
         user.delete()
+        # No content returned (204) since the user object is gone
         return Response(
-            {'message': 'Account deleted successfully'},
+            {'message': 'Your account has been permanently removed. We hope to see you again!'},
             status=status.HTTP_204_NO_CONTENT
         )

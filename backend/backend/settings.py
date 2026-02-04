@@ -110,7 +110,17 @@ DATABASES = {
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
 
 
+# Custom User Model configuration
+# We use a custom user so that email can be the primary unique identifier
 AUTH_USER_MODEL = 'users.CustomUser'
+
+# Authentication Backends
+# We add our custom backend so users can login with either their email or username. 
+# This makes the app much easier to access for different user preferences.
+AUTHENTICATION_BACKENDS = [
+    'users.backends.EmailOrUsernameModelBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
 
 AUTH_PASSWORD_VALIDATORS = [
     {

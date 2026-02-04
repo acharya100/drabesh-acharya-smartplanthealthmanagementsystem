@@ -115,26 +115,29 @@ class PlantViewSet(viewsets.ModelViewSet):
     
     def get_queryset(self):
         """
-        Returns optimized queryset with optional filtering.
+        Customizes the queryset to ensure users only see their own plants.
         
-        Prefetches related diseases for efficient database queries.
-        Supports custom query parameters for advanced filtering.
+        This is critical for privacy and account isolation. We use the current 
+        request user to filter the Plant records. We also prefetch related diseases 
+        to keep the database performance fast and snappy.
         
         Returns:
-            Filtered and optimized queryset
+            A queryset of plants belonging only to the authenticated user.
         """
-        queryset = super().get_queryset()
+        # Start with all plants and then filter down to the owner
+        queryset = Plant.objects.filter(user=self.request.user)
         
-        # Prefetch related diseases for efficiency
+        # We prefetch diseases so that when the UI asks for them, we don't have to 
+        # keep hitting the database over and over (avoids the N+1 problem).
         queryset = queryset.prefetch_related('diseases')
         
-        # Custom filter: low maintenance plants
+        # If the user wants to find easy-to-care-for plants, we filter them here.
         if self.request.query_params.get('low_maintenance') == 'true':
             queryset = queryset.filter(
                 difficulty_level__in=['beginner', 'intermediate']
             )
         
-        # Custom filter: temperature range
+        # Temperature filtering - useful for users in specific climates.
         min_temp = self.request.query_params.get('min_temp')
         max_temp = self.request.query_params.get('max_temp')
         
@@ -175,30 +178,6 @@ class PlantViewSet(viewsets.ModelViewSet):
         """
         return super().retrieve(request, *args, **kwargs)
     
-    def create(self, request, *args, **kwargs):
-        """
-        Creates a new plant entry (admin only).
-        
-        Validates all plant data including temperature ranges
-        and ensures toxic plants are not marked as edible.
-        
-        Returns:
-            Created plant data with 201 status
-        """
-        return super().create(request, *args, **kwargs)
-    
-    def update(self, request, *args, **kwargs):
-        """
-        Updates an existing plant (admin only).
-        
-        Supports both full update (PUT) and partial update (PATCH).
-        Validates all modified fields.
-        
-        Returns:
-            Updated plant data
-        """
-        return super().update(request, *args, **kwargs)
-    
     def destroy(self, request, *args, **kwargs):
         """
         Deletes a plant entry (admin only).
@@ -210,6 +189,15 @@ class PlantViewSet(viewsets.ModelViewSet):
             204 No Content on success
         """
         return super().destroy(request, *args, **kwargs)
+
+    def perform_create(self, serializer):
+        """
+        Automatically assigns the currently logged-in user as the owner of the plant.
+        
+        This is a standard security practice to ensure that users can't create
+        records for other people.
+        """
+        serializer.save(user=self.request.user)
     
     @action(detail=False, methods=['get'])
     def statistics(self, request):

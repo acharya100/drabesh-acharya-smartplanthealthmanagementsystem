@@ -11,18 +11,25 @@ Sprint: 3 - Plant and Disease Management
 
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
-
+from django.conf import settings # Import settings to access AUTH_USER_MODEL
 
 class Plant(models.Model):
     """
-    Represents a plant species in the system.
-    
-    This model stores detailed information about plants including their
-    botanical classification, care requirements, and growth characteristics.
-    Used for plant identification and providing care recommendations to users.
+    Represents a specific plant entry owned by a user.
+    Each user has their own collection of plants, allowing for personalized
+    tracking and management within the Smart Plant Health system.
     """
+    # Each plant must be owned by a user. This ensures that when you login, 
+    # you only see the plants you've added, avoiding clutter from other users.
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.CASCADE, 
+        related_name='plants',
+        help_text="The authorized user who owns this specific plant entry"
+    )
     
-    # Choices for categorical fields
+    # We provide a variety of choices for sunlight and water to make it easy for users
+    # to select accurate care requirements for their plants.
     SUNLIGHT_CHOICES = [
         ('full_sun', 'Full Sun (6+ hours)'),
         ('partial_sun', 'Partial Sun (4-6 hours)'),

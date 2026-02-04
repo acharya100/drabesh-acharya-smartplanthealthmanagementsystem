@@ -6,7 +6,8 @@ const Navbar = ({ activePage }) => {
 
   const username = localStorage.getItem("username") || "User";
 
-  const logout = () => {
+  // This function handles user logout, clearing session data and redirecting to the login page.
+  const handleLogout = () => {
     localStorage.removeItem("isAuthenticated");
     localStorage.removeItem("username");
     localStorage.removeItem("access_token");
@@ -51,10 +52,11 @@ const Navbar = ({ activePage }) => {
         </Link>
 
         <div className="nav-user-greeting" style={{ marginLeft: '1rem', marginRight: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-muted)', fontWeight: 600, fontSize: '0.9rem' }}>
+          {/* We show a warm greeting to the user to make the platform feel friendly */}
           <span>Welcome,</span>
           <span style={{ color: 'var(--primary)', fontWeight: 800 }}>{username}</span>
         </div>
-        <button className="logout-btn" onClick={logout}>
+        <button onClick={handleLogout} className="logout-btn">
           <LogOut size={18} />
           <span>Logout</span>
         </button>

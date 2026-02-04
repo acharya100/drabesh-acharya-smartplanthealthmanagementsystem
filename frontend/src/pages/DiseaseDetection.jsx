@@ -85,6 +85,7 @@ const DiseaseDetection = () => {
 
       <div className="discovery-content animate-slide-up">
         <header className="discovery-header mb-8" style={{ textAlign: 'center' }}>
+          {/* Badge is a nice tiny UI detail that makes the page feel premium */}
           <div className="header-badge" style={{ display: 'inline-block', padding: '0.4rem 1rem', background: 'var(--primary-subtle)', color: 'var(--primary)', borderRadius: '100px', fontSize: '0.75rem', fontWeight: 800, letterSpacing: '0.1em', marginBottom: '1rem' }}>AI DISEASE DETECTION</div>
           <h1 style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--secondary)', marginBottom: '0.5rem' }}>Detect Plant Disease</h1>
           <p style={{ maxWidth: '600px', margin: '0 auto', fontSize: '1rem', color: 'var(--text-muted)' }}>Upload a photo of your plant for instant AI-based diagnosis.</p>
@@ -153,9 +154,11 @@ const DiseaseDetection = () => {
           </div>
 
           <aside className="detection-sidebar">
+            {/* If we have a result, we show it here in a beautiful card */}
             {result ? (
-              <div className="result-card-v2 animate-slide-up" style={{ background: 'white', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--glass-shadow)', overflow: 'hidden', border: '1px solid var(--border-light)' }}>
+              <div className="result-card-v2 animate-slide-up" style={{ background: 'var(--bg-card)', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--glass-shadow)', overflow: 'hidden', border: '1px solid var(--border-light)' }}>
                 <div className="result-header" style={{ padding: '2.5rem', background: 'var(--bg-main)', borderBottom: '1px solid var(--border-light)' }}>
+                  {/* Status pills help users quickly see if their plant is okay or not */}
                   <div className={`status-pill ${result.is_healthy ? 'healthy' : 'infected'}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.4rem 0.8rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', marginBottom: '1.5rem', background: result.is_healthy ? 'var(--primary-subtle)' : '#fee2e2', color: result.is_healthy ? 'var(--primary)' : '#dc2626' }}>
                     {result.is_healthy ? <CheckCircle size={16} /> : <AlertTriangle size={16} />}
                     {result.is_healthy ? 'Plant is Healthy' : 'Disease Detected'}

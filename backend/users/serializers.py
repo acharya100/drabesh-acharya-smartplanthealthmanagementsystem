@@ -1,6 +1,6 @@
 
 from rest_framework import serializers
-from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model, authenticate
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 User = get_user_model()
@@ -24,23 +24,13 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     username_field = 'username'
     
     def validate(self, attrs):
-        # Map 'username' to 'email' for authentication
-        credentials = {
-            'email': attrs.get('username'),
-            'password': attrs.get('password')
-        }
-        
-        # Call parent validate with modified attrs
-        attrs_copy = attrs.copy()
-        attrs_copy['email'] = attrs_copy.pop('username')
-        
-        # Use the parent class validation but with email
-        from django.contrib.auth import authenticate
-        
+        # We use the built-in authenticate function. 
+        # Our EmailOrUsernameModelBackend will check if the input is an email or username
+        # and verify the password accordingly.
         user = authenticate(
             request=self.context.get('request'),
-            username=credentials['email'],  # Django's authenticate uses 'username' kwarg but checks USERNAME_FIELD
-            password=credentials['password']
+            username=attrs.get('username'), 
+            password=attrs.get('password')
         )
         
         if user is None:

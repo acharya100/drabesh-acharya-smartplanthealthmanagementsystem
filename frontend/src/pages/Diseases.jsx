@@ -205,6 +205,7 @@ const Diseases = () => {
                                     </div>
 
                                     <div className="disease-body-info" style={{ padding: '0 2rem 1.5rem 2rem' }}>
+                                        {/* We show a snippet of the symptoms to keep the cards looking neat and uniform */}
                                         <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
                                             {disease.symptoms?.substring(0, 140)}...
                                         </p>
@@ -346,7 +347,7 @@ const Diseases = () => {
                                                     onClick={() => handlePlantToggle(plant.id)}
                                                     style={{
                                                         padding: '0.5rem', border: '1px solid var(--border-light)', borderRadius: '4px', cursor: 'pointer', textAlign: 'center', fontSize: '0.8rem', fontWeight: 600,
-                                                        background: newDisease.affected_plant_ids?.includes(plant.id) ? 'var(--primary-subtle)' : 'white',
+                                                        background: newDisease.affected_plant_ids?.includes(plant.id) ? 'var(--primary-subtle)' : 'var(--bg-card)',
                                                         color: newDisease.affected_plant_ids?.includes(plant.id) ? 'var(--primary)' : 'inherit',
                                                         borderColor: newDisease.affected_plant_ids?.includes(plant.id) ? 'var(--primary)' : 'var(--border-light)'
                                                     }}
@@ -405,7 +406,8 @@ const Diseases = () => {
 
                                     <div style={{ marginBottom: '2rem' }}>
                                         <h4 style={{ color: 'var(--primary)', marginBottom: '0.75rem', textTransform: 'uppercase', fontSize: '0.8rem', fontWeight: 800 }}>Symptoms</h4>
-                                        <p style={{ lineHeight: 1.8, background: '#f8fafc', padding: '1.5rem', borderRadius: '8px', borderLeft: '4px solid var(--primary)' }}>{selectedDiseaseDetail.symptoms || "Detailed symptoms not recorded."}</p>
+                                        {/* This bubble provides a nice focus for reading symptoms */}
+                                        <p style={{ lineHeight: 1.8, background: 'var(--bg-main)', padding: '1.5rem', borderRadius: '8px', borderLeft: '4px solid var(--primary)' }}>{selectedDiseaseDetail.symptoms || "Detailed symptoms not recorded."}</p>
                                     </div>
 
                                     <div style={{ marginBottom: '2rem' }}>
