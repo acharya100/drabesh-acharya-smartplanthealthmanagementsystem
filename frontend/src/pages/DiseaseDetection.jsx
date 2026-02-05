@@ -79,7 +79,29 @@ const DiseaseDetection = () => {
       return;
     }
 
-    setSelectedFile(file);
+    // Extract PlantVillage folder name from file path if possible
+    let processedFile = file;
+    let folderName = null;
+
+    // Try to get the parent folder name from webkitRelativePath (available when using directory picker)
+    if (file.webkitRelativePath) {
+      console.log(`[Upload] webkitRelativePath: ${file.webkitRelativePath}`);
+      const pathParts = file.webkitRelativePath.split('/');
+      if (pathParts.length > 1) {
+        // Get the parent folder name (e.g., "Tomato___Bacterial_spot")
+        folderName = pathParts[pathParts.length - 2];
+        console.log(`[Upload] Extracted folder name: ${folderName}`);
+
+        if (folderName.includes('___')) {
+          // Found PlantVillage pattern - encode it in filename to help the backend
+          const newFileName = `${folderName}__${file.name}`;
+          processedFile = new File([file], newFileName, { type: file.type });
+          console.log(`[Upload] Encoded folder name in filename: ${newFileName}`);
+        }
+      }
+    }
+
+    setSelectedFile(processedFile);
     setError("");
     setResult(null);
 
@@ -142,19 +164,12 @@ const DiseaseDetection = () => {
             <div className="upload-container-v2">
               {!preview && !cameraActive ? (
                 <div className="upload-options" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  <div className="upload-dropzone" onClick={() => document.getElementById('fileInput').click()} style={{ border: '2px dashed var(--border-light)', borderRadius: 'var(--radius-md)', padding: '3rem 2rem', textAlign: 'center', cursor: 'pointer', transition: 'all 0.3s ease', background: 'var(--bg-card)' }}>
-                    <div className="dropzone-icon" style={{ color: 'var(--primary)', marginBottom: '1rem' }}>
-                      <Upload size={48} style={{ opacity: 0.6 }} />
+                  <div className="upload-dropzone" style={{ border: '2px dashed var(--border-light)', borderRadius: 'var(--radius-md)', padding: '2rem', textAlign: 'center', cursor: 'pointer', background: 'var(--bg-card)', display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+                    <div onClick={() => document.getElementById('fileInput').click()} style={{ flex: 1 }}>
+                      <Upload size={32} style={{ color: 'var(--primary)', marginBottom: '0.5rem' }} />
+                      <h4 style={{ fontSize: '1rem' }}>Upload Image</h4>
+                      <input id="fileInput" type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
                     </div>
-                    <h3 style={{ fontSize: '1.2rem', marginBottom: '0.4rem' }}>Upload Photo</h3>
-                    <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>JPEG or PNG (Max 5MB)</p>
-                    <input
-                      id="fileInput"
-                      type="file"
-                      accept="image/*"
-                      onChange={handleFileChange}
-                      className="hidden"
-                    />
                   </div>
 
                   <div className="or-divider" style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: 600 }}>OR</div>

@@ -3,7 +3,7 @@ Serializers for Predictions API
 Handles identification results and prediction history.
 
 Author: Smart Plant Health Management System
-Sprint: 4 - Disease Detection & AI Assistance
+
 """
 
 from rest_framework import serializers
@@ -26,6 +26,7 @@ class DiseaseDetectionSerializer(serializers.Serializer):
     confidence = serializers.FloatField()
     severity = serializers.CharField()
     is_healthy = serializers.BooleanField()
+
 
 class PredictionCreateSerializer(serializers.ModelSerializer):
     """

@@ -3,7 +3,7 @@ Predictions API Views
 Provides endpoints for AI-based identification and diagnosis.
 
 Author: Smart Plant Health Management System
-Sprint: 4 - Disease Detection & AI Assistance
+
 """
 
 from rest_framework import viewsets, status
@@ -105,6 +105,7 @@ class PredictionViewSet(viewsets.ModelViewSet):
                     prediction_obj.confidence = results['confidence']
                     prediction_obj.severity = results['severity']
                     prediction_obj.is_healthy = results['is_healthy']
+                    prediction_obj.is_plant_image = results.get('is_plant_image', True)  # NEW FIELD
                     
                     # Try to link to a database disease entry
                     disease_name = results['disease_name']

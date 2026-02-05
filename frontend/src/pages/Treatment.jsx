@@ -12,7 +12,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { treatmentService, diseaseService } from "../services/api";
-import { Search, Filter, ShieldCheck, List, Package, ArrowRight, Trash2 } from "lucide-react";
+import { Search, Filter, ShieldCheck, List, Package, ArrowRight, Trash2, CheckCircle, AlertTriangle } from "lucide-react";
 
 const Treatment = () => {
   const [treatments, setTreatments] = useState([]);
@@ -38,10 +38,26 @@ const Treatment = () => {
 
   useEffect(() => {
     loadData();
+
+    // Check URL parameters for special cases
+    const urlParams = new URLSearchParams(window.location.search);
+    const isHealthy = urlParams.get('healthy');
+    const isNotPlant = urlParams.get('notplant');
+    const diseaseParam = urlParams.get('disease');
+
+    if (isHealthy === 'true') {
+      setSelectedDisease('healthy');
+    } else if (isNotPlant === 'true') {
+      setSelectedDisease('notplant');
+    } else if (diseaseParam) {
+      setSelectedDisease(diseaseParam);
+    }
   }, []);
 
   useEffect(() => {
-    loadTreatments();
+    if (selectedDisease !== 'healthy' && selectedDisease !== 'notplant') {
+      loadTreatments();
+    }
   }, [selectedDisease]);
 
   const loadData = async () => {
@@ -182,6 +198,157 @@ const Treatment = () => {
           <div className="loading-spinner-container">
             <div className="spinner"></div>
             <p>Loading treatment records...</p>
+          </div>
+        ) : selectedDisease === 'healthy' ? (
+          // Healthy Plant Message
+          <div className="healthy-plant-message" style={{
+            maxWidth: '800px',
+            margin: '4rem auto',
+            textAlign: 'center',
+            padding: '3rem',
+            background: 'linear-gradient(135deg, var(--success-subtle) 0%, var(--bg-card) 100%)',
+            borderRadius: 'var(--radius-lg)',
+            border: '2px solid var(--success)'
+          }}>
+            <div style={{ marginBottom: '2rem' }}>
+              <CheckCircle size={80} style={{ color: 'var(--success)', marginBottom: '1rem' }} />
+            </div>
+            <h2 style={{
+              fontSize: '2rem',
+              fontWeight: 800,
+              color: 'var(--success)',
+              marginBottom: '1rem'
+            }}>
+              Excellent News!
+            </h2>
+            <h3 style={{
+              fontSize: '1.5rem',
+              fontWeight: 600,
+              color: 'var(--text-primary)',
+              marginBottom: '1.5rem'
+            }}>
+              No Disease Detected
+            </h3>
+            <p style={{
+              fontSize: '1.1rem',
+              color: 'var(--text-secondary)',
+              lineHeight: '1.8',
+              marginBottom: '2rem',
+              maxWidth: '600px',
+              margin: '0 auto 2rem'
+            }}>
+              Your plant appears to be in excellent health. Treatment is not required at this time as no disease or infection has been identified. Continue with regular care and monitoring to maintain optimal plant health.
+            </p>
+            <div style={{
+              padding: '1.5rem',
+              background: 'var(--bg-card)',
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid var(--border-light)',
+              marginTop: '2rem'
+            }}>
+              <h4 style={{
+                fontSize: '1rem',
+                fontWeight: 700,
+                color: 'var(--primary)',
+                marginBottom: '1rem'
+              }}>
+                Recommended Preventive Care:
+              </h4>
+              <ul style={{
+                textAlign: 'left',
+                color: 'var(--text-secondary)',
+                lineHeight: '2',
+                listStyle: 'none',
+                padding: 0
+              }}>
+                <li>✓ Maintain consistent watering schedule</li>
+                <li>✓ Ensure adequate sunlight exposure</li>
+                <li>✓ Monitor for early signs of stress or disease</li>
+                <li>✓ Provide appropriate nutrients and fertilization</li>
+                <li>✓ Keep the growing environment clean and well-ventilated</li>
+              </ul>
+            </div>
+            <div style={{ marginTop: '2rem' }}>
+              <Link to="/disease" className="btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+                <ArrowRight size={20} />
+                Scan Another Plant
+              </Link>
+            </div>
+          </div>
+        ) : selectedDisease === 'notplant' ? (
+          // Not a Plant Leaf Message
+          <div className="healthy-plant-message" style={{
+            maxWidth: '800px',
+            margin: '4rem auto',
+            textAlign: 'center',
+            padding: '3rem',
+            background: 'linear-gradient(135deg, var(--primary-subtle) 0%, var(--bg-card) 100%)',
+            borderRadius: 'var(--radius-lg)',
+            border: '2px solid var(--primary)'
+          }}>
+            <div style={{ marginBottom: '2rem' }}>
+              <AlertTriangle size={80} style={{ color: 'var(--primary)', marginBottom: '1rem' }} />
+            </div>
+            <h2 style={{
+              fontSize: '2rem',
+              fontWeight: 800,
+              color: 'var(--primary)',
+              marginBottom: '1rem'
+            }}>
+              Invalid Image Type
+            </h2>
+            <h3 style={{
+              fontSize: '1.5rem',
+              fontWeight: 600,
+              color: 'var(--text-primary)',
+              marginBottom: '1.5rem'
+            }}>
+              Not a Plant Leaf Detected
+            </h3>
+            <p style={{
+              fontSize: '1.1rem',
+              color: 'var(--text-secondary)',
+              lineHeight: '1.8',
+              marginBottom: '2rem',
+              maxWidth: '600px',
+              margin: '0 auto 2rem'
+            }}>
+              The uploaded image does not appear to be a plant leaf. Our AI system has identified this as a non-plant object (e.g., person, vehicle, or other unrelated item). For accurate diagnosis, please upload a clear, close-up photo of a single plant leaf.
+            </p>
+            <div style={{
+              padding: '1.5rem',
+              background: 'var(--bg-card)',
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid var(--border-light)',
+              marginTop: '2rem'
+            }}>
+              <h4 style={{
+                fontSize: '1rem',
+                fontWeight: 700,
+                color: 'var(--primary)',
+                marginBottom: '1rem'
+              }}>
+                Identification Guidelines:
+              </h4>
+              <ul style={{
+                textAlign: 'left',
+                color: 'var(--text-secondary)',
+                lineHeight: '2',
+                listStyle: 'none',
+                padding: 0
+              }}>
+                <li>⚠️ Ensure the image contains only plant leaves</li>
+                <li>⚠️ Avoid including people or backgrounds in the frame</li>
+                <li>⚠️ Position the leaf centrally and ensure good lighting</li>
+                <li>⚠️ Capture both the upper and lower surfaces if possible</li>
+              </ul>
+            </div>
+            <div style={{ marginTop: '2rem' }}>
+              <Link to="/disease" className="btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+                <ArrowRight size={20} />
+                Try Again with a Leaf
+              </Link>
+            </div>
           </div>
         ) : (
           <div className="treatments-grid">

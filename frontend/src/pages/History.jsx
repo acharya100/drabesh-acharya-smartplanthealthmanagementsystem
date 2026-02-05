@@ -12,7 +12,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { predictionService } from "../services/api";
-import { Calendar, AlertTriangle, CheckCircle, ArrowRight, Clock, Trash2, Search, Edit } from "lucide-react";
+import { Calendar, AlertTriangle, CheckCircle, ArrowRight, Clock, Trash2, Search, Edit, X } from "lucide-react";
 
 const History = () => {
     const [predictions, setPredictions] = useState([]);
@@ -148,7 +148,7 @@ const History = () => {
                                         <div style={{ flex: 1 }}>
                                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                                                 <h3 style={{ fontSize: '1.1rem', fontWeight: 700 }}>
-                                                    {pred.disease_name || (pred.is_healthy ? "Healthy Plant" : "Unidentified Issue")}
+                                                    {pred.is_plant_image === false ? "Non-Plant Image Detected" : (pred.disease_name || (pred.is_healthy ? "Healthy Plant" : "Unidentified Issue"))}
                                                 </h3>
                                                 <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                                                     <Clock size={14} /> {formatDate(pred.created_at)}
@@ -156,22 +156,22 @@ const History = () => {
                                             </div>
 
                                             <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
-                                                <div className={`status-badge ${pred.is_healthy ? 'healthy' : 'infected'}`} style={{
+                                                <div className={`status-badge ${pred.is_plant_image === false ? 'not-plant' : (pred.is_healthy ? 'healthy' : 'infected')}`} style={{
                                                     display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
                                                     padding: '0.3rem 0.6rem', borderRadius: '4px',
                                                     fontSize: '0.75rem', fontWeight: 700,
-                                                    background: pred.is_healthy ? 'var(--primary-subtle)' : '#fee2e2',
-                                                    color: pred.is_healthy ? 'var(--primary)' : '#dc2626'
+                                                    background: pred.is_plant_image === false ? '#e5e7eb' : (pred.is_healthy ? 'var(--primary-subtle)' : '#fee2e2'),
+                                                    color: pred.is_plant_image === false ? '#4b5563' : (pred.is_healthy ? 'var(--primary)' : '#dc2626')
                                                 }}>
-                                                    {pred.is_healthy ? <CheckCircle size={14} /> : <AlertTriangle size={14} />}
-                                                    {pred.is_healthy ? 'Healthy' : 'Diseased'}
+                                                    {pred.is_plant_image === false ? <X size={14} /> : (pred.is_healthy ? <CheckCircle size={14} /> : <AlertTriangle size={14} />)}
+                                                    {pred.is_plant_image === false ? 'Non-Plant' : (pred.is_healthy ? 'Healthy' : 'Diseased')}
                                                 </div>
 
                                                 <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                                                    Compliance: <strong>{Math.round(pred.confidence)}%</strong>
+                                                    Compliance: <strong>{Math.round(pred.confidence || 0)}%</strong>
                                                 </span>
 
-                                                {pred.severity && !pred.is_healthy && (
+                                                {pred.severity && !pred.is_healthy && pred.is_plant_image !== false && (
                                                     <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
                                                         Severity: <strong style={{ textTransform: 'uppercase', color: pred.severity === 'critical' ? 'red' : 'inherit' }}>{pred.severity}</strong>
                                                     </span>
@@ -182,11 +182,14 @@ const History = () => {
                                         {/* Actions */}
                                         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                                             <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                                                {!pred.is_healthy && pred.predicted_disease && (
-                                                    <Link to={`/treatment?disease=${pred.predicted_disease}`} className="btn-secondary" style={{ fontSize: '0.85rem', padding: '0.5rem 1rem' }}>
-                                                        View Treatment
-                                                    </Link>
-                                                )}
+                                                {/* View Treatment link for ALL cases */}
+                                                <Link
+                                                    to={pred.is_plant_image === false ? '/treatment?notplant=true' : (pred.is_healthy ? '/treatment?healthy=true' : `/treatment?disease=${pred.predicted_disease}`)}
+                                                    className="btn-secondary"
+                                                    style={{ fontSize: '0.85rem', padding: '0.5rem 1rem' }}
+                                                >
+                                                    View Treatment
+                                                </Link>
                                                 <button
                                                     onClick={() => handleEdit(pred)}
                                                     className="btn-secondary"
