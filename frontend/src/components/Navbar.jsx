@@ -30,9 +30,9 @@ const Navbar = ({ activePage }) => {
     <nav className="navbar">
       <div className="navbar-brand">
         <Link to="/dashboard" style={{ textDecoration: 'none' }}>
-          <h2>
+          <h2 style={{ fontSize: '1.5rem', margin: 0 }}>
             <Leaf size={28} className="text-primary" />
-            <span style={{ fontSize: '1.4rem' }}>Smart Plant Health Management System</span>
+            <span>Smart Plant Health Management System</span>
           </h2>
         </Link>
       </div>

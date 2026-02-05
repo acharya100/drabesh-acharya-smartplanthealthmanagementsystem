@@ -142,6 +142,7 @@ export const predictionService = {
     }),
     getHistory: () => api.get('/predictions/'),
     getDetails: (id) => api.get(`/predictions/${id}/`),
+    delete: (id) => api.delete(`/predictions/${id}/`),
 };
 
 export default api;

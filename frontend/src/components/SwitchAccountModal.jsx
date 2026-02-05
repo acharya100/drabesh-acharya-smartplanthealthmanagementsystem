@@ -5,6 +5,7 @@
  * and switch identities with a single click.
  */
 import { useState, useEffect } from 'react';
+import ReactDOM from 'react-dom';
 import { authService } from '../services/api';
 import { User, Mail, ShieldCheck, RefreshCw, X } from 'lucide-react';
 
@@ -55,8 +56,8 @@ const SwitchAccountModal = ({ isOpen, onClose }) => {
 
     if (!isOpen) return null;
 
-    return (
-        <div className="modal-overlay" onClick={onClose} style={{ alignItems: 'center', paddingTop: '2rem', paddingBottom: '2rem' }}>
+    return ReactDOM.createPortal(
+        <div className="modal-overlay" onClick={onClose} style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
             <div
                 className="modal-content animate-slide-up"
                 style={{
@@ -184,13 +185,14 @@ const SwitchAccountModal = ({ isOpen, onClose }) => {
                 <div className="modal-footer" style={{ borderTop: '1px solid var(--border-light)', padding: '1rem', background: 'var(--bg-main)' }}>
                     <button
                         onClick={onClose}
-                        style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border-light)', background: 'white', borderRadius: 'var(--radius-sm)', cursor: 'pointer', color: 'var(--text-muted)', fontWeight: 600 }}
+                        style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border-light)', background: 'var(--bg-card)', borderRadius: 'var(--radius-sm)', cursor: 'pointer', color: 'var(--text-muted)', fontWeight: 600 }}
                     >
                         Cancel
                     </button>
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 };
 

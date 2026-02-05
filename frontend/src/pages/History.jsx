@@ -145,12 +145,34 @@ const History = () => {
 
                                         {/* Actions */}
                                         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                                            {!pred.is_healthy && pred.predicted_disease && (
-                                                <Link to={`/treatment?disease=${pred.predicted_disease}`} className="btn-secondary" style={{ fontSize: '0.85rem', padding: '0.5rem 1rem' }}>
-                                                    View Treatment
-                                                </Link>
-                                            )}
-                                            {/* We could add delete functionality here if the API supports it */}
+                                            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                                                {!pred.is_healthy && pred.predicted_disease && (
+                                                    <Link to={`/treatment?disease=${pred.predicted_disease}`} className="btn-secondary" style={{ fontSize: '0.75rem', padding: '0.4rem 0.8rem' }}>
+                                                        Treatment
+                                                    </Link>
+                                                )}
+                                                <button
+                                                    className="btn-secondary"
+                                                    style={{ fontSize: '0.75rem', padding: '0.4rem 0.8rem' }}
+                                                    onClick={() => alert("Edit feature coming next sprint!")}
+                                                >
+                                                    Edit
+                                                </button>
+                                                <button
+                                                    className="btn-secondary"
+                                                    style={{ fontSize: '0.75rem', padding: '0.4rem', color: 'var(--danger)', borderColor: 'var(--danger)' }}
+                                                    onClick={async () => {
+                                                        if (window.confirm("Delete this scan record?")) {
+                                                            try {
+                                                                await predictionService.delete(pred.id);
+                                                                loadHistory();
+                                                            } catch (e) { console.error(e); alert("Failed to delete"); }
+                                                        }
+                                                    }}
+                                                >
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 ))}

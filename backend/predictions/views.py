@@ -134,11 +134,13 @@ class PredictionViewSet(viewsets.ModelViewSet):
                         "prediction_id": prediction_obj.id
                     })
                 else:
+                    prediction_obj.delete() # CLEANUP: Delete the invalid record
                     return Response({
                         "success": False,
                         "message": "AI could not process the image for disease detection."
                     }, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
             except Exception as e:
+                prediction_obj.delete() # CLEANUP: Delete the failed record
                 import traceback
                 error_trace = traceback.format_exc()
                 with open('inference.log', 'a') as f:

@@ -122,12 +122,22 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+html,
+body {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  background: var(--bg-main);
+  /* Ensure background is applied to root */
+  color: var(--text-main);
+}
+
 body {
   font-family: 'Outfit', sans-serif;
-  background: var(--bg-main);
-  color: var(--text-main);
   line-height: 1.6;
   overflow-x: hidden;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 button,
@@ -169,7 +179,8 @@ h3 {
 /* --- Navigation & Layout --- */
 .navbar {
   height: var(--nav-height);
-  padding: 0 4rem;
+  padding: 0 2rem;
+  /* Reduced from 4rem for better fit on smaller screens */
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -370,10 +381,14 @@ h3 {
   background: rgba(15, 23, 42, 0.85);
   backdrop-filter: blur(8px);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
+  /* Start from top to prevent cutoff */
   justify-content: center;
   z-index: 2000;
-  padding: 2rem;
+  padding: 4rem 2rem;
+  /* Add top padding */
+  overflow-y: auto;
+  /* Allow scrolling of the overlay itself */
 }
 
 .modal-content-large {
