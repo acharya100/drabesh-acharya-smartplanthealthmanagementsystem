@@ -109,7 +109,7 @@ const SwitchAccountModal = ({ isOpen, onClose }) => {
                     </button>
                 </div>
 
-                <div className="modal-body" style={{ padding: '0', overflowY: 'auto' }}>
+                <div className="modal-body" style={{ padding: '0', overflowY: 'auto', flex: 1 }}>
                     {loading ? (
                         <div style={{ padding: '3rem', textAlign: 'center' }}>
                             <RefreshCw className="animate-spin text-primary" size={32} style={{ margin: '0 auto' }} />

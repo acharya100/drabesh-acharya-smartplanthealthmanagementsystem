@@ -70,11 +70,14 @@ class PlantIdentifier:
             probabilities = torch.nn.functional.softmax(output[0], dim=0)
             
             # Get the top prediction
-            # Note: For demo purposes, we map the highest ImageNet score to our plant list
-            # A real model would be trained specifically on these classes
             conf, index = torch.max(probabilities, 0)
             
-            # Map index to a plant class (deterministically for demo)
+            # Use ImageNet labels for "Not a Plant" detection (Heuristic)
+            # In a real system, we'd use a dedicated detector.
+            # Here we check if the prediction isn't a vegetable, fruit, or plant.
+            # (Note: This is a placeholder since we don't have the full ImageNet class list loaded here)
+            # For this MVP, we will assume everything is a valid input but use confidence to filter noise.
+            
             plant_index = index.item() % len(self.classes)
             plant_name = self.classes[plant_index]
             
@@ -101,7 +104,6 @@ class DiseaseDetector:
     """
     
     def __init__(self):
-        # Using ResNet18 for disease detection
         self.model = models.resnet18(weights=models.ResNet18_Weights.IMAGENET1K_V1)
         self.model.eval()
         
@@ -116,6 +118,10 @@ class DiseaseDetector:
             "Healthy", "Powdery Mildew", "Leaf Spot", "Rust", 
             "Bacterial Blight", "Spider Mites", "Aphids", "Iron Deficiency"
         ]
+
+        # List of ImageNet indices that generally correspond to people, animals, vehicles, etc.
+        # This is a broad heuristic.
+        # For this refactor, we will rely on confidence thresholds.
 
     def predict(self, image_path):
         """
@@ -132,36 +138,43 @@ class DiseaseDetector:
             probabilities = torch.nn.functional.softmax(output[0], dim=0)
             conf, index = torch.max(probabilities, 0)
             
-            disease_index = index.item() % len(self.classes)
-            disease_name = self.classes[disease_index]
+            confidence_score = float(conf.item() * 100)
+
+            # --- "NOT A PLANT" Filter ---
+            # If the model is very confident about something that likely isn't our disease classes,
+            # we should be careful. Since we are using ImageNet weights, the 'index' is actually an ImageNet class index.
+            # We need to map it carefully. 
             
-            severity_map = {0: "mild", 1: "moderate", 2: "severe"}
-            severity = severity_map[index.item() % 3]
+            # IMPORTANT: Since we are using ImageNet weights but mapping to our own 8 classes via modulo,
+            # we are "faking" the transfer learning for this demo environment without a .pth file.
+            # To fix the "Person" issue:
+            # We can't know for sure it's a person without the ImageNet labels file.
+            # However, we can enforce a stricter threshold.
             
-            # Heuristic for demo purposes (since we are using ImageNet weights):
-            # If the model predicts "Healthy" but is not super confident (>90%),
-            # or if it's just a general object classification, we'll shift it to a disease 
-            # to ensure the user sees how the disease detection UI works.
-            base_confidence = float(conf.item() * 100)
-            
-            # Use file path hash to ensure consistency for the same image
+            if confidence_score < 40:
+                 return None # Reject low confidence inputs entirely
+
+            # Deterministic mapping based on hash of the image content/path to keep it consistent
+            # but getting rid of the "Force Disease" logic.
             path_hash = hash(os.path.basename(image_path))
             
-            if disease_name == "Healthy" and base_confidence < 90:
-                # Force a disease detection for the demo if not 100% sure it's healthy
-                # Skip index 0 (Healthy)
-                new_index = (path_hash % (len(self.classes) - 1)) + 1
-                disease_name = self.classes[new_index]
+            # Logic: 
+            # 1. Evenly distribute result buckets based on hash (Simulated Model)
+            # 2. But default to "Healthy" if the hash allows it, to avoid "everything is a disease"
             
-            # Boost confidence for the demo to look authoritative
-            display_confidence = min(max(base_confidence + 40, 75), 98)
+            simulated_index = (index.item() + path_hash) % (len(self.classes) + 3) # Add 3 extra slots for "Healthy" bias
+            
+            if simulated_index >= len(self.classes):
+                disease_name = "Healthy"
+            else:
+                disease_name = self.classes[simulated_index]
 
             severity_map = {0: "mild", 1: "moderate", 2: "severe"}
             severity = severity_map[((index.item() + path_hash) % 3)]
             
             return {
                 "disease_name": disease_name,
-                "confidence": display_confidence,
+                "confidence": confidence_score, # Use actual confidence
                 "severity": severity,
                 "is_healthy": disease_name == "Healthy"
             }
@@ -171,6 +184,6 @@ class DiseaseDetector:
             print(traceback.format_exc())
             return None
 
-# Singleton instances for the application
+# Singleton instances
 identifier = PlantIdentifier()
 detector = DiseaseDetector()
