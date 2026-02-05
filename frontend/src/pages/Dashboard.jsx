@@ -11,7 +11,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { plantService } from "../services/api";
-import { Leaf, Activity, ShieldCheck, Plus, Camera, List } from "lucide-react";
+import { Leaf, Activity, ShieldCheck, Plus, Camera, List, Settings as SettingsIcon } from "lucide-react";
 
 const Dashboard = () => {
   const [stats, setStats] = useState({
@@ -92,20 +92,32 @@ const Dashboard = () => {
           </div>
         )}
 
-        <div className="quick-actions mt-6">
-          <h2 className="mb-8">Quick Actions</h2>
-          <div className="stats-grid">
+        <div className="quick-actions" style={{ marginTop: '4rem' }}>
+          <h2 style={{ marginBottom: '2rem' }}>Quick Actions</h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
             <Link to="/plants" className="stat-card card clickable">
               <div className="stat-icon"><Plus size={24} /></div>
-              <h3>Add New Plant</h3>
+              <h3 style={{ fontSize: '1.25rem' }}>Add New Plant</h3>
             </Link>
             <Link to="/disease" className="stat-card card clickable">
               <div className="stat-icon"><Camera size={24} /></div>
-              <h3>Check Disease</h3>
+              <h3 style={{ fontSize: '1.25rem' }}>Check Disease</h3>
             </Link>
             <Link to="/treatment" className="stat-card card clickable">
               <div className="stat-icon"><List size={24} /></div>
-              <h3>View Treatments</h3>
+              <h3 style={{ fontSize: '1.25rem' }}>View Treatments</h3>
+            </Link>
+            <Link to="/diseases" className="stat-card card clickable">
+              <div className="stat-icon"><Activity size={24} /></div>
+              <h3 style={{ fontSize: '1.25rem' }}>Browse Diseases</h3>
+            </Link>
+            <Link to="/history" className="stat-card card clickable">
+              <div className="stat-icon"><List size={24} /></div>
+              <h3 style={{ fontSize: '1.25rem' }}>View History</h3>
+            </Link>
+            <Link to="/settings" className="stat-card card clickable">
+              <div className="stat-icon"><SettingsIcon size={24} /></div>
+              <h3 style={{ fontSize: '1.25rem' }}>Settings</h3>
             </Link>
           </div>
         </div>

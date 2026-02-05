@@ -30,8 +30,8 @@ const Navbar = ({ activePage }) => {
     <nav className="navbar">
       <div className="navbar-brand">
         <Link to="/dashboard" style={{ textDecoration: 'none' }}>
-          <h2 style={{ fontSize: '1.5rem', margin: 0 }}>
-            <Leaf size={28} className="text-primary" />
+          <h2 style={{ fontSize: '1.25rem', margin: 0 }}>
+            <Leaf size={24} className="text-primary" />
             <span>Smart Plant Health Management System</span>
           </h2>
         </Link>
@@ -66,7 +66,7 @@ const Navbar = ({ activePage }) => {
           <span>Settings</span>
         </Link>
 
-        <div className="nav-user-greeting" style={{ marginLeft: '1rem', marginRight: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-muted)', fontWeight: 600, fontSize: '0.9rem' }}>
+        <div className="nav-user-greeting" style={{ marginLeft: '0.5rem', marginRight: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.3rem', color: 'var(--text-muted)', fontWeight: 600, fontSize: '0.8rem' }}>
           {/* We show a warm greeting to the user to make the platform feel friendly */}
           <span>Welcome,</span>
           <span style={{ color: 'var(--primary)', fontWeight: 800 }}>{username}</span>
@@ -81,13 +81,13 @@ const Navbar = ({ activePage }) => {
               cursor: 'pointer',
               display: 'flex',
               padding: '0.2rem',
-              marginLeft: '0.5rem',
+              marginLeft: '0.3rem',
               transition: 'color 0.2s'
             }}
             onMouseOver={(e) => e.currentTarget.style.color = 'var(--primary)'}
             onMouseOut={(e) => e.currentTarget.style.color = 'var(--text-muted)'}
           >
-            <Users size={16} />
+            <Users size={14} />
           </button>
         </div>
         <button onClick={handleLogout} className="logout-btn">
