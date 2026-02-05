@@ -1,43 +1,4 @@
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-:root {
-  --primary: #2d8659;
-  --primary-dark: #1f5d3f;
-  --success: #28a745;
-  --warning: #ffc107;
-  --danger: #dc3545;
-  --info: #17a2b8;
-  --bg: #f8f9fa;
-  --white: #ffffff;
-  --text: #212529;
-  --text-light: #6c757d;
-  --border: #dee2e6;
-  --shadow: 0 2px 4px rgba(0,0,0,0.1);
-  --shadow-lg: 0 4px 6px rgba(0,0,0,0.1);
-  --radius: 8px;
-}
-
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  line-height: 1.6;
-}
-
-.loading, .error-message, .empty-state {
-  text-align: center;
-  padding: 20px;
-  color: var(--text-light);
-}
-
-.error-message {
-  background: #fee;
-  color: var(--danger);
-  border-left: 4px solid var(--danger);
-  border-radius: var(--radius);
-  margin: 16px 0;
-}
+/* 
+  Legacy styles removed. 
+  All global styles are now managed in App.css for the Smart Plant Health Management System.
+*/

@@ -254,10 +254,19 @@ h3 {
   box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
 }
 
+.page-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-main);
+  /* Ensure fallback background */
+}
+
 .page-content {
   max-width: var(--max-width);
   margin: 0 auto;
   padding: 4rem 2rem;
+  flex: 1;
 }
 
 .page-header {
