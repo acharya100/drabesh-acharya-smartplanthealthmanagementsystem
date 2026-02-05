@@ -12,12 +12,15 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { predictionService } from "../services/api";
-import { Calendar, AlertTriangle, CheckCircle, ArrowRight, Clock, Trash2, Search } from "lucide-react";
+import { Calendar, AlertTriangle, CheckCircle, ArrowRight, Clock, Trash2, Search, Edit } from "lucide-react";
 
 const History = () => {
     const [predictions, setPredictions] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState("all"); // all, healthy, infected
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [editingPrediction, setEditingPrediction] = useState(null);
+
 
     useEffect(() => {
         loadHistory();
@@ -49,6 +52,39 @@ const History = () => {
             hour: '2-digit',
             minute: '2-digit'
         });
+    };
+
+    const handleEdit = (prediction) => {
+        setEditingPrediction(prediction);
+        setShowEditModal(true);
+    };
+
+    const handleDelete = async (id) => {
+        if (window.confirm("Delete this scan record? This cannot be undone.")) {
+            try {
+                await predictionService.delete(id);
+                loadHistory();
+            } catch (e) {
+                console.error(e);
+                alert("Failed to delete record");
+            }
+        }
+    };
+
+    const handleUpdatePrediction = async (e) => {
+        e.preventDefault();
+        try {
+            await predictionService.update(editingPrediction.id, {
+                is_healthy: editingPrediction.is_healthy,
+                severity: editingPrediction.severity,
+                confidence: editingPrediction.confidence
+            });
+            setShowEditModal(false);
+            loadHistory();
+        } catch (error) {
+            console.error("Error updating prediction:", error);
+            alert("Failed to update record");
+        }
     };
 
     return (
@@ -145,29 +181,31 @@ const History = () => {
 
                                         {/* Actions */}
                                         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                                            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                                            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                                                 {!pred.is_healthy && pred.predicted_disease && (
-                                                    <Link to={`/treatment?disease=${pred.predicted_disease}`} className="btn-secondary" style={{ fontSize: '0.75rem', padding: '0.4rem 0.8rem' }}>
-                                                        Treatment
+                                                    <Link to={`/treatment?disease=${pred.predicted_disease}`} className="btn-secondary" style={{ fontSize: '0.85rem', padding: '0.5rem 1rem' }}>
+                                                        View Treatment
                                                     </Link>
                                                 )}
                                                 <button
+                                                    onClick={() => handleEdit(pred)}
                                                     className="btn-secondary"
-                                                    style={{ fontSize: '0.75rem', padding: '0.4rem 0.8rem' }}
-                                                    onClick={() => alert("Edit feature coming next sprint!")}
+                                                    style={{ fontSize: '0.85rem', padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
                                                 >
+                                                    <Edit size={16} />
                                                     Edit
                                                 </button>
                                                 <button
-                                                    className="btn-secondary"
-                                                    style={{ fontSize: '0.75rem', padding: '0.4rem', color: 'var(--danger)', borderColor: 'var(--danger)' }}
-                                                    onClick={async () => {
-                                                        if (window.confirm("Delete this scan record?")) {
-                                                            try {
-                                                                await predictionService.delete(pred.id);
-                                                                loadHistory();
-                                                            } catch (e) { console.error(e); alert("Failed to delete"); }
-                                                        }
+                                                    onClick={() => handleDelete(pred.id)}
+                                                    style={{
+                                                        background: 'transparent',
+                                                        border: '1px solid var(--danger)',
+                                                        color: 'var(--danger)',
+                                                        padding: '0.5rem',
+                                                        borderRadius: 'var(--radius-sm)',
+                                                        cursor: 'pointer',
+                                                        display: 'flex',
+                                                        alignItems: 'center'
                                                     }}
                                                 >
                                                     <Trash2 size={16} />
@@ -188,6 +226,96 @@ const History = () => {
                     </div>
                 )}
             </div>
+
+            {/* Edit Modal */}
+            {showEditModal && editingPrediction && (
+                <div className="modal-overlay" onClick={() => setShowEditModal(false)}>
+                    <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '500px' }}>
+                        <h2 style={{ marginBottom: '1.5rem' }}>Edit Scan Record</h2>
+                        <form onSubmit={handleUpdatePrediction}>
+                            <div style={{ marginBottom: '1.5rem' }}>
+                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>
+                                    Health Status
+                                </label>
+                                <select
+                                    value={editingPrediction.is_healthy}
+                                    onChange={(e) => setEditingPrediction({ ...editingPrediction, is_healthy: e.target.value === 'true' })}
+                                    style={{
+                                        width: '100%',
+                                        padding: '0.75rem',
+                                        borderRadius: 'var(--radius-sm)',
+                                        border: '1px solid var(--border-light)',
+                                        background: 'var(--bg-card)',
+                                        color: 'var(--text-primary)'
+                                    }}
+                                >
+                                    <option value="true">Healthy</option>
+                                    <option value="false">Diseased</option>
+                                </select>
+                            </div>
+
+                            {!editingPrediction.is_healthy && (
+                                <div style={{ marginBottom: '1.5rem' }}>
+                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>
+                                        Severity Level
+                                    </label>
+                                    <select
+                                        value={editingPrediction.severity || 'moderate'}
+                                        onChange={(e) => setEditingPrediction({ ...editingPrediction, severity: e.target.value })}
+                                        style={{
+                                            width: '100%',
+                                            padding: '0.75rem',
+                                            borderRadius: 'var(--radius-sm)',
+                                            border: '1px solid var(--border-light)',
+                                            background: 'var(--bg-card)',
+                                            color: 'var(--text-primary)'
+                                        }}
+                                    >
+                                        <option value="low">Low</option>
+                                        <option value="moderate">Moderate</option>
+                                        <option value="high">High</option>
+                                        <option value="critical">Critical</option>
+                                    </select>
+                                </div>
+                            )}
+
+                            <div style={{ marginBottom: '1.5rem' }}>
+                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>
+                                    Confidence (%)
+                                </label>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    max="100"
+                                    value={editingPrediction.confidence || 0}
+                                    onChange={(e) => setEditingPrediction({ ...editingPrediction, confidence: parseFloat(e.target.value) })}
+                                    style={{
+                                        width: '100%',
+                                        padding: '0.75rem',
+                                        borderRadius: 'var(--radius-sm)',
+                                        border: '1px solid var(--border-light)',
+                                        background: 'var(--bg-card)',
+                                        color: 'var(--text-primary)'
+                                    }}
+                                />
+                            </div>
+
+                            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+                                <button
+                                    type="button"
+                                    onClick={() => setShowEditModal(false)}
+                                    className="btn-secondary"
+                                >
+                                    Cancel
+                                </button>
+                                <button type="submit" className="btn-primary">
+                                    Save Changes
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

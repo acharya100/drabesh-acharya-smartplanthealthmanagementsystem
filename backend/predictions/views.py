@@ -142,9 +142,11 @@ class PredictionViewSet(viewsets.ModelViewSet):
             except Exception as e:
                 prediction_obj.delete() # CLEANUP: Delete the failed record
                 import traceback
+                import os
                 error_trace = traceback.format_exc()
-                with open('inference.log', 'a') as f:
-                    f.write(f"--- Detection Error ---\n{str(e)}\n{error_trace}\n")
+                log_path = os.path.join(os.path.dirname(__file__), '..', '..', 'inference.log')
+                with open(log_path, 'a') as f:
+                    f.write(f"--- Detection Error ({prediction_obj.id}) ---\n{str(e)}\n{error_trace}\n\n")
                 return Response({
                     "success": False,
                     "message": f"Inference Error: {str(e)}",

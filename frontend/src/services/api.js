@@ -143,6 +143,7 @@ export const predictionService = {
     getHistory: () => api.get('/predictions/'),
     getDetails: (id) => api.get(`/predictions/${id}/`),
     delete: (id) => api.delete(`/predictions/${id}/`),
+    update: (id, data) => api.patch(`/predictions/${id}/`, data),
 };
 
 export default api;

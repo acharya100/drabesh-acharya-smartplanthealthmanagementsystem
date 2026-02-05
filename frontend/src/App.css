@@ -325,9 +325,32 @@ h3 {
 
 /* --- Dashboard Enhancements --- */
 .stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  display: flex;
+  flex-direction: row;
   gap: 2rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 1rem;
+  scroll-behavior: smooth;
+}
+
+/* Scrollbar styling for stats grid */
+.stats-grid::-webkit-scrollbar {
+  height: 8px;
+}
+
+.stats-grid::-webkit-scrollbar-track {
+  background: var(--bg-main);
+  border-radius: 10px;
+}
+
+.stats-grid::-webkit-scrollbar-thumb {
+  background: var(--primary);
+  border-radius: 10px;
+}
+
+.stats-grid::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-light);
 }
 
 .stat-card {
@@ -339,6 +362,8 @@ h3 {
   background: var(--bg-card);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-sm);
+  min-width: 280px;
+  flex-shrink: 0;
 }
 
 .stat-card::before {
@@ -533,9 +558,40 @@ textarea:focus {
 .plants-grid,
 .diseases-grid,
 .treatments-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-  gap: 2.5rem;
+  display: flex;
+  flex-direction: row;
+  gap: 2rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 1rem;
+  scroll-behavior: smooth;
+}
+
+/* Scrollbar styling for horizontal grids */
+.plants-grid::-webkit-scrollbar,
+.diseases-grid::-webkit-scrollbar,
+.treatments-grid::-webkit-scrollbar {
+  height: 8px;
+}
+
+.plants-grid::-webkit-scrollbar-track,
+.diseases-grid::-webkit-scrollbar-track,
+.treatments-grid::-webkit-scrollbar-track {
+  background: var(--bg-main);
+  border-radius: 10px;
+}
+
+.plants-grid::-webkit-scrollbar-thumb,
+.diseases-grid::-webkit-scrollbar-thumb,
+.treatments-grid::-webkit-scrollbar-thumb {
+  background: var(--primary);
+  border-radius: 10px;
+}
+
+.plants-grid::-webkit-scrollbar-thumb:hover,
+.diseases-grid::-webkit-scrollbar-thumb:hover,
+.treatments-grid::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-light);
 }
 
 .plant-card-v2,
@@ -551,6 +607,9 @@ textarea:focus {
   flex-direction: column;
   word-wrap: break-word;
   overflow-wrap: break-word;
+  min-width: 340px;
+  max-width: 380px;
+  flex-shrink: 0;
 }
 
 .plant-card-v2 h3,
