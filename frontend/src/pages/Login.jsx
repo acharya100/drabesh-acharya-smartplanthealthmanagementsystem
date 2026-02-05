@@ -1,8 +1,21 @@
+/**
+ * User Login Page
+ * 
+ * This is the gateway to our application. It handles user authentication by
+ * collecting credentials and verifying them with the backend.
+ * Upon success, it securely stores the session tokens and redirects to the dashboard.
+ * 
+ * Author: Drabesh Acharya
+ */
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { login } from "../api";
 import { Eye, EyeOff } from "lucide-react";
 
+/**
+ * Login Component
+ * Only unauthenticated users should see this.
+ */
 const Login = () => {
   const [formData, setFormData] = useState({ username: "", password: "" });
   const [error, setError] = useState("");

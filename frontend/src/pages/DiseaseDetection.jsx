@@ -5,13 +5,13 @@ import { predictionService } from "../services/api";
 import { Upload, Camera, AlertTriangle, CheckCircle, ArrowRight, RefreshCw, X } from "lucide-react";
 
 /**
- * Disease Detection Page
+ * AI Disease Detection Lab
  * 
- * Allows users to upload or capture plant photos for AI-based diagnosis.
- * Connects to the backend Prediction API and displays results with treatment links.
+ * The core AI feature of the application. Users can upload photos or use their camera
+ * to scan plants. The image is sent to the backend where a PyTorch model analyzes it
+ * and returns a diagnosis with confidence scores and treatment recommendations.
  * 
- * Author: Smart Plant Health Management System
- * Sprint: 4 - Disease Detection
+ * Author: Drabesh Acharya
  */
 const DiseaseDetection = () => {
   const [selectedFile, setSelectedFile] = useState(null);

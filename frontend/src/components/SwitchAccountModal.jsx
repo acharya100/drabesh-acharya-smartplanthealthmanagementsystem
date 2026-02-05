@@ -56,7 +56,7 @@ const SwitchAccountModal = ({ isOpen, onClose }) => {
     if (!isOpen) return null;
 
     return (
-        <div className="modal-overlay" onClick={onClose}>
+        <div className="modal-overlay" onClick={onClose} style={{ alignItems: 'center', paddingTop: '2rem', paddingBottom: '2rem' }}>
             <div
                 className="modal-content animate-slide-up"
                 style={{
@@ -67,8 +67,10 @@ const SwitchAccountModal = ({ isOpen, onClose }) => {
                     boxShadow: 'var(--shadow-xl)',
                     display: 'flex',
                     flexDirection: 'column',
-                    maxHeight: '85vh',
-                    position: 'relative'
+                    maxHeight: 'calc(100vh - 4rem)', /* Prevent cut-off */
+                    position: 'relative',
+                    margin: '0 auto', /* Centering safety */
+                    border: '1px solid var(--border-light)' /* High contrast border */
                 }}
                 onClick={e => e.stopPropagation()}
             >

@@ -1,11 +1,11 @@
 /**
- * Prediction History Page
+ * Diagnosis History Log
  * 
- * Displays a log of all past AI diagnoses and uploaded images.
- * Allows users to review past results and access treatments.
+ * Your personal archive of all past AI scans. This page allows users to review
+ * previous diagnoses, track the health progress of their plants over time,
+ * and quickly access treatment plans for past issues.
  * 
- * Author: Smart Plant Health Management System
- * Sprint: 4 & 5 - Prediction History & Logs
+ * Author: Drabesh Acharya
  */
 
 import { useState, useEffect } from "react";

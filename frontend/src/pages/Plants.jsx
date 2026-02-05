@@ -1,11 +1,11 @@
 /**
- * Plants Management Page
+ * Plant Collection Management
  * 
- * Displays a professional grid of plants with advanced search and filtering.
- * Connects to the backend Plant API for real-time data.
+ * This page serves as the digital garden for the user. It lists all tracked plants,
+ * allowing users to add new ones, view details, or edit existing records.
+ * It also integrates with the AI service to auto-identify plant species from photos.
  * 
- * Author: Smart Plant Health Management System
- * Sprint: 3 - Plant and Disease Management
+ * Author: Drabesh Acharya
  */
 
 import { useState, useEffect } from "react";

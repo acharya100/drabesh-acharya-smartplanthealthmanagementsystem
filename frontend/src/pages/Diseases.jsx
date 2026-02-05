@@ -1,11 +1,11 @@
 /**
- * Diseases Database Page
+ * Disease Reference Database
  * 
- * Displays a professional browsing interface for plant diseases.
- * Features search and severity filtering.
+ * A comprehensive encylopedia of plant diseases. Users can browse this catalog
+ * to understand symptoms, causes, and severity levels of various infections.
+ * It links diseases to the plants they commonly affect.
  * 
- * Author: Smart Plant Health Management System
- * Sprint: 3 - Plant and Disease Management
+ * Author: Drabesh Acharya
  */
 
 import { useState, useEffect } from "react";

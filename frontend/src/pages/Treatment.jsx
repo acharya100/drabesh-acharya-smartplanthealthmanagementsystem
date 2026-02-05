@@ -1,11 +1,11 @@
 /**
- * Treatment Recommendations Page
+ * Treatment Protocols
  * 
- * Provides detailed guidance on managing plant diseases.
- * Connects to the backend Treatment API for verified protocols.
+ * A knowledge base of remedial actions for plant diseases. Each treatment plan
+ * includes step-by-step instructions, required products, and effectiveness ratings.
+ * Users can view details to save their plants.
  * 
- * Author: Smart Plant Health Management System
- * Sprint: 3 - Plant and Disease Management
+ * Author: Drabesh Acharya
  */
 
 import { useState, useEffect } from "react";

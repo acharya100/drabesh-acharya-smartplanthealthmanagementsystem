@@ -50,71 +50,66 @@
 }
 
 [data-theme='dark'] {
-  /* High-end Dark Mode Palette - Using Slate and Emerald */
-  --primary: #10b981;
-  --primary-light: #34d399;
-  --primary-subtle: #064e3b;
-  --secondary: #f8fafc;
-  --accent: #1e293b;
+  /* Ultra-Premium Dark Mode Palette - Deep Obsidian & Emerald Glow */
+  --primary: #34d399;
+  /* Brighter Emerald for text contrast */
+  --primary-light: #6ee7b7;
+  --primary-subtle: rgba(16, 185, 129, 0.15);
+  /* Glassy green */
+  --secondary: #f1f5f9;
+  --accent: #e2e8f0;
 
-  --bg-main: #0f172a;
-  /* Deep Slate - professional and calm */
-  --bg-card: #1e293b;
-  /* Slightly lighter slate for cards */
-  --text-main: #f1f5f9;
+  --bg-main: #020617;
+  /* Deepest Obsidian Blue/Black */
+  --bg-card: #0f172a;
+  /* Rich, dark slate for cards */
+  --text-main: #ffffff;
+  /* Pure white for readability */
   --text-muted: #94a3b8;
-  --border-light: #334155;
-  --border-focus: #10b981;
+  /* Cool gray for secondary text */
+  --border-light: #1e293b;
+  --border-focus: #34d399;
 
-  --glass-bg: rgba(30, 41, 59, 0.8);
-  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-bg: rgba(2, 6, 23, 0.85);
+  /* Darker, more opaque glass */
+  --glass-border: rgba(255, 255, 255, 0.08);
 
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.5);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.6);
-  --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.7);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
 
-  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+  --glass-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
 }
 
-/* Global Dark Mode Overrides for consistency across all pages */
+/* Global Dark Mode Overrides */
 [data-theme='dark'] input,
 [data-theme='dark'] select,
-[data-theme='dark'] textarea {
+[data-theme='dark'] textarea,
+[data-theme='dark'] .upload-container-v2,
+[data-theme='dark'] .camera-zone {
   background: #0f172a;
-  /* Keeping inputs dark to match the theme */
-  color: #f1f5f9;
+  color: #f8fafc;
   border-color: #334155;
-}
-
-[data-theme='dark'] .btn-secondary {
-  background: #1e293b;
-  color: #f1f5f9;
-  border-color: #334155;
-}
-
-[data-theme='dark'] .btn-secondary:hover {
-  background: #334155;
 }
 
 [data-theme='dark'] .navbar {
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  background: rgba(2, 6, 23, 0.8);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-[data-theme='dark'] .page-container,
-[data-theme='dark'] .page-content,
-[data-theme='dark'] .discovery-page {
-  background: var(--bg-main);
-  min-height: 100vh;
+[data-theme='dark'] .switch-account-modal {
+  background: #1e293b;
+  border: 1px solid #334155;
 }
 
-[data-theme='dark'] .page-header h1,
-[data-theme='dark'] .discovery-header h1 {
-  color: var(--secondary);
-  /* Ensuring h1 is bright slate/white in dark mode */
+[data-theme='dark'] h1,
+[data-theme='dark'] h2,
+[data-theme='dark'] h3 {
+  color: #f8fafc;
 }
 
 [data-theme='dark'] .subtitle {
-  color: var(--text-muted);
+  color: #cbd5e1;
 }
 
 

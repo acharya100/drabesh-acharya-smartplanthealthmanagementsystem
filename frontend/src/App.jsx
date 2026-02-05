@@ -1,3 +1,12 @@
+/**
+ * Main Application Routing Component
+ * 
+ * This is the central hub of our React application. It handles all the client-side routing,
+ * determining which page to show based on the URL. It also manages global theme states
+ * and ensures that sensitive pages are protected from unauthorized access.
+ * 
+ * Author: Drabesh Acharya
+ */
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
 import SignUp from "./pages/SignUp";
@@ -11,6 +20,13 @@ import History from "./pages/History";
 import { useEffect } from "react";
 import "./App.css";
 
+/**
+ * Protected Route Wrapper
+ * 
+ * A security guard component that checks if the user is logged in.
+ * If they are authenticated, it lets them through to the child component.
+ * If not, it politely redirects them back to the login page.
+ */
 const ProtectedRoute = ({ children }) => {
   const isAuth = localStorage.getItem("isAuthenticated");
   return isAuth ? children : <Navigate to="/" />;

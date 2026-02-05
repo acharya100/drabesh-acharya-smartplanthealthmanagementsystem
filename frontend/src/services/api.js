@@ -1,16 +1,20 @@
 /**
- * API Utility for Smart Plant Health Management System
+ * API Service Layer
  * 
- * Provides a central location for all backend service interactions.
- * Handles authentication headers, error responses, and resource-specific methods.
+ * This module acts as the bridge between our frontend UI and the backend Django server.
+ * Instead of scattering fetch calls everywhere, we centralize them here.
  * 
- * Author: Smart Plant Health Management System
- * Sprint: 3 - Plant and Disease Management
+ * Key Features:
+ * 1. Automatic Token Management: Attaches your access token to every request.
+ * 2. Smart Error Handling: Automatically tries to refresh your session if it expires.
+ * 3. Organized Endpoints: Grouped by feature (Auth, Plants, Diseases, etc.) for easy maintenance.
+ * 
+ * Author: Drabesh Acharya
  */
 
 import axios from 'axios';
 
-// Base API configuration
+// Base API configuration - points to our Django backend
 const API_URL = 'http://localhost:8000/api';
 
 const api = axios.create({
@@ -20,7 +24,13 @@ const api = axios.create({
     },
 });
 
-// Interceptor to add authorization token automatically
+/**
+ * Request Interceptor
+ * 
+ * Before any request leaves the browser, this function runs.
+ * It checks if we have a logged-in user (access_token exists) and stamps
+ * the request with an Authorization header. This works like a VIP pass.
+ */
 api.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem('access_token');
@@ -32,7 +42,17 @@ api.interceptors.request.use(
     (error) => Promise.reject(error)
 );
 
-// Interceptor to handle token refresh and errors
+/**
+ * Response Interceptor
+ * 
+ * This function watches every response coming back from the server.
+ * If everything is fine, it just passes the data through.
+ * 
+ * But if we get a 401 Unauthorized error (meaning the token expired),
+ * it silently tries to use the refresh token to get a new access pass.
+ * If successful, it retries the failed request so the user never notices.
+ * If that fails too, it logs the user out for security.
+ */
 api.interceptors.response.use(
     (response) => response,
     async (error) => {

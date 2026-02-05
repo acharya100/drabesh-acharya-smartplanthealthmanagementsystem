@@ -1,3 +1,12 @@
+/**
+ * Navigation Bar Component
+ * 
+ * The main top navigation for the application. It provides access to all major modules
+ * like Dashboard, Plants, Diseases, Detection, and Settings.
+ * Includes user session management and account switching access.
+ * 
+ * Author: Drabesh Acharya
+ */
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { LayoutDashboard, Leaf, Activity, Camera, ShieldCheck, LogOut, Settings as SettingsIcon, Users, History as HistoryIcon } from "lucide-react";
@@ -23,7 +32,7 @@ const Navbar = ({ activePage }) => {
         <Link to="/dashboard" style={{ textDecoration: 'none' }}>
           <h2>
             <Leaf size={28} className="text-primary" />
-            <span>Smart Plant Health</span>
+            <span style={{ fontSize: '1.4rem' }}>Smart Plant Health Management System</span>
           </h2>
         </Link>
       </div>
