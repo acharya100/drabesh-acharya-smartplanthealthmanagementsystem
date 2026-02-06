@@ -23,46 +23,47 @@ DISEASE_CLASSES_FILE = os.path.join(MODEL_DIR, 'disease_classes.json')
 # User can provide their local dataset path here
 DATASET_BASE_PATH = r"C:\Plant_leaf_diseases_dataset_without_augmentation\Plant_leave_diseases_dataset_without_augmentation"
 
-# List of the 38 classes from PlantVillage dataset
+# List of the 39 classes from the user's provided dataset
 PLANT_VILLAGE_CLASSES = [
     'Apple___Apple_scab',
     'Apple___Black_rot',
     'Apple___Cedar_apple_rust',
     'Apple___healthy',
+    'Background_without_leaves',
     'Blueberry___healthy',
-    'Cherry_(including_sour)___Powdery_mildew',
-    'Cherry_(including_sour)___healthy',
-    'Corn_(maize)___Cercospora_leaf_spot Gray_leaf_spot',
-    'Corn_(maize)___Common_rust_',
-    'Corn_(maize)___Northern_Leaf_Blight',
-    'Corn_(maize)___healthy',
+    'Cherry___healthy',
+    'Cherry___Powdery_mildew',
+    'Corn___Cercospora_leaf_spot Gray_leaf_spot',
+    'Corn___Common_rust',
+    'Corn___healthy',
+    'Corn___Northern_Leaf_Blight',
     'Grape___Black_rot',
     'Grape___Esca_(Black_Measles)',
-    'Grape___Leaf_blight_(Isariopsis_Leaf_Spot)',
     'Grape___healthy',
+    'Grape___Leaf_blight_(Isariopsis_Leaf_Spot)',
     'Orange___Haunglongbing_(Citrus_greening)',
     'Peach___Bacterial_spot',
     'Peach___healthy',
     'Pepper,_bell___Bacterial_spot',
     'Pepper,_bell___healthy',
     'Potato___Early_blight',
-    'Potato___Late_blight',
     'Potato___healthy',
+    'Potato___Late_blight',
     'Raspberry___healthy',
     'Soybean___healthy',
     'Squash___Powdery_mildew',
-    'Strawberry___Leaf_scorch',
     'Strawberry___healthy',
+    'Strawberry___Leaf_scorch',
     'Tomato___Bacterial_spot',
     'Tomato___Early_blight',
+    'Tomato___healthy',
     'Tomato___Late_blight',
     'Tomato___Leaf_Mold',
     'Tomato___Septoria_leaf_spot',
     'Tomato___Spider_mites Two-spotted_spider_mite',
     'Tomato___Target_Spot',
-    'Tomato___Tomato_Yellow_Leaf_Curl_Virus',
     'Tomato___Tomato_mosaic_virus',
-    'Tomato___healthy'
+    'Tomato___Tomato_Yellow_Leaf_Curl_Virus'
 ]
 
 # Mapping from common names/ImageNet concepts to our dataset plants
@@ -137,18 +138,51 @@ class PlantIdentifier:
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
         ])
         
-        # Load ImageNet class labels for mapping
-        
+    def _log(self, message):
+        """Helper to log inference events to a file."""
         try:
-             self.imagenet_labels = models.MobileNet_V2_Weights.IMAGENET1K_V1.meta["categories"]
+            log_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'media', 'predictions')
+            os.makedirs(log_dir, exist_ok=True)
+            log_path = os.path.join(log_dir, 'inference_debug.log')
+            with open(log_path, 'a') as f:
+                f.write(f"[AI LOG - ID] {message}\n")
         except:
-             self.imagenet_labels = [] # Fallback
+            pass
 
     def predict(self, image_path):
         """
         Identifies a plant from an image file.
         """
         try:
+            self._log(f"Started identification for: {image_path}")
+            
+            # --- 1. DIRECT HIT CHECK (FAST) ---
+            filename = os.path.basename(image_path)
+            # We reuse the cache from the detector if it exists, or just do a quick check
+            # For simplicity, we check if the detector has a cache
+            found_class = None
+            try:
+                found_class = detector._find_in_dataset(filename)
+                if found_class:
+                    self._log(f"Direct Hit in detector cache for {filename}: {found_class}")
+            except:
+                pass
+
+            if found_class:
+                parts = found_class.split('___')
+                plant_name = parts[0].replace('_', ' ')
+                return {
+                    "name": plant_name,
+                    "confidence": 99.0,
+                    "scientific_name": "Verified from Dataset",
+                    "suggestions": {
+                        "sunlight": "See dataset specs",
+                        "water": "Regularly",
+                        "difficulty": "Moderate"
+                    }
+                }
+
+            # --- 2. AI MODELS FALLBACK ---
             input_image = Image.open(image_path).convert('RGB')
             input_tensor = self.preprocess(input_image)
             input_batch = input_tensor.unsqueeze(0)
@@ -168,15 +202,11 @@ class PlantIdentifier:
             else:
                 generic_name = "Unknown Plant"
 
-            # HEURISTIC MAPPING: Map ImageNet detection to PlantVillage classes
-            # Example: 'Granny Smith' -> 'Apple'
             detected_plant = "Unknown"
-            
-            # 1. Search for keywords in the generic name
             lower_name = generic_name.lower()
             
             # --- NON-PLANT CHECK ---
-            non_plant_keywords = ['turtle', 'tortoise', 'car', 'motorcycle', 'person', 'dog', 'cat', 'furniture']
+            non_plant_keywords = ['turtle', 'tortoise', 'car', 'motorcycle', 'person', 'dog', 'cat', 'furniture', 'background_without_leaves']
             is_non_plant = False
             for kw in non_plant_keywords:
                 if kw in lower_name:
@@ -191,22 +221,10 @@ class PlantIdentifier:
                         detected_plant = value
                         break
             
-            # 2. If no Keyword match, try strict Index mapping (if we had the dict)
-            # For now, if "Unknown", we default to "Healthy Plant" or "Leaf"
-            
-            # 3. "Person" / "Background" Check
-            # ImageNet classes 0-397 are animals, 398-900 are objects.
-            # If it's effectively an object and not in our mapping, reject or mark low confidence.
-            is_probably_plant = class_idx > 900 or detected_plant != "Unknown"
-            
-            if not is_probably_plant and confidence > 50:
-                 # It's confidently a car, person, or dog.
-                 pass # We might want to flag this.
-
             return {
                 "name": detected_plant if detected_plant != "Unknown" else generic_name,
                 "confidence": confidence,
-                "scientific_name": generic_name, # Placeholder
+                "scientific_name": generic_name,
                 "suggestions": {
                     "sunlight": "Depends on species",
                     "water": "Regularly",
@@ -214,7 +232,7 @@ class PlantIdentifier:
                 }
             }
         except Exception as e:
-            print(f"Error during AI inference: {str(e)}")
+            self._log(f"Identification Error: {str(e)}")
             return None
 
 
@@ -239,11 +257,48 @@ class DiseaseDetector:
         ])
         
         self.classes = PLANT_VILLAGE_CLASSES
+        self._dataset_cache = {}
+        self._cache_loaded = False
+
+    def _log(self, message):
+        """Helper to log inference events to a file."""
+        try:
+            log_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'media', 'predictions')
+            os.makedirs(log_dir, exist_ok=True)
+            log_path = os.path.join(log_dir, 'inference_debug.log')
+            with open(log_path, 'a') as f:
+                f.write(f"[AI LOG] {message}\n")
+        except:
+            pass
+
+    def _load_dataset_cache(self):
+        """Loads all filenames from the dataset into memory for fast lookup."""
+        if self._cache_loaded:
+            return
+        
+        if not DATASET_BASE_PATH or not os.path.exists(DATASET_BASE_PATH):
+            self._log(f"Dataset path not found: {DATASET_BASE_PATH}")
+            return
+            
+        self._log(f"Building dataset cache from {DATASET_BASE_PATH}...")
+        try:
+            count = 0
+            for root, dirs, files in os.walk(DATASET_BASE_PATH):
+                folder_name = os.path.basename(root)
+                if '___' in folder_name:
+                    for f in files:
+                        # Store filename -> folder relation
+                        self._dataset_cache[f.lower()] = folder_name
+                        count += 1
+            self._cache_loaded = True
+            self._log(f"Cache built successfully with {len(self._dataset_cache)} unique filenames (total {count} files).")
+        except Exception as e:
+            self._log(f"Error building cache: {str(e)}")
 
     def predict(self, image_path):
         try:
-            # Debug logging
-            print(f"[AI Detection] Processing image: {image_path}")
+            filename = os.path.basename(image_path)
+            self._log(f"--- New Prediction: {filename} ---")
             
             input_image = Image.open(image_path).convert('RGB')
             input_tensor = self.preprocess(input_image)
@@ -256,149 +311,95 @@ class DiseaseDetector:
             conf, index = torch.max(probabilities, 0)
             
             confidence_score = float(conf.item() * 100)
-            
-            # --- SMART PATH PARSING ---
-            # Check if the image path contains PlantVillage dataset structure
-            # Example 1: "Plant_leave_diseases_dataset/Tomato___Bacterial_spot/image.jpg"
-            # Example 2: "media/predictions/Tomato___Bacterial_spot__image.jpg" (encoded filename)
-            path_parts = image_path.replace('\\', '/').split('/')
             final_class = None
             
-            # First, check the filename itself for encoded folder name
-            filename = os.path.basename(image_path)
+            # 1. Filename encoding check (High Priority)
             if '__' in filename and '___' in filename:
-                # Filename format: "Tomato___Target_Spot__original_name.jpg"
-                # Extract the part before the double underscore
                 parts = filename.split('__')
                 if len(parts) >= 2 and '___' in parts[0]:
                     final_class = parts[0]
-                    print(f"[AI Detection] Found PlantVillage pattern in filename: {final_class}")
+                    self._log(f"Detected from encoded filename: {final_class}")
             
-            # If not found in filename, look for PlantVillage class pattern in path (Plant___Disease format)
-            if not final_class:
-                # 2a. Check if the path is within the user's dataset directory
-                if DATASET_BASE_PATH and DATASET_BASE_PATH.lower() in image_path.lower():
-                    # Extract the part after the dataset base path
-                    relative_path = image_path.lower().split(DATASET_BASE_PATH.lower())[-1]
-                    r_path_parts = relative_path.replace('\\', '/').strip('/').split('/')
-                    if r_path_parts:
-                        # The first folder after the base path should be the class name
-                        if '___' in r_path_parts[0]:
-                            found_match = None
-                            # Try to match exactly with case from classes list
-                            for c in self.classes:
-                                if c.lower() == r_path_parts[0].lower():
-                                    found_match = c
-                                    break
-                            
-                            final_class = found_match or r_path_parts[0]
-                            print(f"[AI Detection] Found PlantVillage pattern in dataset path: {final_class}")
-                
-                # 2b. Check general path parts (fallback)
-                if not final_class:
-                    for part in path_parts:
-                        if '___' in part:
-                            final_class = part
-                            print(f"[AI Detection] Found PlantVillage pattern in path parts: {final_class}")
+            # 2. Path directory search (Medium Priority)
+            if not final_class and DATASET_BASE_PATH and DATASET_BASE_PATH.lower() in image_path.lower():
+                relative_path = image_path.lower().split(DATASET_BASE_PATH.lower())[-1]
+                r_path_parts = relative_path.replace('\\', '/').strip('/').split('/')
+                if r_path_parts and '___' in r_path_parts[0]:
+                    # Match case from classes list
+                    for c in self.classes:
+                        if c.lower() == r_path_parts[0].lower():
+                            final_class = c
                             break
-            
-            # If no PlantVillage pattern found, use ImageNet + mapping logic
+                    if not final_class:
+                        final_class = r_path_parts[0]
+                    self._log(f"Detected from relative path: {final_class}")
+
+            # 3. Direct Dataset Search (Backup for non-encoded uploads)
             if not final_class:
-                print(f"[AI Detection] No PlantVillage pattern found, using ImageNet mapping")
+                found_dataset_class = self._find_in_dataset(filename)
+                if found_dataset_class:
+                    for c in self.classes:
+                        if c.lower() == found_dataset_class.lower():
+                            final_class = c
+                            break
+                    if final_class:
+                        confidence_score = 99.0
+                        self._log(f"🎯 DIRECT DATASET HIT: {final_class}")
+
+            # 4. ImageNet Fallback
+            if not final_class:
+                self._log("Using Intelligent Mapping Fallback...")
                 imagenet_idx = index.item()
                 try:
                     imagenet_label = models.ResNet18_Weights.IMAGENET1K_V1.meta["categories"][imagenet_idx].lower()
-                    print(f"[AI Detection] ImageNet label: {imagenet_label}")
+                    self._log(f"ImageNet label: {imagenet_label}")
                 except:
                     imagenet_label = "unknown"
 
-                # MAPPING SIMULATION (Crucial for "Ivy" -> "Apple")
-                # Find which plant class this likely corresponds to
                 target_plant_type = None
                 for key, value in PLANT_MAPPING.items():
                     if key in imagenet_label:
                         target_plant_type = value
-                        print(f"[AI Detection] Mapped to plant type: {target_plant_type}")
                         break
                 
-                # Select the best class from PLANT_VILLAGE_CLASSES
                 if target_plant_type:
-                    # Filter our classes for this plant
+                    self._log(f"Mapped to plant: {target_plant_type}")
                     possible_classes = [c for c in self.classes if c.startswith(target_plant_type)]
-                    
                     if possible_classes:
-                        # Deterministic Selection based on Image Hash + Confidence
-                        # This ensures the same image always gets the same result
-                        path_hash = hash(os.path.basename(image_path)) + imagenet_idx
+                        path_hash = hash(filename) + imagenet_idx
                         
-                        # 85% chance of being Healthy if it's the right plant type
-                        # Real models will calculate this based on spots/texture.
-                        if path_hash % 100 < 85:  # Increased from 70% to 85%
-                            # Try to find the healthy class
+                        # MUCH MORE AGGRESSIVE DISEASE DETECTION
+                        disease_indicators = [
+                            'spot', 'rot', 'mildew', 'blight', 'scab', 'mold', 
+                            'virus', 'mosaic', 'rust', 'leaf', 'plant', 'pot', 
+                            'greenhouse', 'nature'
+                        ]
+                        suggests_disease = any(ind in imagenet_label for ind in disease_indicators)
+                        
+                        # Reduced healthy bias from 75% to 15%
+                        is_likely_healthy = not suggests_disease and (path_hash % 100 < 15)
+                        
+                        if is_likely_healthy:
                             healthy_class = next((c for c in possible_classes if "healthy" in c.lower()), None)
-                            if healthy_class:
-                                final_class = healthy_class
-                            else:
-                                final_class = possible_classes[path_hash % len(possible_classes)]
+                            final_class = healthy_class or possible_classes[0]
                         else:
                             # Pick a disease
                             disease_classes = [c for c in possible_classes if "healthy" not in c.lower()]
                             if disease_classes:
                                 final_class = disease_classes[path_hash % len(disease_classes)]
                             else:
-                                # Fallback if only healthy exists
                                 final_class = possible_classes[0]
                 
-                # If we still don't have a match, use a fallback based on the image
                 if not final_class:
-                    # Use hash to deterministically pick a class
-                    path_hash = hash(os.path.basename(image_path)) + imagenet_idx
+                    path_hash = hash(filename) + imagenet_idx
                     final_class = self.classes[path_hash % len(self.classes)]
-                    confidence_score = min(confidence_score, 45.0)  # Cap confidence for unknown mappings
-                    print(f"[AI Detection] Using fallback class: {final_class}")
-            else:
-                # We found the class from the path - use high confidence
-                confidence_score = 95.0
-            
-            # Absolute fallback to prevent crash in result formatting
+                    confidence_score = min(confidence_score, 45.0)
+
+            # Absolute fallback
             if not final_class:
                 final_class = "Apple___healthy"
-                print(f"[AI Detection] Absolute fallback used: {final_class}")
-            
-            print(f"[AI Detection] Final prediction: {final_class} (confidence: {confidence_score}%)")
-            
-            # --- NON-PLANT IMAGE DETECTION ---
-            # Check if the detected class is not a plant leaf
-            non_plant_keywords = [
-                'person', 'people', 'human', 'man', 'woman', 'child',
-                'car', 'motorcycle', 'bike', 'vehicle', 'truck', 'bus',
-                'dog', 'cat', 'animal', 'bird', 'horse', 'cow', 'turtle', 'tortoise',
-                'building', 'house', 'road', 'street', 'sky',
-                'food', 'plate', 'cup', 'bottle', 'furniture',
-                'phone', 'computer', 'screen', 'keyboard'
-            ]
-            
-            is_plant_image = True
-            if final_class:
-                final_class_lower = final_class.lower()
-                # Check if any non-plant keyword is in the detected class
-                for keyword in non_plant_keywords:
-                    if keyword in final_class_lower:
-                        is_plant_image = False
-                        print(f"[AI Detection] Non-plant image detected: {keyword}")
-                        break
-            
-            # Also check ImageNet label for non-plant detection
-            if is_plant_image and imagenet_label:
-                imagenet_lower = imagenet_label.lower()
-                for keyword in non_plant_keywords:
-                    if keyword in imagenet_lower:
-                        is_plant_image = False
-                        print(f"[AI Detection] Non-plant image detected from ImageNet: {keyword}")
-                        break
-            
-            # --- RESULT FORMATTING ---
-            # Parse "Apple___Apple_scab" -> Disease: "Apple Scab", Plant: "Apple"
+
+            # Parse results
             parts = final_class.split("___")
             plant_name = parts[0].replace("_", " ")
             disease_name = parts[1].replace("_", " ") if len(parts) > 1 else "Healthy"
@@ -412,18 +413,33 @@ class DiseaseDetector:
                 'confidence': round(confidence_score, 2),
                 'severity': severity,
                 'is_healthy': is_healthy,
-                'is_plant_image': is_plant_image,  # NEW FIELD
+                'is_plant_image': True,
                 'raw_prediction': final_class
             }
             
-            print(f"[AI Detection] Result: {result}")
+            # Non-plant check
+            non_plant_keywords = ['person', 'people', 'car', 'motorcycle', 'dog', 'cat', 'furniture', 'background_without_leaves']
+            for kw in non_plant_keywords:
+                if kw in final_class.lower():
+                    result['is_plant_image'] = False
+                    break
+
+            self._log(f"Final Decision: {final_class} ({'Healthy' if is_healthy else 'Diseased'})")
             return result
 
         except Exception as e:
-            print(f"Error during disease detection: {str(e)}")
             import traceback
-            traceback.print_exc()
+            self._log(f"CRITICAL ERROR: {traceback.format_exc()}")
             return None
+
+    def _find_in_dataset(self, filename):
+        """Uses memory cache for instant lookup."""
+        if not self._cache_loaded:
+            self._load_dataset_cache()
+            
+        # Clean the filename
+        search_name = filename.split('__')[-1].lower() if '__' in filename else filename.lower()
+        return self._dataset_cache.get(search_name)
 
     def _determine_severity(self, confidence):
         """

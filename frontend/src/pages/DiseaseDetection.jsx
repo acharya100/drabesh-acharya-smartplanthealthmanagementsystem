@@ -170,6 +170,12 @@ const DiseaseDetection = () => {
                       <h4 style={{ fontSize: '1rem' }}>Upload Image</h4>
                       <input id="fileInput" type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
                     </div>
+                    <div style={{ width: '1px', background: 'var(--border-light)' }}></div>
+                    <div onClick={() => document.getElementById('folderInput').click()} style={{ flex: 1 }}>
+                      <Upload size={32} style={{ color: 'var(--secondary)', marginBottom: '0.5rem' }} />
+                      <h4 style={{ fontSize: '1rem' }}>Upload Folder</h4>
+                      <input id="folderInput" type="file" webkitdirectory="true" directory="true" multiple onChange={handleFileChange} className="hidden" />
+                    </div>
                   </div>
 
                   <div className="or-divider" style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: 600 }}>OR</div>

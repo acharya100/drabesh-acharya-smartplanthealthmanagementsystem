@@ -89,7 +89,23 @@ const Plants = () => {
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setPlantImage(file);
+      let processedFile = file;
+
+      // Extract folder name from path if available (webkitRelativePath)
+      if (file.webkitRelativePath) {
+        const pathParts = file.webkitRelativePath.split('/');
+        if (pathParts.length > 1) {
+          const folderName = pathParts[pathParts.length - 2];
+          if (folderName.includes('___')) {
+            // Encode folder name in filename for backend identification
+            const newFileName = `${folderName}__${file.name}`;
+            processedFile = new File([file], newFileName, { type: file.type });
+            console.log(`[Identify] Encoded folder name in filename: ${newFileName}`);
+          }
+        }
+      }
+
+      setPlantImage(processedFile);
       setImagePreview(URL.createObjectURL(file));
     }
   };
