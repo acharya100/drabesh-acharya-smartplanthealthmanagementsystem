@@ -9,7 +9,7 @@
  */
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { login } from "../api";
+import { authService } from "../services/api";
 import { Eye, EyeOff } from "lucide-react";
 
 /**
@@ -49,7 +49,7 @@ const Login = () => {
       // Django's authenticate() method uses the USERNAME_FIELD which is 'email'.
       // So sending JSON { "username": "user@example.com", "password": "..." } should work even if the field is 'email'.
 
-      const { data } = await login({
+      const { data } = await authService.login({
         username: formData.username, // TokenObtainPairView expects 'username' key
         password: formData.password
       });

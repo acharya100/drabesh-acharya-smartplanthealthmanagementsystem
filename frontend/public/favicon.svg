@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="leafGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4ade80;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#166534;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <!-- Background Circle -->
+  <circle cx="50" cy="50" r="48" fill="#f0fff4" stroke="#4ade80" stroke-width="2"/>
+  
+  <!-- Leaf -->
+  <path d="M50 20 C65 20 80 35 80 50 C80 65 65 80 50 80 C35 80 20 65 20 50 C20 35 35 20 50 20 Z" fill="url(#leafGrad)" />
+  <path d="M50 20 Q50 50 50 80" stroke="#ffffff" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <path d="M50 35 L65 30" stroke="#ffffff" stroke-width="1" fill="none" />
+  <path d="M50 50 L65 45" stroke="#ffffff" stroke-width="1" fill="none" />
+  <path d="M50 65 L65 60" stroke="#ffffff" stroke-width="1" fill="none" />
+  <path d="M50 35 L35 30" stroke="#ffffff" stroke-width="1" fill="none" />
+  <path d="M50 50 L35 45" stroke="#ffffff" stroke-width="1" fill="none" />
+  <path d="M50 65 L35 60" stroke="#ffffff" stroke-width="1" fill="none" />
+
+  <!-- Magnifying Glass -->
+  <circle cx="65" cy="65" r="20" fill="none" stroke="#2c3e50" stroke-width="4" />
+  <rect x="78" y="78" width="6" height="15" transform="rotate(-45 78 78)" fill="#2c3e50" rx="2" />
+  <circle cx="65" cy="65" r="14" fill="white" fill-opacity="0.2" />
+</svg>

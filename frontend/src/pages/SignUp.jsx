@@ -9,7 +9,7 @@
  */
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import axios from "axios";
+import { authService } from "../services/api";
 import { Eye, EyeOff } from "lucide-react";
 
 const SignUp = () => {
@@ -55,7 +55,7 @@ const SignUp = () => {
         }
 
         try {
-            await axios.post("http://localhost:8000/api/auth/register/", {
+            await authService.register({
                 email: formData.email,
                 username: formData.username,
                 password: formData.password
