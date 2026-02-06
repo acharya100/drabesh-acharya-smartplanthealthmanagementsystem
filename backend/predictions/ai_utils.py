@@ -128,7 +128,9 @@ class PlantIdentifier:
     
     def __init__(self):
         # Using MobileNet_V2 for generic object identification
-        self.model = models.mobilenet_v2(weights=models.MobileNet_V2_Weights.IMAGENET1K_V1)
+        weights = models.MobileNet_V2_Weights.IMAGENET1K_V1
+        self.model = models.mobilenet_v2(weights=weights)
+        self.imagenet_labels = weights.meta["categories"]
         self.model.eval()
         
         self.preprocess = transforms.Compose([
