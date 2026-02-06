@@ -401,10 +401,21 @@ class DiseaseDetector:
 
             # Parse results
             parts = final_class.split("___")
-            plant_name = parts[0].replace("_", " ")
-            disease_name = parts[1].replace("_", " ") if len(parts) > 1 else "Healthy"
+            plant_name = parts[0].replace("_", " ").replace(",", "")
+            raw_disease = parts[1].replace("_", " ") if len(parts) > 1 else "Healthy"
             
-            is_healthy = "healthy" in disease_name.lower()
+            is_healthy = "healthy" in raw_disease.lower()
+            
+            # User specifically requested names like "Apple Black Rot" instead of just "Black rot"
+            if is_healthy:
+                disease_name = "Healthy"
+            else:
+                # User specifically requested names like "Apple Black Rot" instead of just "Black rot"
+                # We combine plant and disease names but avoid redundancy (e.g. "Cedar Apple Rust")
+                if plant_name.lower() in raw_disease.lower():
+                    disease_name = raw_disease.title()
+                else:
+                    disease_name = f"{plant_name} {raw_disease}".title()
             severity = "Low" if is_healthy else self._determine_severity(confidence_score)
             
             result = {

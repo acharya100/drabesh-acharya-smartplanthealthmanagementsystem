@@ -56,7 +56,7 @@ class Command(BaseCommand):
                 'type': 'fungal',
                 'hosts': ['Apple'],
                 'symptoms': 'Olive-green, velvety spots on leaves; dark, scabby lesions on fruit.',
-                'causes': 'Fungal pathogen overwintering in fallen leaves.',
+                'causes': 'Fungal pathogen Venturia inaequalis.',
                 'treatments': [
                     {'name': 'Neem Oil', 'type': 'organic', 'desc': 'Organic fungicide.', 'inst': 'Spray leaves early evening.'},
                     {'name': 'Mancozeb Fungicide', 'type': 'chemical', 'desc': 'Protective fungicide.', 'inst': 'Apply during silver tip stage.'}
@@ -68,19 +68,19 @@ class Command(BaseCommand):
                 'type': 'fungal',
                 'hosts': ['Apple'],
                 'symptoms': 'Reddish-brown spots on leaves (frogeye); firm, brown fruit rot with concentric rings.',
-                'causes': 'Paths entering through wounds or dead tissue.',
+                'causes': 'Fungus Botryosphaeria obtusa.',
                 'treatments': [
                     {'name': 'Pruning', 'type': 'cultural', 'desc': 'Remove dead wood.', 'inst': 'Prune out cankers during winter.'},
                     {'name': 'Captan Fungicide', 'type': 'chemical', 'desc': 'Standard chemical control.', 'inst': 'Apply every 10-14 days.'}
                 ]
             },
             {
-                'name': 'Apple Cedar Rust',
+                'name': 'Cedar Apple Rust',
                 'scientific_name': 'Gymnosporangium juniperi-virginianae',
                 'type': 'fungal',
                 'hosts': ['Apple'],
                 'symptoms': 'Bright orange spots on the upper surface of leaves.',
-                'causes': 'Fungus requiring both apple and cedar trees to complete life cycle.',
+                'causes': 'Fungus requiring both apple and cedar trees.',
                 'treatments': [
                     {'name': 'Removing Juniper Hosts', 'type': 'cultural', 'desc': 'Remove nearby cedars.', 'inst': 'Clear red cedars within 1 mile range.'},
                     {'name': 'Myclobutanil', 'type': 'chemical', 'desc': 'Systemic fungicide.', 'inst': 'Apply between pink and petal fall stages.'}
@@ -92,19 +92,19 @@ class Command(BaseCommand):
                 'type': 'fungal',
                 'hosts': ['Cherry'],
                 'symptoms': 'White, powdery patches on leaves and young shoots.',
-                'causes': 'High humidity and poor air circulation.',
+                'causes': 'Fungus Podosphaera clandestine.',
                 'treatments': [
                     {'name': 'Sulfur Spray', 'type': 'organic', 'desc': 'Traditional organic sulfur.', 'inst': 'Dust or spray at first sign of white spots.'},
                     {'name': 'Potassium Bicarbonate', 'type': 'organic', 'desc': 'Baking soda alternative.', 'inst': 'Mix with water and surfactant.'}
                 ]
             },
             {
-                'name': 'Corn Cercospora Leaf Spot',
+                'name': 'Corn Cercospora Leaf Spot Gray Leaf',
                 'scientific_name': 'Cercospora zeae-maydis',
                 'type': 'fungal',
                 'hosts': ['Corn'],
                 'symptoms': 'Rectangular, gray to tan lesions on leaves.',
-                'causes': 'Warm, humid weather and wet leaves.',
+                'causes': 'Fungus Cercospora zeae-maydis.',
                 'treatments': [
                     {'name': 'Crop Rotation', 'type': 'cultural', 'desc': 'Rotate with non-grasses.', 'inst': 'Avoid corn-on-corn planting.'},
                     {'name': 'Strobilurin Fungicides', 'type': 'chemical', 'desc': 'Tassel stage application.', 'inst': 'Apply at VT to R1 stage.'}
@@ -116,18 +116,18 @@ class Command(BaseCommand):
                 'type': 'fungal',
                 'hosts': ['Corn'],
                 'symptoms': 'Small, cinnamon-brown pustules on both leaf surfaces.',
-                'causes': 'Wind-borne spores from southern regions.',
+                'causes': 'Fungus Puccinia sorghi.',
                 'treatments': [
                     {'name': 'Resistant Varieties', 'type': 'cultural', 'desc': 'Plant hybrid corn.', 'inst': 'Selection of resistant genotypes.'}
                 ]
             },
             {
-                'name': 'Corn Northern Leaf Blight',
+                'name': 'Corn Northern Blight',
                 'scientific_name': 'Exserohilum turcicum',
                 'type': 'fungal',
                 'hosts': ['Corn'],
                 'symptoms': 'Large, cigar-shaped, grayish-green to tan lesions.',
-                'causes': 'Extended periods of leaf wetness and moderate temperatures.',
+                'causes': 'Fungus Exserohilum turcicum.',
                 'treatments': [
                     {'name': 'Deep Tillage', 'type': 'cultural', 'desc': 'Bury infected residue.', 'inst': 'Plow field after harvest.'}
                 ]
@@ -138,18 +138,18 @@ class Command(BaseCommand):
                 'type': 'fungal',
                 'hosts': ['Grape'],
                 'symptoms': 'Brown leaf spots; shriveled, black "mummy" berries.',
-                'causes': 'Wet weather during late spring/summer.',
+                'causes': 'Fungus Guignardia bidwellii.',
                 'treatments': [
                     {'name': 'Manicure Vines', 'type': 'cultural', 'desc': 'Remove mummies.', 'inst': 'Remove dried fruit from previous season.'}
                 ]
             },
             {
-                'name': 'Grape Esca',
+                'name': 'Grape Esca (Black Measles)',
                 'scientific_name': 'Phaeomoniella chlamydospora',
                 'type': 'fungal',
                 'hosts': ['Grape'],
                 'symptoms': 'Tiger-stripe patterns on leaves; "black measles" spots on berries.',
-                'causes': 'Complex of various wood-rotting fungi.',
+                'causes': 'Wood-rotting fungi complex.',
                 'treatments': [
                     {'name': 'Pruning Protection', 'type': 'cultural', 'desc': 'Seal pruning wounds.', 'inst': 'Apply wound sealant after winter pruning.'}
                 ]
@@ -160,18 +160,18 @@ class Command(BaseCommand):
                 'type': 'fungal',
                 'hosts': ['Grape'],
                 'symptoms': 'Angular tan to brown spots on leaves; premature leaf drop.',
-                'causes': 'High humidity and overlapping seasons.',
+                'causes': 'Fungus Isariopsis vaccinii.',
                 'treatments': [
                     {'name': 'Copper Spray', 'type': 'organic', 'desc': 'Bordeaux mixture.', 'inst': 'Apply after harvest to protect foliage.'}
                 ]
             },
             {
-                'name': 'Citrus Greening (HLB)',
+                'name': 'Orange Haunglongbing',
                 'scientific_name': 'Candidatus Liberibacter asiaticus',
                 'type': 'bacterial',
                 'hosts': ['Orange'],
                 'symptoms': 'Asymmetrical yellowing of leaves; small, lopsided fruit with bitter juice.',
-                'causes': 'Asian Citrus Psyllid (insect vector).',
+                'causes': 'Asian Citrus Psyllid vector.',
                 'treatments': [
                     {'name': 'Psyllid Control', 'type': 'pest', 'desc': 'Target the vector.', 'inst': 'Use systemic insecticides to kill psyllids.'}
                 ]
@@ -182,18 +182,18 @@ class Command(BaseCommand):
                 'type': 'bacterial',
                 'hosts': ['Peach'],
                 'symptoms': 'Small, angular, water-soaked spots on leaves; pitted fruit.',
-                'causes': 'Bacteria splashing via rain/wind.',
+                'causes': 'Bacteria Xanthomonas campestris.',
                 'treatments': [
                     {'name': 'Copper Bactericides', 'type': 'chemical', 'desc': 'Late dormant application.', 'inst': 'Spray before bud break.'}
                 ]
             },
             {
-                'name': 'Pepper Bacterial Spot',
+                'name': 'Pepper Bell Bacterial Spot',
                 'scientific_name': 'Xanthomonas campestris pv. vesicatoria',
                 'type': 'bacterial',
                 'hosts': ['Pepper, bell'],
                 'symptoms': 'Small, wart-like raised spots on fruit; brown leaf spots.',
-                'causes': 'Infected seeds or soil splashes.',
+                'causes': 'Bacteria Xanthomonas campestris pv. vesicatoria.',
                 'treatments': [
                     {'name': 'Seed Treatment', 'type': 'cultural', 'desc': 'Bleach dip.', 'inst': 'Soak seeds in 10% bleach for 1 minute.'}
                 ]
@@ -204,7 +204,7 @@ class Command(BaseCommand):
                 'type': 'fungal',
                 'hosts': ['Potato'],
                 'symptoms': 'Dark spots with concentric rings (target-like) on older leaves.',
-                'causes': 'Moderate temperatures and alternating wet/dry periods.',
+                'causes': 'Fungus Alternaria solani.',
                 'treatments': [
                     {'name': 'Mulching', 'type': 'cultural', 'desc': 'Prevent soil splash.', 'inst': 'Apply straw or plastic mulch.'}
                 ]
@@ -215,7 +215,7 @@ class Command(BaseCommand):
                 'type': 'fungal',
                 'hosts': ['Potato'],
                 'symptoms': 'Pale green, water-soaked spots; white fungal growth on leaf undersides.',
-                'causes': 'Cool, moist weather (The Great Famine pathogen).',
+                'causes': 'Fungus Phytophthora infestans.',
                 'treatments': [
                     {'name': 'Destroy Volunteers', 'type': 'cultural', 'desc': 'Eliminate cull piles.', 'inst': 'Remove all potato waste from the garden.'}
                 ]
@@ -226,7 +226,7 @@ class Command(BaseCommand):
                 'type': 'fungal',
                 'hosts': ['Squash'],
                 'symptoms': 'White powdery film on leaves; premature yellowing.',
-                'causes': 'Warm temperatures and lack of airflow.',
+                'causes': 'Fungus Erysiphe cichoracearum.',
                 'treatments': [
                     {'name': 'Milk Spray', 'type': 'organic', 'desc': 'Natural antifungal.', 'inst': 'Mix 1 part milk with 9 parts water.'}
                 ]
@@ -237,7 +237,7 @@ class Command(BaseCommand):
                 'type': 'fungal',
                 'hosts': ['Strawberry'],
                 'symptoms': 'Purplish-brown spots that merge to "scorch" the leaf.',
-                'causes': 'Overhead irrigation and high density.',
+                'causes': 'Fungus Diplocarpon earlianum.',
                 'treatments': [
                     {'name': 'Drip Irrigation', 'type': 'cultural', 'desc': 'Keep leaves dry.', 'inst': 'Switch from overhead sprinklers to drip lines.'}
                 ]
@@ -248,7 +248,7 @@ class Command(BaseCommand):
                 'type': 'bacterial',
                 'hosts': ['Tomato'],
                 'symptoms': 'Small, greasy-looking spots on fruit; yellow halos on leaves.',
-                'causes': 'Bacterial entry via stomata.',
+                'causes': 'Bacteria Xanthomonas campestris.',
                 'treatments': [
                     {'name': 'Oxytetracycline', 'type': 'chemical', 'desc': 'Antibiotic spray.', 'inst': 'Apply under local agricultural guidelines.'}
                 ]
@@ -259,7 +259,7 @@ class Command(BaseCommand):
                 'type': 'fungal',
                 'hosts': ['Tomato'],
                 'symptoms': 'Lower leaves turn yellow with brown target-pattern spots.',
-                'causes': 'Soil-borne fungi.',
+                'causes': 'Fungus Alternaria solani.',
                 'treatments': [
                     {'name': 'Potassium Soap', 'type': 'organic', 'desc': 'Insecticidal soap.', 'inst': 'Helps clean leaf surface.'}
                 ]
@@ -270,7 +270,7 @@ class Command(BaseCommand):
                 'type': 'fungal',
                 'hosts': ['Tomato'],
                 'symptoms': 'Large, irregular olive-green to brown spots on leaves; oily fruit rot.',
-                'causes': 'Pathogen spread by rain/wind.',
+                'causes': 'Fungus Phytophthora infestans.',
                 'treatments': [
                     {'name': 'Copper Fungicide', 'type': 'organic', 'desc': 'Standard preventative.', 'inst': 'Apply every 7-10 days in wet seasons.'}
                 ]
@@ -281,7 +281,7 @@ class Command(BaseCommand):
                 'type': 'fungal',
                 'hosts': ['Tomato'],
                 'symptoms': 'Pale green patches on upper leaf; olive-brown fuzzy growth underneath.',
-                'causes': 'High humidity in greenhouses.',
+                'causes': 'Fungus Passalora fulva.',
                 'treatments': [
                     {'name': 'Ventilation', 'type': 'environmental', 'desc': 'Lower humidity.', 'inst': 'Use fans and dehumidifiers in the greenhouse.'}
                 ]
@@ -292,7 +292,7 @@ class Command(BaseCommand):
                 'type': 'fungal',
                 'hosts': ['Tomato'],
                 'symptoms': 'Tiny white circles with dark borders on leaves; usually lower leaves first.',
-                'causes': 'Wet, humid weather.',
+                'causes': 'Fungus Septoria lycopersici.',
                 'treatments': [
                     {'name': 'Pruning Lower Leaves', 'type': 'cultural', 'desc': 'Remove bottom foliage.', 'inst': 'Keep first 12 inches of stem leaf-free.'}
                 ]
@@ -303,7 +303,7 @@ class Command(BaseCommand):
                 'type': 'pest',
                 'hosts': ['Tomato'],
                 'symptoms': 'Fine white speckling (stippling) on leaves; silk webbing.',
-                'causes': 'Hot, dry conditions and dusty roads.',
+                'causes': 'Tetranychus urticae mites.',
                 'treatments': [
                     {'name': 'Water Wash', 'type': 'mechanical', 'desc': 'Blast them off.', 'inst': 'Strong stream of water on leaf undersides.'},
                     {'name': 'Predatory Mites', 'type': 'biological', 'desc': 'Phytoseiulus persimilis.', 'inst': 'Release beneficial insects.'}
@@ -315,7 +315,7 @@ class Command(BaseCommand):
                 'type': 'fungal',
                 'hosts': ['Tomato'],
                 'symptoms': 'Brown spots with faint concentric rings; can affect stems and fruit.',
-                'causes': 'Warm, wet weather.',
+                'causes': 'Fungus Corynespora cassiicola.',
                 'treatments': [
                     {'name': 'Spacing', 'type': 'cultural', 'desc': 'Wider planting.', 'inst': 'Increase plant-to-plant distance for air.'}
                 ]
@@ -326,7 +326,7 @@ class Command(BaseCommand):
                 'type': 'viral',
                 'hosts': ['Tomato'],
                 'symptoms': 'Mottled "mosaic" pattern of dark and light green on leaves; fern-like leaves.',
-                'causes': 'Mechanical transmission (handling, tools).',
+                'causes': 'Tomato mosaic virus.',
                 'treatments': [
                     {'name': 'Tool Sanitization', 'type': 'cultural', 'desc': 'Clean your shears.', 'inst': 'Dip tools in 10% TSP or bleach between plants.'}
                 ]
@@ -337,7 +337,7 @@ class Command(BaseCommand):
                 'type': 'viral',
                 'hosts': ['Tomato'],
                 'symptoms': 'Severe yellowing and upward curling of leaf edges; stunted growth.',
-                'causes': 'Silverleaf Whitefly (insect vector).',
+                'causes': 'TYLCV virus.',
                 'treatments': [
                     {'name': 'Yellow Sticky Traps', 'type': 'mechanical', 'desc': 'Trap whiteflies.', 'inst': 'Hang traps at canopy level.'}
                 ]
@@ -346,7 +346,7 @@ class Command(BaseCommand):
 
         # 4. Perform Seeding
         for d_info in disease_data:
-            disease, created = Disease.objects.get_or_create(
+            disease, created = Disease.objects.update_or_create(
                 name=d_info['name'],
                 defaults={
                     'scientific_name': d_info.get('scientific_name', ''),
@@ -364,10 +364,12 @@ class Command(BaseCommand):
 
             if created:
                 self.stdout.write(f"Created disease entry: {disease.name}")
+            else:
+                self.stdout.write(f"Updated disease entry: {disease.name}")
 
             # Add Treatments
             for t_info in d_info.get('treatments', []):
-                Treatment.objects.get_or_create(
+                Treatment.objects.update_or_create(
                     disease=disease,
                     name=t_info['name'],
                     defaults={
