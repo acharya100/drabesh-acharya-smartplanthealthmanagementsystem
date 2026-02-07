@@ -33,7 +33,7 @@ const api = axios.create({
  */
 api.interceptors.request.use(
     (config) => {
-        const token = localStorage.getItem('access_token');
+        const token = sessionStorage.getItem('access_token');
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
@@ -61,19 +61,19 @@ api.interceptors.response.use(
         // Handle unauthorized (401) with token refresh logic
         if (error.response?.status === 401 && !originalRequest._retry) {
             originalRequest._retry = true;
-            const refreshToken = localStorage.getItem('refresh_token');
+            const refreshToken = sessionStorage.getItem('refresh_token');
 
             if (refreshToken) {
                 try {
                     const { data } = await axios.post(`${API_URL}/auth/token/refresh/`, {
                         refresh: refreshToken
                     });
-                    localStorage.setItem('access_token', data.access);
+                    sessionStorage.setItem('access_token', data.access);
                     originalRequest.headers.Authorization = `Bearer ${data.access}`;
                     return api(originalRequest);
                 } catch (refreshError) {
                     // Refresh failed, logout user
-                    localStorage.clear();
+                    sessionStorage.clear();
                     window.location.href = '/';
                 }
             }

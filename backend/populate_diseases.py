@@ -212,12 +212,11 @@ def populate():
     updated_count = 0
     for data in DISEASE_DATA:
         # Find disease by partial name match since existing names might vary slightly
-        # We use icontains
+       
         diseases = Disease.objects.filter(name__icontains=data['name_contains'])
         
         if not diseases.exists():
             # Try stricter match or just skip if not found
-            # Or try searching by 'Plant Name' + 'Disease Name' parts
             print(f"⚠️ Could not find disease matching '{data['name_contains']}'")
             continue
             
@@ -232,12 +231,13 @@ def populate():
             
             # 2. Link Plant
             plant_name = data['plant_name']
-            menu_plant = Plant.objects.filter(name__icontains=plant_name).first()
+            # Prioritize System/Superuser plants for global knowledge base
+            menu_plant = Plant.objects.filter(name__icontains=plant_name, user__is_superuser=True).first()
+            if not menu_plant:
+                 menu_plant = Plant.objects.filter(name__icontains=plant_name).first()
             
             if not menu_plant:
                 # If specific plant not found, try to find by that name in general
-                # Ideally we should simulate finding the 'Apple' plant entity
-                # If it doesn't exist, we might create a generic one or skip
                 print(f"  Note: Plant '{plant_name}' not found in database to link.")
             else:
                 # Check if already linked

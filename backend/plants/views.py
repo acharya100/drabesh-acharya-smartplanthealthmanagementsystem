@@ -124,6 +124,13 @@ class PlantViewSet(viewsets.ModelViewSet):
         Returns:
             A queryset of plants belonging only to the authenticated user.
         """
+        # Global plants (for Treatment reference page)
+        # Returns plants owned by superusers/admins (System Plants)
+        if self.request.query_params.get('global') == 'true':
+            # We want unique names, but since we ensure_plants creates distinct names for superuser,
+            # this should be fine.
+            return Plant.objects.filter(user__is_superuser=True).order_by('name')
+
         # Start with all plants and then filter down to the owner
         queryset = Plant.objects.filter(user=self.request.user)
         

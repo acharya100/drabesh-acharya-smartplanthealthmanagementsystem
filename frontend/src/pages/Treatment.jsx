@@ -3,588 +3,330 @@
  * 
  * A knowledge base of remedial actions for plant diseases. Each treatment plan
  * includes step-by-step instructions, required products, and effectiveness ratings.
- * Users can view details to save their plants.
+ * Users can browse by Host Plant to find relevant issues.
  * 
  * Author: Drabesh Acharya
  */
 
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
-import { treatmentService, diseaseService } from "../services/api";
-import { Search, Filter, ShieldCheck, List, Package, ArrowRight, Trash2, CheckCircle, AlertTriangle } from "lucide-react";
+import { treatmentService, diseaseService, plantService } from "../services/api";
+import {
+  Search, ShieldCheck, Package,
+  ChevronRight, Sprout, AlertTriangle,
+  CheckCircle, Droplets, Thermometer
+} from "lucide-react";
 
 const Treatment = () => {
-  const [treatments, setTreatments] = useState([]);
+  const [plants, setPlants] = useState([]);
+  const [selectedPlant, setSelectedPlant] = useState(null);
   const [diseases, setDiseases] = useState([]);
-  const [selectedDisease, setSelectedDisease] = useState("");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [showViewModal, setShowViewModal] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [loadingPlants, setLoadingPlants] = useState(true);
+
+  // Modal State
+  const [showModal, setShowModal] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false); // Added for 'Add Treatment' button
   const [selectedTreatment, setSelectedTreatment] = useState(null);
-  const [isEditing, setIsEditing] = useState(false);
-  const [newTreatment, setNewTreatment] = useState({
-    name: "",
-    disease: "",
-    treatment_type: "organic",
-    description: "",
-    instructions: "",
-    products_needed: "",
-    effectiveness_rate: 85,
-    is_preventive: false,
-    cost_estimate: "Low"
-  });
+  const [modalLoading, setModalLoading] = useState(false);
 
   useEffect(() => {
-    loadData();
-
-    // Check URL parameters for special cases
-    const urlParams = new URLSearchParams(window.location.search);
-    const isHealthy = urlParams.get('healthy');
-    const isNotPlant = urlParams.get('notplant');
-    const diseaseParam = urlParams.get('disease');
-
-    if (isHealthy === 'true') {
-      setSelectedDisease('healthy');
-    } else if (isNotPlant === 'true') {
-      setSelectedDisease('notplant');
-    } else if (diseaseParam) {
-      setSelectedDisease(diseaseParam);
-    }
+    loadPlants();
   }, []);
 
   useEffect(() => {
-    if (selectedDisease !== 'healthy' && selectedDisease !== 'notplant') {
-      loadTreatments();
+    if (selectedPlant) {
+      loadDiseases(selectedPlant.id);
     }
-  }, [selectedDisease]);
+  }, [selectedPlant]);
 
-  const loadData = async () => {
+  const loadPlants = async () => {
     try {
-      const { data } = await diseaseService.getAll();
+      setLoadingPlants(true);
+      // Fetch 'global' plants (system plants) for the reference guide
+      const { data } = await plantService.getAll({ global: true });
+      const results = data.results || data;
+      setPlants(results);
+
+      // Select the first plant by default if available
+      if (results.length > 0) {
+        setSelectedPlant(results[0]);
+      }
+      setLoadingPlants(false);
+    } catch (error) {
+      console.error("Error loading plants:", error);
+      setLoadingPlants(false);
+    }
+  };
+
+  const loadDiseases = async (plantId) => {
+    try {
+      setLoading(true);
+      // Filter diseases by affected_plants ID
+      const { data } = await diseaseService.getAll({ affected_plants: plantId });
       setDiseases(data.results || data);
-    } catch (error) {
-      console.error("Error loading diseases list:", error);
-    }
-  };
-
-  const loadTreatments = async () => {
-    try {
-      setLoading(true);
-      const params = {
-        search: searchTerm,
-        disease: selectedDisease
-      };
-      const { data } = await treatmentService.getAll(params);
-      setTreatments(data.results || data);
       setLoading(false);
     } catch (error) {
-      console.error("Error loading treatments:", error);
+      console.error("Error loading diseases:", error);
       setLoading(false);
     }
   };
 
-  const handleEdit = (treatment) => {
-    setSelectedTreatment(treatment);
-    setIsEditing(true);
-    setNewTreatment({
-      name: treatment.name,
-      disease: treatment.disease,
-      treatment_type: treatment.treatment_type,
-      description: treatment.description || "",
-      instructions: treatment.instructions || "",
-      products_needed: treatment.products_needed || "",
-      effectiveness_rate: treatment.effectiveness_rate,
-      is_preventive: treatment.is_preventive,
-      cost_estimate: treatment.cost_estimate
-    });
-    setShowAddModal(true);
-  };
+  const handleViewTreatment = async (disease) => {
+    setModalLoading(true);
+    setShowModal(true);
+    setSelectedTreatment(null); // Clear previous
 
-  const handleViewDetails = (treatment) => {
-    setSelectedTreatment(treatment);
-    setShowViewModal(true);
-  };
-
-  const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this treatment plan? This action cannot be undone.")) {
-      try {
-        setLoading(true);
-        await treatmentService.delete(id);
-        await loadTreatments();
-      } catch (error) {
-        console.error("Error deleting treatment:", error);
-        alert("Failed to delete treatment plan. Check your permissions.");
-        setLoading(false);
-      }
-    }
-  };
-
-  const handleSearch = (e) => {
-    e.preventDefault();
-    loadTreatments();
-  };
-
-  const handleSubmitTreatment = async (e) => {
-    e.preventDefault();
     try {
-      setLoading(true);
-      if (isEditing) {
-        await treatmentService.update(selectedTreatment.id, newTreatment);
+      // 1. Get Disease Details to find Treatment ID
+      const { data: diseaseDetail } = await diseaseService.getById(disease.id);
+
+      if (diseaseDetail.treatments && diseaseDetail.treatments.length > 0) {
+        // 2. Get Full Treatment Details (for instructions etc)
+        // We take the first treatment for now as per requirement 1:1 map
+        const treatmentId = diseaseDetail.treatments[0].id;
+        const { data: treatmentDetail } = await treatmentService.getById(treatmentId);
+        setSelectedTreatment({ ...treatmentDetail, disease_name: disease.name });
       } else {
-        await treatmentService.create(newTreatment);
+        // Handle case with no treatment
+        setSelectedTreatment({ error: "No treatment protocol found for this disease." });
       }
-      setShowAddModal(false);
-      resetForm();
-      loadTreatments();
     } catch (error) {
-      console.error("Error saving treatment:", error);
-      setLoading(false);
-      alert("Failed to save treatment record.");
+      console.error("Error fetching treatment:", error);
+      setSelectedTreatment({ error: "Failed to load treatment properties." });
+    } finally {
+      setModalLoading(false);
     }
-  };
-
-  const resetForm = () => {
-    setNewTreatment({
-      name: "",
-      disease: "",
-      treatment_type: "organic",
-      description: "",
-      instructions: "",
-      products_needed: "",
-      effectiveness_rate: 85,
-      is_preventive: false,
-      cost_estimate: "Low"
-    });
-    setIsEditing(false);
-    setSelectedTreatment(null);
   };
 
   return (
     <div className="page-container">
       <Navbar activePage="treatment" />
-      <div className="page-content animate-slide-up">
-        <div className="page-header">
-          <div>
-            <h1>Treatment Plans</h1>
-            <p className="subtitle">Guided steps for plant recovery and health</p>
-          </div>
-          <button
-            className="btn-primary"
-            onClick={() => { resetForm(); setShowAddModal(true); }}
-          >
-            <ShieldCheck size={20} />
-            <span>Add Treatment</span>
-          </button>
-        </div>
 
-        <div className="search-filter-section mb-8">
-          <form onSubmit={handleSearch} className="search-bar-container">
-            <div className="search-input-wrapper">
-              <Search className="search-icon" size={20} />
-              <input
-                type="text"
-                placeholder="Search treatments, products, or steps..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            <button type="submit" className="btn-primary">Search</button>
-          </form>
-        </div>
+      <div className="page-content animate-slide-up" style={{ padding: '0', maxWidth: '100%', display: 'flex', height: 'calc(100vh - 80px)', overflow: 'hidden' }}>
 
-        {loading ? (
-          <div className="loading-spinner-container">
-            <div className="spinner"></div>
-            <p>Loading treatment records...</p>
-          </div>
-        ) : selectedDisease === 'healthy' ? (
-          // Healthy Plant Message
-          <div className="healthy-plant-message" style={{
-            maxWidth: '800px',
-            margin: '4rem auto',
-            textAlign: 'center',
-            padding: '3rem',
-            background: 'linear-gradient(135deg, var(--success-subtle) 0%, var(--bg-card) 100%)',
-            borderRadius: 'var(--radius-lg)',
-            border: '2px solid var(--success)'
-          }}>
-            <div style={{ marginBottom: '2rem' }}>
-              <CheckCircle size={80} style={{ color: 'var(--success)', marginBottom: '1rem' }} />
-            </div>
-            <h2 style={{
-              fontSize: '2rem',
-              fontWeight: 800,
-              color: 'var(--success)',
-              marginBottom: '1rem'
-            }}>
-              Excellent News!
+        {/* SIDEBAR: HOST PLANTS */}
+        <div style={{
+          width: '280px',
+          background: 'var(--bg-card)',
+          borderRight: '1px solid var(--border-light)',
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100%'
+        }}>
+          <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border-light)' }}>
+            <h2 style={{ fontSize: '1.2rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Sprout size={20} className="text-primary" />
+              Host Plants
             </h2>
-            <h3 style={{
-              fontSize: '1.5rem',
-              fontWeight: 600,
-              color: 'var(--text-primary)',
-              marginBottom: '1.5rem'
-            }}>
-              No Disease Detected
-            </h3>
-            <p style={{
-              fontSize: '1.1rem',
-              color: 'var(--text-secondary)',
-              lineHeight: '1.8',
-              marginBottom: '2rem',
-              maxWidth: '600px',
-              margin: '0 auto 2rem'
-            }}>
-              Your plant appears to be in excellent health. Treatment is not required at this time as no disease or infection has been identified. Continue with regular care and monitoring to maintain optimal plant health.
+            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
+              Select a plant to view its potential diseases and treatments.
             </p>
-            <div style={{
-              padding: '1.5rem',
-              background: 'var(--bg-card)',
-              borderRadius: 'var(--radius-md)',
-              border: '1px solid var(--border-light)',
-              marginTop: '2rem'
-            }}>
-              <h4 style={{
-                fontSize: '1rem',
-                fontWeight: 700,
-                color: 'var(--primary)',
-                marginBottom: '1rem'
-              }}>
-                Recommended Preventive Care:
-              </h4>
-              <ul style={{
-                textAlign: 'left',
-                color: 'var(--text-secondary)',
-                lineHeight: '2',
-                listStyle: 'none',
-                padding: 0
-              }}>
-                <li>✓ Maintain consistent watering schedule</li>
-                <li>✓ Ensure adequate sunlight exposure</li>
-                <li>✓ Monitor for early signs of stress or disease</li>
-                <li>✓ Provide appropriate nutrients and fertilization</li>
-                <li>✓ Keep the growing environment clean and well-ventilated</li>
-              </ul>
-            </div>
-            <div style={{ marginTop: '2rem' }}>
-              <Link to="/disease" className="btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
-                <ArrowRight size={20} />
-                Scan Another Plant
-              </Link>
-            </div>
           </div>
-        ) : selectedDisease === 'notplant' ? (
-          // Not a Plant Leaf Message
-          <div className="healthy-plant-message" style={{
-            maxWidth: '800px',
-            margin: '4rem auto',
-            textAlign: 'center',
-            padding: '3rem',
-            background: 'linear-gradient(135deg, var(--primary-subtle) 0%, var(--bg-card) 100%)',
-            borderRadius: 'var(--radius-lg)',
-            border: '2px solid var(--primary)'
-          }}>
-            <div style={{ marginBottom: '2rem' }}>
-              <AlertTriangle size={80} style={{ color: 'var(--primary)', marginBottom: '1rem' }} />
-            </div>
-            <h2 style={{
-              fontSize: '2rem',
-              fontWeight: 800,
-              color: 'var(--primary)',
-              marginBottom: '1rem'
-            }}>
-              Invalid Image Type
-            </h2>
-            <h3 style={{
-              fontSize: '1.5rem',
-              fontWeight: 600,
-              color: 'var(--text-primary)',
-              marginBottom: '1.5rem'
-            }}>
-              Not a Plant Leaf Detected
-            </h3>
-            <p style={{
-              fontSize: '1.1rem',
-              color: 'var(--text-secondary)',
-              lineHeight: '1.8',
-              marginBottom: '2rem',
-              maxWidth: '600px',
-              margin: '0 auto 2rem'
-            }}>
-              The uploaded image does not appear to be a plant leaf. Our AI system has identified this as a non-plant object (e.g., person, vehicle, or other unrelated item). For accurate diagnosis, please upload a clear, close-up photo of a single plant leaf.
-            </p>
-            <div style={{
-              padding: '1.5rem',
-              background: 'var(--bg-card)',
-              borderRadius: 'var(--radius-md)',
-              border: '1px solid var(--border-light)',
-              marginTop: '2rem'
-            }}>
-              <h4 style={{
-                fontSize: '1rem',
-                fontWeight: 700,
-                color: 'var(--primary)',
-                marginBottom: '1rem'
-              }}>
-                Identification Guidelines:
-              </h4>
-              <ul style={{
-                textAlign: 'left',
-                color: 'var(--text-secondary)',
-                lineHeight: '2',
-                listStyle: 'none',
-                padding: 0
-              }}>
-                <li>⚠️ Ensure the image contains only plant leaves</li>
-                <li>⚠️ Avoid including people or backgrounds in the frame</li>
-                <li>⚠️ Position the leaf centrally and ensure good lighting</li>
-                <li>⚠️ Capture both the upper and lower surfaces if possible</li>
-              </ul>
-            </div>
-            <div style={{ marginTop: '2rem' }}>
-              <Link to="/disease" className="btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
-                <ArrowRight size={20} />
-                Try Again with a Leaf
-              </Link>
-            </div>
-          </div>
-        ) : (
-          <div className="treatments-grid">
-            {treatments.length > 0 ? (
-              treatments.map(t => (
-                <div key={t.id} className="treatment-card-v2 animate-slide-up">
-                  <div className="treatment-main" style={{ padding: '2.5rem' }}>
-                    <div className="disease-ctx" style={{ color: 'var(--primary)', fontWeight: 800, fontSize: '0.75rem', textTransform: 'uppercase', marginBottom: '0.5rem' }}>
-                      Target: {t.disease_name}
-                    </div>
-                    <h3 style={{ marginBottom: '1rem' }}>{t.name}</h3>
-                    <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginBottom: '2rem' }}>{t.description}</p>
 
-                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                      <div className={`badge ${t.effectiveness_rate > 80 ? 'badge-edible' : 'badge-toxic'}`} style={{ borderRadius: '4px' }}>
-                        {t.effectiveness_rate}% Effective
-                      </div>
-                      <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600 }}>Cost: {t.cost_estimate}</span>
-                    </div>
-                  </div>
-
-                  <div className="treatment-footer-v2" style={{ padding: '1.5rem 2.5rem', borderTop: '1px solid var(--border-light)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-main)' }}>
-                    <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--secondary)' }}>{t.treatment_type} Type</span>
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                      <button className="btn-secondary" style={{ padding: '0.4rem 1rem', fontSize: '0.8rem' }} onClick={() => handleEdit(t)}>Edit</button>
-                      <button className="btn-secondary" style={{ padding: '0.4rem 1rem', fontSize: '0.8rem' }} onClick={() => handleViewDetails(t)}>View Details</button>
-                      <button className="btn-secondary" style={{ padding: '0.4rem', fontSize: '0.8rem', color: 'var(--danger)', borderColor: 'var(--danger)' }} onClick={() => handleDelete(t.id)} title="Delete Treatment">
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))
+          <div style={{ flex: 1, overflowY: 'auto', padding: '1rem' }}>
+            {loadingPlants ? (
+              <div style={{ textAlign: 'center', padding: '2rem' }}>Loading...</div>
             ) : (
-              <div className="no-results">
-                <ShieldCheck size={64} className="text-muted" />
-                <h3>No Treatments Found</h3>
-                <p>Try searching for a different disease or keyword.</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                {plants.map(plant => (
+                  <button
+                    key={plant.id}
+                    onClick={() => setSelectedPlant(plant)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '1rem',
+                      borderRadius: '8px',
+                      background: selectedPlant?.id === plant.id ? 'var(--primary-subtle)' : 'transparent',
+                      color: selectedPlant?.id === plant.id ? 'var(--primary)' : 'var(--text-secondary)',
+                      border: selectedPlant?.id === plant.id ? '1px solid var(--primary)' : '1px solid transparent',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      fontWeight: selectedPlant?.id === plant.id ? 600 : 400
+                    }}
+                  >
+                    <span>{plant.name}</span>
+                    <ChevronRight size={16} style={{ opacity: selectedPlant?.id === plant.id ? 1 : 0.3 }} />
+                  </button>
+                ))}
               </div>
             )}
           </div>
-        )}
-      </div>
-
-      {/* Senior Standard Modal - Add/Edit */}
-      {showAddModal && (
-        <div className="modal-overlay">
-          <div className="modal-content-large animate-slide-up">
-            <div className="modal-header">
-              <h2>{isEditing ? "Edit Treatment Plan" : "Add Treatment Plan"}</h2>
-              <button className="close-btn" onClick={() => setShowAddModal(false)}>&times;</button>
-            </div>
-
-            <form onSubmit={handleSubmitTreatment} className="add-plant-form">
-              <div className="form-grid">
-                <div className="form-left">
-                  <div className="form-group">
-                    <label>Target Disease</label>
-                    <select
-                      value={newTreatment.disease}
-                      onChange={(e) => setNewTreatment({ ...newTreatment, disease: e.target.value })}
-                      required
-                    >
-                      <option value="">Select Disease...</option>
-                      {diseases.map(d => (
-                        <option key={d.id} value={d.id}>{d.name}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="form-group">
-                    <label>Treatment Type</label>
-                    <select
-                      value={newTreatment.treatment_type}
-                      onChange={(e) => setNewTreatment({ ...newTreatment, treatment_type: e.target.value })}
-                    >
-                      <option value="organic">Organic/Natural</option>
-                      <option value="chemical">Chemical/Synthetic</option>
-                      <option value="biological">Biological Agent</option>
-                    </select>
-                  </div>
-
-                  <div className="form-group">
-                    <label>Effectiveness (%)</label>
-                    <input
-                      type="number"
-                      min="0" max="100"
-                      value={newTreatment.effectiveness_rate}
-                      onChange={(e) => setNewTreatment({ ...newTreatment, effectiveness_rate: e.target.value })}
-                    />
-                  </div>
-
-                  <div className="form-checkbox-group" style={{ border: '1px solid var(--border-light)', padding: '1.5rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-main)' }}>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 'bold' }}>
-                      <input
-                        type="checkbox"
-                        checked={newTreatment.is_preventive}
-                        onChange={(e) => setNewTreatment({ ...newTreatment, is_preventive: e.target.checked })}
-                        style={{ width: '20px', height: '20px' }}
-                      />
-                      Preventative Action
-                    </label>
-                  </div>
-                </div>
-
-                <div className="form-right">
-                  <div className="form-group-row">
-                    <div className="form-group">
-                      <label>Treatment Name</label>
-                      <input
-                        type="text"
-                        value={newTreatment.name}
-                        onChange={(e) => setNewTreatment({ ...newTreatment, name: e.target.value })}
-                        required
-                        placeholder="e.g. Concentrated Neem Spray"
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label>Cost Level</label>
-                      <select
-                        value={newTreatment.cost_estimate}
-                        onChange={(e) => setNewTreatment({ ...newTreatment, cost_estimate: e.target.value })}
-                      >
-                        <option value="Low">Low</option>
-                        <option value="Medium">Medium</option>
-                        <option value="High">High</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="form-group">
-                    <label>Description</label>
-                    <textarea
-                      value={newTreatment.description}
-                      onChange={(e) => setNewTreatment({ ...newTreatment, description: e.target.value })}
-                      rows="2"
-                      placeholder="Brief summary of the treatment..."
-                    ></textarea>
-                  </div>
-
-                  <div className="form-group">
-                    <label>Instructions</label>
-                    <textarea
-                      value={newTreatment.instructions}
-                      onChange={(e) => setNewTreatment({ ...newTreatment, instructions: e.target.value })}
-                      rows="4"
-                      placeholder="1. Prepare solution&#10;2. Apply to leaves..."
-                    ></textarea>
-                  </div>
-
-                  <div className="form-group">
-                    <label>Products Needed</label>
-                    <input
-                      type="text"
-                      value={newTreatment.products_needed}
-                      onChange={(e) => setNewTreatment({ ...newTreatment, products_needed: e.target.value })}
-                      placeholder="e.g. Neem oil, Soap, Water"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="modal-footer" style={{ marginTop: '3rem', paddingTop: '2rem', borderTop: '1px solid var(--border-light)', display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
-                <button type="button" className="btn-secondary" onClick={() => setShowAddModal(false)}>Cancel</button>
-                <button type="submit" className="btn-primary">{isEditing ? "Update Treatment" : "Save Treatment"}</button>
-              </div>
-            </form>
-          </div>
         </div>
-      )}
 
-      {/* Senior Standard Modal - View Details */}
-      {showViewModal && selectedTreatment && (
-        <div className="modal-overlay">
-          <div className="modal-content-large animate-slide-up">
-            <div className="modal-header">
-              <h2>Treatment Protocol</h2>
-              <button className="close-btn" onClick={() => setShowViewModal(false)}>&times;</button>
-            </div>
-            <div className="add-plant-form">
-              <div className="form-grid">
-                <div className="form-left">
-                  <div style={{ background: 'var(--bg-main)', padding: '2rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-light)' }}>
-                    <h4 style={{ marginBottom: '1.5rem', color: 'var(--primary)', textTransform: 'uppercase', fontSize: '0.8rem', letterSpacing: '0.1em' }}>Metrics</h4>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                      <div>
-                        <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700 }}>SUCCESS RATE</span>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <span style={{ fontSize: '1.2rem', fontWeight: 800 }}>{selectedTreatment.effectiveness_rate}%</span>
-                          <div style={{ flex: 1, height: '8px', background: '#e2e8f0', borderRadius: '4px', overflow: 'hidden' }}>
-                            <div style={{ height: '100%', width: `${selectedTreatment.effectiveness_rate}%`, background: 'var(--secondary)' }}></div>
+        {/* MAIN CONTENT: DISEASES GRID */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '2rem', background: 'var(--bg-main)' }}>
+          {selectedPlant ? (
+            <div>
+              <div style={{ marginBottom: '2rem' }}>
+                <h1 style={{ fontSize: '2rem', fontWeight: 800 }}>{selectedPlant.name} Diseases</h1>
+                <p style={{ color: 'var(--text-secondary)' }}>Known pathologies affecting {selectedPlant.scientific_name}</p>
+              </div>
+
+              {loading ? (
+                <div className="loading-spinner-container">
+                  <div className="spinner"></div>
+                  <p>Analyzing botanical records...</p>
+                </div>
+              ) : diseases.length > 0 ? (
+                <div className="diseases-grid">
+                  {/* HEALTHY CARD */}
+                  <div className="disease-card-v2" style={{ borderLeft: '4px solid var(--success)' }}>
+                    <div className="disease-header-info" style={{ padding: '2rem' }}>
+                      <div className="disease-title-row">
+                        <h3>Healthy {selectedPlant.name}</h3>
+                        <div className="badge badge-edible">Stable</div>
+                      </div>
+                      <p style={{ marginTop: '1rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+                        No signs of infection. Plant is vigorous and productive.
+                      </p>
+                    </div>
+                    <div className="disease-card-footer" style={{ padding: '1.5rem', background: 'var(--bg-card)', borderTop: '1px solid var(--border-light)' }}>
+                      <span style={{ fontSize: '0.85rem', color: 'var(--success)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <CheckCircle size={16} /> Optimal Condition
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* DISEASE CARDS */}
+                  {diseases.map(disease => (
+                    <div key={disease.id} className="disease-card-v2 animate-slide-up">
+                      <div className="disease-header-info" style={{ padding: '2rem' }}>
+                        <div className="disease-title-row">
+                          <h3>{disease.name}</h3>
+                          <div className={`badge ${disease.severity_level === 'critical' ? 'badge-toxic' : 'badge-warning'}`}>
+                            {disease.severity_level}
                           </div>
                         </div>
+                        <p className="scientific-name" style={{ marginBottom: '1rem' }}>{disease.scientific_name}</p>
+                        <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>
+                          {disease.symptoms ? (disease.symptoms.substring(0, 100) + '...') : "Symptoms not documented."}
+                        </p>
                       </div>
-                      <div>
-                        <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700 }}>COST LEVEL</span>
-                        <span style={{ fontSize: '1rem', fontWeight: 800 }}>{selectedTreatment.cost_estimate}</span>
-                      </div>
-                      <div>
-                        <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700 }}>TYPE</span>
-                        <span style={{ fontSize: '1rem', fontWeight: 800 }}>{selectedTreatment.treatment_type.toUpperCase()}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="form-right">
-                  <div style={{ marginBottom: '2rem' }}>
-                    <div style={{ color: 'var(--primary)', fontWeight: 800, fontSize: '0.8rem', textTransform: 'uppercase', marginBottom: '0.5rem' }}>PROTOCOL FOR {selectedTreatment.disease_name}</div>
-                    <h1 style={{ fontSize: '2.5rem', marginBottom: '1rem', fontWeight: 800 }}>{selectedTreatment.name}</h1>
-                    <p style={{ lineHeight: 1.8, color: 'var(--text-main)', fontSize: '1.1rem' }}>{selectedTreatment.description}</p>
-                  </div>
 
-                  <div style={{ marginBottom: '2rem' }}>
-                    <h4 style={{ color: 'var(--primary)', marginBottom: '1rem', textTransform: 'uppercase', fontSize: '0.8rem', fontWeight: 800 }}>Application Instructions</h4>
-                    <div style={{ background: '#f8fafc', padding: '1.5rem', borderRadius: '8px', borderLeft: '4px solid var(--secondary)', whiteSpace: 'pre-line', lineHeight: 1.7 }}>
-                      {selectedTreatment.instructions || "Contact an expert for detailed application steps."}
+                      <div className="disease-card-footer" style={{ padding: '1.5rem', display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid var(--border-light)', background: 'var(--bg-card)' }}>
+                        <button
+                          className="btn-primary"
+                          style={{ fontSize: '0.85rem', padding: '0.5rem 1rem' }}
+                          onClick={() => handleViewTreatment(disease)}
+                        >
+                          <ShieldCheck size={16} />
+                          View Treatment Plan
+                        </button>
+                      </div>
                     </div>
-                  </div>
-
-                  <div>
-                    <h4 style={{ color: 'var(--primary)', marginBottom: '0.75rem', textTransform: 'uppercase', fontSize: '0.8rem', fontWeight: 800 }}>Inventory Required</h4>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 600 }}>
-                      <Package size={20} className="text-secondary" />
-                      <span>{selectedTreatment.products_needed || "General gardening tools"}</span>
-                    </div>
-                  </div>
+                  ))}
                 </div>
-              </div>
+              ) : (
+                <div className="no-results">
+                  <CheckCircle size={64} className="text-success" style={{ opacity: 0.5 }} />
+                  <h3>No Diseases Found</h3>
+                  <p>We have no recorded diseases for this plant in our database yet.</p>
+                </div>
+              )}
             </div>
-            <div className="modal-footer" style={{ padding: '2rem 3rem', borderTop: '1px solid var(--border-light)', display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
-              <button className="btn-secondary" onClick={() => setShowViewModal(false)}>Close Protocol</button>
-              <button className="btn-primary" onClick={() => { setShowViewModal(false); handleEdit(selectedTreatment); }}>Update Plan</button>
+          ) : (
+            <div className="empty-state-container" style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+              <Sprout size={64} className="text-primary" style={{ opacity: 0.3 }} />
+              <h3>Select a Plant</h3>
+              <p>Choose a host plant from the sidebar to view its health guide.</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* TREATMENT MODAL */}
+      {showModal && (
+        <div className="modal-overlay">
+          <div className="modal-content-large animate-slide-up" style={{ maxWidth: '800px' }}>
+            <div className="modal-header">
+              <h2>Treatment Protocol</h2>
+              <button className="close-btn" onClick={() => setShowModal(false)}>&times;</button>
+            </div>
+
+            <div style={{ padding: '0', maxHeight: '70vh', overflowY: 'auto' }}>
+              {modalLoading ? (
+                <div style={{ padding: '4rem', textAlign: 'center' }}>
+                  <div className="spinner"></div>
+                  <p>Fetching protocol...</p>
+                </div>
+              ) : selectedTreatment?.error ? (
+                <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                  <AlertTriangle size={48} style={{ margin: '0 auto 1rem', display: 'block' }} />
+                  <p>{selectedTreatment.error}</p>
+                </div>
+              ) : selectedTreatment ? (
+                <div>
+                  {/* HEADER SECTION */}
+                  <div style={{ padding: '2.5rem', background: 'var(--bg-main)', borderBottom: '1px solid var(--border-light)' }}>
+                    <div style={{ color: 'var(--primary)', fontWeight: 800, fontSize: '0.8rem', textTransform: 'uppercase', marginBottom: '0.5rem' }}>
+                      TREATING {selectedTreatment.disease_name}
+                    </div>
+                    <h1 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '1rem' }}>{selectedTreatment.name}</h1>
+                    <p style={{ fontSize: '1.1rem', lineHeight: 1.6, color: 'var(--text-secondary)' }}>
+                      {selectedTreatment.description}
+                    </p>
+
+                    <div style={{ display: 'flex', gap: '2rem', marginTop: '2rem' }}>
+                      <div>
+                        <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: '0.25rem' }}>EFFECTIVENESS</span>
+                        <span style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--success)' }}>{selectedTreatment.effectiveness_rate}%</span>
+                      </div>
+                      <div>
+                        <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: '0.25rem' }}>COST</span>
+                        <span style={{ fontSize: '1.25rem', fontWeight: 800 }}>{selectedTreatment.cost_estimate}</span>
+                      </div>
+                      <div>
+                        <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: '0.25rem' }}>TYPE</span>
+                        <span style={{ fontSize: '1.25rem', fontWeight: 800 }}>{selectedTreatment.treatment_type?.toUpperCase()}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* DETAILED STEPS */}
+                  <div style={{ padding: '2.5rem' }}>
+                    <div style={{ marginBottom: '2.5rem' }}>
+                      <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <CheckCircle size={20} className="text-secondary" />
+                        Step-by-Step Instructions
+                      </h3>
+                      <div style={{ background: '#f8fafc', padding: '1.5rem', borderRadius: '8px', borderLeft: '4px solid var(--secondary)', whiteSpace: 'pre-line', lineHeight: 1.8 }}>
+                        {selectedTreatment.instructions}
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+                      <div>
+                        <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <Package size={18} /> Required Products
+                        </h3>
+                        <p style={{ padding: '1rem', background: 'var(--bg-card)', border: '1px solid var(--border-light)', borderRadius: '6px' }}>
+                          {selectedTreatment.products_needed}
+                        </p>
+                      </div>
+                      <div>
+                        <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <ShieldCheck size={18} /> Preventive
+                        </h3>
+                        <p style={{ padding: '1rem', background: 'var(--bg-card)', border: '1px solid var(--border-light)', borderRadius: '6px' }}>
+                          {selectedTreatment.is_preventive ? "Yes - Can be used to prevent infection." : "No - Use only when disease is present."}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+            </div>
+
+            <div className="modal-footer" style={{ padding: '1.5rem 2.5rem', borderTop: '1px solid var(--border-light)', display: 'flex', justifyContent: 'flex-end' }}>
+              <button className="btn-secondary" onClick={() => setShowModal(false)}>Close Protocol</button>
             </div>
           </div>
         </div>
       )}
+
     </div>
   );
 };
