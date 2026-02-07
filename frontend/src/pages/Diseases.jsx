@@ -78,9 +78,18 @@ const Diseases = () => {
         setShowAddModal(true);
     };
 
-    const handleViewDetails = (disease) => {
-        setSelectedDiseaseDetail(disease);
-        setShowViewModal(true);
+    const handleViewDetails = async (disease) => {
+        try {
+            setLoading(true);
+            const { data } = await diseaseService.getById(disease.id);
+            setSelectedDiseaseDetail(data);
+            setShowViewModal(true);
+        } catch (error) {
+            console.error("Error fetching disease details:", error);
+            alert("Failed to load disease details.");
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleDelete = async (id) => {
@@ -418,8 +427,8 @@ const Diseases = () => {
                                     <div>
                                         <h4 style={{ color: 'var(--primary)', marginBottom: '1rem', textTransform: 'uppercase', fontSize: '0.8rem', fontWeight: 800 }}>Commonly Affected Plants</h4>
                                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                                            {selectedDiseaseDetail.affected_plant_names?.map((name, i) => (
-                                                <span key={i} style={{ padding: '0.4rem 0.8rem', background: 'var(--bg-main)', border: '1px solid var(--border-light)', borderRadius: '4px', fontSize: '0.85rem' }}>{name}</span>
+                                            {selectedDiseaseDetail.affected_plants?.map((plant, i) => (
+                                                <span key={i} style={{ padding: '0.4rem 0.8rem', background: 'var(--bg-main)', border: '1px solid var(--border-light)', borderRadius: '4px', fontSize: '0.85rem' }}>{plant.name}</span>
                                             ))}
                                         </div>
                                     </div>
