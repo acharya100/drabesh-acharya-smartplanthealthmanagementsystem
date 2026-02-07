@@ -14,8 +14,10 @@ import { treatmentService, diseaseService, plantService } from "../services/api"
 import {
   Search, ShieldCheck, Package,
   ChevronRight, Sprout, AlertTriangle,
-  CheckCircle, Droplets, Thermometer
+  CheckCircle, Droplets, Thermometer,
+  Plus, Edit2, Trash2
 } from "lucide-react";
+import TreatmentFormModal from "../components/TreatmentFormModal";
 
 const Treatment = () => {
   const [plants, setPlants] = useState([]);
@@ -26,8 +28,9 @@ const Treatment = () => {
 
   // Modal State
   const [showModal, setShowModal] = useState(false);
-  const [showAddModal, setShowAddModal] = useState(false); // Added for 'Add Treatment' button
+  const [showAddModal, setShowAddModal] = useState(false); // Controls TreatmentFormModal
   const [selectedTreatment, setSelectedTreatment] = useState(null);
+  const [editingTreatment, setEditingTreatment] = useState(null); // For edit mode
   const [modalLoading, setModalLoading] = useState(false);
 
   useEffect(() => {
@@ -89,7 +92,11 @@ const Treatment = () => {
         setSelectedTreatment({ ...treatmentDetail, disease_name: disease.name });
       } else {
         // Handle case with no treatment
-        setSelectedTreatment({ error: "No treatment protocol found for this disease." });
+        setSelectedTreatment({
+          disease_name: disease.name,
+          disease_id: disease.id,
+          error: "No treatment protocol found for this disease."
+        });
       }
     } catch (error) {
       console.error("Error fetching treatment:", error);
@@ -97,6 +104,41 @@ const Treatment = () => {
     } finally {
       setModalLoading(false);
     }
+  };
+
+  const handleCreateTreatment = async (formData) => {
+    await treatmentService.create(formData);
+    // Refresh diseases to show update (or just close)
+    if (selectedPlant) loadDiseases(selectedPlant.id);
+  };
+
+  const handleUpdateTreatment = async (formData) => {
+    await treatmentService.update(editingTreatment.id, formData);
+    // Refresh displayed treatment
+    const { data } = await treatmentService.getById(editingTreatment.id);
+    setSelectedTreatment({ ...data, disease_name: selectedTreatment.disease_name });
+    if (selectedPlant) loadDiseases(selectedPlant.id);
+  };
+
+  const handleDeleteTreatment = async () => {
+    if (!window.confirm("Are you sure you want to delete this treatment protocol?")) return;
+    try {
+      await treatmentService.delete(selectedTreatment.id);
+      setShowModal(false);
+      if (selectedPlant) loadDiseases(selectedPlant.id);
+    } catch (error) {
+      alert("Failed to delete treatment.");
+    }
+  };
+
+  const openAddModal = () => {
+    setEditingTreatment(null);
+    setShowAddModal(true);
+  };
+
+  const openEditModal = () => {
+    setEditingTreatment(selectedTreatment);
+    setShowAddModal(true);
   };
 
   return (
@@ -163,6 +205,17 @@ const Treatment = () => {
               <div style={{ marginBottom: '2rem' }}>
                 <h1 style={{ fontSize: '2rem', fontWeight: 800 }}>{selectedPlant.name} Diseases</h1>
                 <p style={{ color: 'var(--text-secondary)' }}>Known pathologies affecting {selectedPlant.scientific_name}</p>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
+                <button
+                  className="btn-primary"
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                  onClick={openAddModal}
+                >
+                  <Plus size={18} />
+                  <span>Add Treatment</span>
+                </button>
               </div>
 
               {loading ? (
@@ -260,7 +313,35 @@ const Treatment = () => {
               ) : selectedTreatment ? (
                 <div>
                   {/* HEADER SECTION */}
-                  <div style={{ padding: '2.5rem', background: 'var(--bg-main)', borderBottom: '1px solid var(--border-light)' }}>
+                  <div style={{ padding: '2.5rem', background: 'var(--bg-main)', borderBottom: '1px solid var(--border-light)', position: 'relative' }}>
+                    <div style={{ position: 'absolute', top: '2rem', right: '2rem', display: 'flex', gap: '0.5rem' }}>
+                      {selectedTreatment.id && (
+                        <>
+                          <button
+                            onClick={openEditModal}
+                            style={{
+                              background: 'white', border: '1px solid var(--border-light)',
+                              padding: '0.5rem', borderRadius: '8px', cursor: 'pointer',
+                              color: 'var(--text-secondary)'
+                            }}
+                            title="Edit Treatment"
+                          >
+                            <Edit2 size={18} />
+                          </button>
+                          <button
+                            onClick={handleDeleteTreatment}
+                            style={{
+                              background: 'white', border: '1px solid #fee2e2',
+                              padding: '0.5rem', borderRadius: '8px', cursor: 'pointer',
+                              color: '#dc2626'
+                            }}
+                            title="Delete Treatment"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </>
+                      )}
+                    </div>
                     <div style={{ color: 'var(--primary)', fontWeight: 800, fontSize: '0.8rem', textTransform: 'uppercase', marginBottom: '0.5rem' }}>
                       TREATING {selectedTreatment.disease_name}
                     </div>
@@ -297,24 +378,35 @@ const Treatment = () => {
                       </div>
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
-                      <div>
-                        <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <Package size={18} /> Required Products
-                        </h3>
-                        <p style={{ padding: '1rem', background: 'var(--bg-card)', border: '1px solid var(--border-light)', borderRadius: '6px' }}>
-                          {selectedTreatment.products_needed}
-                        </p>
+                    {/* Empty fallback for no instructions */}
+                    {!selectedTreatment.id && selectedTreatment.error && (
+                      <div style={{ textAlign: 'center', padding: '2rem' }}>
+                        <button className="btn-primary" onClick={openAddModal}>
+                          <Plus size={16} /> Create Treatment Protocol
+                        </button>
                       </div>
-                      <div>
-                        <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <ShieldCheck size={18} /> Preventive
-                        </h3>
-                        <p style={{ padding: '1rem', background: 'var(--bg-card)', border: '1px solid var(--border-light)', borderRadius: '6px' }}>
-                          {selectedTreatment.is_preventive ? "Yes - Can be used to prevent infection." : "No - Use only when disease is present."}
-                        </p>
+                    )}
+
+                    {selectedTreatment.id && (
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+                        <div>
+                          <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <Package size={18} /> Required Products
+                          </h3>
+                          <p style={{ padding: '1rem', background: 'var(--bg-card)', border: '1px solid var(--border-light)', borderRadius: '6px' }}>
+                            {selectedTreatment.products_needed}
+                          </p>
+                        </div>
+                        <div>
+                          <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <ShieldCheck size={18} /> Preventive
+                          </h3>
+                          <p style={{ padding: '1rem', background: 'var(--bg-card)', border: '1px solid var(--border-light)', borderRadius: '6px' }}>
+                            {selectedTreatment.is_preventive ? "Yes - Can be used to prevent infection." : "No - Use only when disease is present."}
+                          </p>
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                 </div>
               ) : null}
@@ -326,6 +418,15 @@ const Treatment = () => {
           </div>
         </div>
       )}
+
+      <TreatmentFormModal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onSubmit={editingTreatment ? handleUpdateTreatment : handleCreateTreatment}
+        initialData={editingTreatment}
+        diseases={diseases}
+        selectedDiseaseId={selectedTreatment?.disease_id}
+      />
 
     </div>
   );
