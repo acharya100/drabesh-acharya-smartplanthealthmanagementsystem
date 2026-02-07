@@ -246,12 +246,19 @@ class DiseaseCreateUpdateSerializer(serializers.ModelSerializer):
 
 
 class TreatmentCreateUpdateSerializer(serializers.ModelSerializer):
+    disease = serializers.PrimaryKeyRelatedField(
+        queryset=Disease.objects.all(),
+        required=False,
+        allow_null=True
+    )
+    custom_disease_name = serializers.CharField(write_only=True, required=False, allow_blank=True)
    
     
     class Meta:
         model = Treatment
         fields = [
             'disease',
+            'custom_disease_name',
             'name',
             'treatment_type',
             'description',
@@ -289,6 +296,33 @@ class TreatmentCreateUpdateSerializer(serializers.ModelSerializer):
             )
         
         return value.strip()
+    
+    def validate(self, data):
+        """Ensure either disease or custom_disease_name is provided."""
+        if not data.get('disease') and not data.get('custom_disease_name'):
+            raise serializers.ValidationError(
+                "Either select an existing disease or provide a custom disease name."
+            )
+        return data
+    
+    def create(self, validated_data):
+        """Handle custom disease creation if custom_disease_name is provided."""
+        custom_disease_name = validated_data.pop('custom_disease_name', None)
+        
+        if custom_disease_name and not validated_data.get('disease'):
+            # Create a new disease with the custom name
+            disease, created = Disease.objects.get_or_create(
+                name=custom_disease_name,
+                defaults={
+                    'disease_type': 'fungal',  # Default type
+                    'severity_level': 'moderate',  # Default severity
+                    'is_contagious': False,
+                    'symptoms': f'Custom disease: {custom_disease_name}',
+                }
+            )
+            validated_data['disease'] = disease
+        
+        return super().create(validated_data)
 
 
 

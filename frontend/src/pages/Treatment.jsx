@@ -19,6 +19,8 @@ const Treatment = () => {
   const [diseases, setDiseases] = useState([]);
   const [loading, setLoading] = useState(false);
   const [loadingPlants, setLoadingPlants] = useState(true);
+  const [customDiseases, setCustomDiseases] = useState([]);
+  const [loadingCustom, setLoadingCustom] = useState(false);
 
   // Modal State
   const [showModal, setShowModal] = useState(false);
@@ -29,6 +31,7 @@ const Treatment = () => {
 
   useEffect(() => {
     loadPlants();
+    loadCustomDiseases();
   }, []);
 
   useEffect(() => {
@@ -69,6 +72,22 @@ const Treatment = () => {
     }
   };
 
+  const loadCustomDiseases = async () => {
+    try {
+      setLoadingCustom(true);
+      // Fetch diseases with no affected plants (custom diseases)
+      const { data } = await diseaseService.getAll();
+      const allDiseases = data.results || data;
+      // Filter for diseases with no affected plants
+      const custom = allDiseases.filter(d => !d.affected_plants || d.affected_plants.length === 0);
+      setCustomDiseases(custom);
+      setLoadingCustom(false);
+    } catch (error) {
+      console.error("Error loading custom diseases:", error);
+      setLoadingCustom(false);
+    }
+  };
+
   const handleViewTreatment = async (disease) => {
     setModalLoading(true);
     setShowModal(true);
@@ -80,7 +99,7 @@ const Treatment = () => {
 
       if (diseaseDetail.treatments && diseaseDetail.treatments.length > 0) {
         // 2. Get Full Treatment Details (for instructions etc)
-        // We take the first treatment for now as per requirement 1:1 map
+        // We take the first treatment for now as per requirement map
         const treatmentId = diseaseDetail.treatments[0].id;
         const { data: treatmentDetail } = await treatmentService.getById(treatmentId);
         setSelectedTreatment({ ...treatmentDetail, disease_name: disease.name });
@@ -190,6 +209,55 @@ const Treatment = () => {
               </div>
             )}
           </div>
+
+          {/* CUSTOM DISEASES SECTION */}
+          {customDiseases.length > 0 && (
+            <>
+              <div style={{ padding: '1rem 1.5rem', borderTop: '1px solid var(--border-light)', borderBottom: '1px solid var(--border-light)', background: 'var(--bg-main)' }}>
+                <h3 style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Custom Diseases
+                </h3>
+              </div>
+              <div style={{ padding: '1rem', maxHeight: '200px', overflowY: 'auto' }}>
+                {loadingCustom ? (
+                  <div style={{ textAlign: 'center', padding: '1rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>Loading...</div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    {customDiseases.map(disease => (
+                      <button
+                        key={disease.id}
+                        onClick={() => handleViewTreatment(disease)}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          padding: '0.75rem',
+                          borderRadius: '6px',
+                          background: 'transparent',
+                          color: 'var(--text-secondary)',
+                          border: '1px solid var(--border-light)',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s',
+                          fontSize: '0.9rem'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = 'var(--primary-subtle)';
+                          e.currentTarget.style.borderColor = 'var(--primary)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = 'transparent';
+                          e.currentTarget.style.borderColor = 'var(--border-light)';
+                        }}
+                      >
+                        <span>{disease.name}</span>
+                        <ChevronRight size={14} style={{ opacity: 0.5 }} />
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </>
+          )}
         </div>
 
         {/* MAIN CONTENT: DISEASES GRID */}
@@ -367,7 +435,7 @@ const Treatment = () => {
                         <CheckCircle size={20} className="text-secondary" />
                         Step-by-Step Instructions
                       </h3>
-                      <div style={{ background: '#f8fafc', padding: '1.5rem', borderRadius: '8px', borderLeft: '4px solid var(--secondary)', whiteSpace: 'pre-line', lineHeight: 1.8 }}>
+                      <div style={{ background: 'var(--bg-card)', padding: '1.5rem', borderRadius: '8px', borderLeft: '4px solid var(--secondary)', whiteSpace: 'pre-line', lineHeight: 1.8 }}>
                         {selectedTreatment.instructions}
                       </div>
                     </div>

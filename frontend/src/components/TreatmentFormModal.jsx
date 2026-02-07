@@ -22,6 +22,8 @@ const TreatmentFormModal = ({ isOpen, onClose, onSubmit, initialData = null, dis
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const [useCustomDisease, setUseCustomDisease] = useState(false);
+    const [customDiseaseName, setCustomDiseaseName] = useState("");
 
     useEffect(() => {
         if (isOpen) {
@@ -73,7 +75,10 @@ const TreatmentFormModal = ({ isOpen, onClose, onSubmit, initialData = null, dis
 
         try {
             setLoading(true);
-            await onSubmit(formData);
+            const submitData = useCustomDisease
+                ? { ...formData, disease: null, custom_disease_name: customDiseaseName }
+                : formData;
+            await onSubmit(submitData);
             onClose();
         } catch (err) {
             console.error(err);
@@ -122,20 +127,48 @@ const TreatmentFormModal = ({ isOpen, onClose, onSubmit, initialData = null, dis
                     )}
 
                     <div style={{ marginBottom: '1rem' }}>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Disease</label>
-                        <select
-                            name="disease"
-                            value={formData.disease}
-                            onChange={handleChange}
-                            disabled={!!initialData}
-                            required
-                            style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #ddd' }}
-                        >
-                            <option value="">Select a Disease...</option>
-                            {diseases.map(d => (
-                                <option key={d.id} value={d.id}>{d.name}</option>
-                            ))}
-                        </select>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                            <label style={{ fontWeight: 600 }}>Disease</label>
+                            {!initialData && (
+                                <button
+                                    type="button"
+                                    onClick={() => setUseCustomDisease(!useCustomDisease)}
+                                    style={{
+                                        background: 'none',
+                                        border: 'none',
+                                        color: 'var(--primary)',
+                                        cursor: 'pointer',
+                                        fontSize: '0.85rem',
+                                        textDecoration: 'underline'
+                                    }}>
+                                    {useCustomDisease ? '← Select Existing' : '+ Add Custom Disease'}
+                                </button>
+                            )}
+                        </div>
+                        {useCustomDisease ? (
+                            <input
+                                type="text"
+                                value={customDiseaseName}
+                                onChange={(e) => setCustomDiseaseName(e.target.value)}
+                                placeholder="Enter custom disease name..."
+                                required
+                                style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #ddd' }}
+                            />
+                        ) : (
+                            <select
+                                name="disease"
+                                value={formData.disease}
+                                onChange={handleChange}
+                                disabled={!!initialData}
+                                required
+                                style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #ddd' }}
+                            >
+                                <option value="">Select a Disease...</option>
+                                {diseases.map(d => (
+                                    <option key={d.id} value={d.id}>{d.name}</option>
+                                ))}
+                            </select>
+                        )}
                     </div>
 
                     <div style={{ marginBottom: '1rem' }}>
