@@ -13,7 +13,6 @@ class Command(BaseCommand):
         self.stdout.write('Starting comprehensive disease seeding...')
 
         # 1. Ensure a default admin user exists to associate with plants if needed
-        # (Though Plant model requires a user, we'll try to find any user)
         user = User.objects.first()
         if not user:
             user = User.objects.create_superuser('admin', 'admin@example.com', 'admin123')

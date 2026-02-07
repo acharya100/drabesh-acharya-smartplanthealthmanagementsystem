@@ -27,6 +27,4 @@ except User.DoesNotExist:
 user_auth = authenticate(username=email, password=password) # authenticate uses 'username' kwarg which maps to USERNAME_FIELD
 print(f"Authenticate result (username=email): {user_auth}")
 
-# If authenticate fails, maybe it expects 'email' kwarg?
-# user_auth2 = authenticate(email=email, password=password)
-# print(f"Authenticate result (email=email): {user_auth2}")
+

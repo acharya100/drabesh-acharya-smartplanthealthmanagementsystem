@@ -1,12 +1,5 @@
 """
 Plant Models for Smart Plant Health Management System
-
-This module defines the Plant model which stores comprehensive information
-about different plant species including their care requirements, growth
-characteristics, and identification details.
-
-Author: Smart Plant Health Management System
-Sprint: 3 - Plant and Disease Management
 """
 
 from django.db import models
@@ -14,13 +7,9 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from django.conf import settings # Import settings to access AUTH_USER_MODEL
 
 class Plant(models.Model):
-    """
-    Represents a specific plant entry owned by a user.
-    Each user has their own collection of plants, allowing for personalized
-    tracking and management within the Smart Plant Health system.
-    """
+
     # Each plant must be owned by a user. This ensures that when you login, 
-    # you only see the plants you've added, avoiding clutter from other users.
+    # you only see the plants you've added avoiding clutter from other users.
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, 
         on_delete=models.CASCADE, 
@@ -194,41 +183,21 @@ class Plant(models.Model):
         return f"{self.name} ({self.scientific_name or 'No scientific name'})"
     
     def get_sunlight_display_verbose(self):
-        """
-        Returns a user-friendly description of sunlight requirements
-        
-        Returns:
-            str: Detailed sunlight requirement description
-        """
+       
         return dict(self.SUNLIGHT_CHOICES).get(self.sunlight_requirement, 'Unknown')
     
     def get_water_frequency_display_verbose(self):
-        """
-        Returns a user-friendly description of watering frequency
-        
-        Returns:
-            str: Detailed watering frequency description
-        """
+       
         return dict(self.WATER_FREQUENCY_CHOICES).get(self.water_frequency, 'Unknown')
     
     @property
     def temperature_range(self):
-        """
-        Returns the temperature range as a formatted string
-        
-        Returns:
-            str: Temperature range (e.g., "15-30°C") or None if not set
-        """
+       
         if self.min_temperature is not None and self.max_temperature is not None:
             return f"{self.min_temperature}-{self.max_temperature}°C"
         return None
     
     @property
     def is_low_maintenance(self):
-        """
-        Determines if the plant is low maintenance
-        
-        Returns:
-            bool: True if difficulty is beginner or intermediate
-        """
+       
         return self.difficulty_level in ['beginner', 'intermediate']

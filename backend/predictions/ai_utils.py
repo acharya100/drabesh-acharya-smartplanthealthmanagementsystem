@@ -1,9 +1,5 @@
 """
 AI Inference Utilities
-Uses PyTorch and Torchvision to perform plant identification and analysis.
-
-Author: Smart Plant Health Management System
-Sprint: 4 - Disease Detection & AI Assistance
 """
 
 import torch
@@ -66,7 +62,6 @@ PLANT_VILLAGE_CLASSES = [
     'Tomato___Tomato_Yellow_Leaf_Curl_Virus'
 ]
 
-# Mapping from common names/ImageNet concepts to our dataset plants
 # This helps guide the simulation when the specific model isn't trained yet
 PLANT_MAPPING = {
     'malus': 'Apple', # Malus is genus for Apple
@@ -122,9 +117,7 @@ PLANT_MAPPING = {
 }
 
 class PlantIdentifier:
-    """
-    Handles plant identification using a pre-trained PyTorch model.
-    """
+   
     
     def __init__(self):
         # Using MobileNet_V2 for generic object identification
@@ -152,16 +145,14 @@ class PlantIdentifier:
             pass
 
     def predict(self, image_path):
-        """
-        Identifies a plant from an image file.
-        """
+       
         try:
             self._log(f"Started identification for: {image_path}")
             
             # --- 1. DIRECT HIT CHECK (FAST) ---
             filename = os.path.basename(image_path)
-            # We reuse the cache from the detector if it exists, or just do a quick check
-            # For simplicity, we check if the detector has a cache
+            # We reuse the cache from the detector if it exists or just do a quick check
+            # For simplicity we check if the detector has a cache
             found_class = None
             try:
                 found_class = detector._find_in_dataset(filename)
@@ -239,14 +230,11 @@ class PlantIdentifier:
 
 
 class DiseaseDetector:
-    """
-    Handles disease detection using PlantVillage classes.
-    """
+   
     
     def __init__(self):
-        # In the future, this will load the custom trained 'plant_disease_model.pth'
-        # self.model = torch.load('plant_disease_model.pth')
-        
+        # In the future this will load the custom trained 'plant_disease_model.pth'
+                
         # For now, we continue to use ResNet18 features + Logic Simulation
         self.model = models.resnet18(weights=models.ResNet18_Weights.IMAGENET1K_V1)
         self.model.eval()
@@ -446,7 +434,7 @@ class DiseaseDetector:
             return None
 
     def _find_in_dataset(self, filename):
-        """Uses memory cache for instant lookup."""
+        
         if not self._cache_loaded:
             self._load_dataset_cache()
             
@@ -455,9 +443,7 @@ class DiseaseDetector:
         return self._dataset_cache.get(search_name)
 
     def _determine_severity(self, confidence):
-        """
-        Maps confidence score to severity level.
-        """
+      
         if confidence > 90:
             return "Low"
         elif confidence > 70:

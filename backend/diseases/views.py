@@ -1,12 +1,5 @@
 """
 Disease and Treatment API Views
-
-This module defines ViewSets for managing plant diseases and their corresponding
-treatments. It provides comprehensive filtering capabilities and custom actions
-for treatment history and recommendations.
-
-Author: Smart Plant Health Management System
-Sprint: 3 - Plant and Disease Management
 """
 
 from rest_framework import viewsets, filters, status
@@ -28,15 +21,7 @@ from .serializers import (
 
 
 class DiseaseViewSet(viewsets.ModelViewSet):
-    """
-    ViewSet for managing plant diseases.
-    
-    Provides standard CRUD operations with advanced filtering by:
-    - disease_type
-    - severity_level
-    - affected_plants (via plant ID)
-    - name (search)
-    """
+   
     queryset = Disease.objects.all().prefetch_related('treatments', 'affected_plants')
     permission_classes = [IsAuthenticatedOrReadOnly]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
@@ -56,9 +41,7 @@ class DiseaseViewSet(viewsets.ModelViewSet):
     ordering = ['name']
 
     def get_serializer_class(self):
-        """
-        Dynamically selects the serializer based on the current action.
-        """
+       
         if self.action == 'list':
             return DiseaseListSerializer
         elif self.action in ['create', 'update', 'partial_update']:
@@ -66,18 +49,14 @@ class DiseaseViewSet(viewsets.ModelViewSet):
         return DiseaseDetailSerializer
 
     def get_permissions(self):
-        """
-        Only admin users can modify disease data.
-        """
+      
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
             return [IsAuthenticated()]
         return [IsAuthenticatedOrReadOnly()]
 
     @action(detail=True, methods=['get'])
     def treatments(self, request, pk=None):
-        """
-        Custom action to retrieve all treatments for a specific disease.
-        """
+       
         disease = self.get_object()
         treatments = disease.treatments.all()
         serializer = TreatmentListSerializer(treatments, many=True)
@@ -85,11 +64,7 @@ class DiseaseViewSet(viewsets.ModelViewSet):
 
 
 class TreatmentViewSet(viewsets.ModelViewSet):
-    """
-    ViewSet for managing disease treatments.
-    
-    Allows browsing treatments by type and disease.
-    """
+   
     queryset = Treatment.objects.all().select_related('disease')
     permission_classes = [IsAuthenticatedOrReadOnly]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
@@ -103,9 +78,7 @@ class TreatmentViewSet(viewsets.ModelViewSet):
     search_fields = ['name', 'description', 'instructions', 'products_needed']
 
     def get_serializer_class(self):
-        """
-        Selects serializer based on action.
-        """
+      
         if self.action in ['create', 'update', 'partial_update']:
             return TreatmentCreateUpdateSerializer
         if self.action == 'retrieve':
@@ -113,9 +86,7 @@ class TreatmentViewSet(viewsets.ModelViewSet):
         return TreatmentListSerializer
 
     def get_permissions(self):
-        """
-        Restrict write access to admin users.
-        """
+       
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
             return [IsAuthenticated()]
         return [IsAuthenticatedOrReadOnly()]

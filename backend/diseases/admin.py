@@ -1,11 +1,5 @@
 """
 Django Admin Configuration for Disease and Treatment Models
-
-This module configures the Django admin interface for managing diseases
-and treatments, providing an intuitive interface for data entry and management.
-
-Author: Smart Plant Health Team
-Sprint: 3 - Plant and Disease Management
 """
 
 from django.contrib import admin
@@ -13,10 +7,7 @@ from .models import Disease, Treatment
 
 
 class TreatmentInline(admin.TabularInline):
-    """
-    Inline admin for treatments within the Disease admin page.
-    Allows adding treatments directly when creating/editing a disease.
-    """
+   
     model = Treatment
     extra = 1  # Number of empty forms to display
     fields = ('name', 'treatment_type', 'effectiveness_rate', 'expected_duration')
@@ -24,9 +15,6 @@ class TreatmentInline(admin.TabularInline):
 
 @admin.register(Disease)
 class DiseaseAdmin(admin.ModelAdmin):
-    """
-    Admin interface for Disease model with comprehensive display and filtering options.
-    """
     # Fields to display in the list view
     list_display = (
         'name',
@@ -55,7 +43,7 @@ class DiseaseAdmin(admin.ModelAdmin):
     )
     
     # Fields to use for autocomplete in foreign key lookups
-    filter_horizontal = ('affected_plants',)  # Better UI for many-to-many
+    filter_horizontal = ('affected_plants',)  
     
     # Inline treatments
     inlines = [TreatmentInline]
@@ -86,9 +74,6 @@ class DiseaseAdmin(admin.ModelAdmin):
 
 @admin.register(Treatment)
 class TreatmentAdmin(admin.ModelAdmin):
-    """
-    Admin interface for Treatment model with detailed display options.
-    """
     # Fields to display in the list view
     list_display = (
         'name',

@@ -1,11 +1,5 @@
 """
 URL Configuration for Disease and Treatment APIs
-
-Uses DRF DefaultRouter to generate URL patterns for browsing diseases
-and their corresponding treatment strategies.
-
-Author: Smart Plant Health Management System
-Sprint: 3 - Plant and Disease Management
 """
 
 from django.urls import path, include

@@ -1,11 +1,5 @@
 """
 URL Configuration for Plants API
-
-This module defines URL patterns for plant-related API endpoints.
-Uses Django REST Framework's router for automatic URL generation.
-
-Author: Smart Plant Health Management System
-Sprint: 3 - Plant and Disease Management
 """
 
 from django.urls import path, include

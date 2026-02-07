@@ -1,11 +1,5 @@
 """
 Plant API Views
-
-This module defines ViewSets for Plant API endpoints, providing
-CRUD operations with filtering, search, and pagination capabilities.
-
-Author: Smart Plant Health Management System
-Sprint: 3 - Plant and Disease Management
 """
 
 from rest_framework import viewsets, filters, status
@@ -24,23 +18,7 @@ from .serializers import (
 
 
 class PlantViewSet(viewsets.ModelViewSet):
-    """
-    ViewSet for Plant model providing full CRUD operations.
-    
-    List endpoint returns lightweight plant data with filtering and search.
-    Detail endpoint returns comprehensive plant information including disease count.
-    Create/Update/Delete operations require admin authentication.
-    
-    Endpoints:
-        GET    /api/plants/          - List all plants (with filters)
-        POST   /api/plants/          - Create new plant (admin only)
-        GET    /api/plants/{id}/     - Get plant details
-        PUT    /api/plants/{id}/     - Update plant (admin only)
-        PATCH  /api/plants/{id}/     - Partial update (admin only)
-        DELETE /api/plants/{id}/     - Delete plant (admin only)
-        GET    /api/plants/search/   - Advanced search endpoint
-    """
-    
+   
     queryset = Plant.objects.all()
     permission_classes = [IsAuthenticatedOrReadOnly]
     
@@ -83,16 +61,7 @@ class PlantViewSet(viewsets.ModelViewSet):
     ordering = ['name']
     
     def get_serializer_class(self):
-        """
-        Returns appropriate serializer based on the action.
-        
-        Uses lightweight serializer for list view and comprehensive
-        serializer for detail view. Create/update operations use
-        a specialized serializer with validation.
-        
-        Returns:
-            Serializer class appropriate for the current action
-        """
+      
         if self.action == 'list':
             return PlantListSerializer
         elif self.action in ['create', 'update', 'partial_update']:
@@ -100,45 +69,25 @@ class PlantViewSet(viewsets.ModelViewSet):
         return PlantDetailSerializer
     
     def get_permissions(self):
-        """
-        Returns appropriate permissions based on the action.
         
-        Read operations (list, retrieve) are open to authenticated users.
-        Write operations (create, update, delete) require admin privileges.
-        
-        Returns:
-            List of permission instances
-        """
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
             return [IsAuthenticated()]
         return [IsAuthenticatedOrReadOnly()]
     
     def get_queryset(self):
-        """
-        Customizes the queryset to ensure users only see their own plants.
-        
-        This is critical for privacy and account isolation. We use the current 
-        request user to filter the Plant records. We also prefetch related diseases 
-        to keep the database performance fast and snappy.
-        
-        Returns:
-            A queryset of plants belonging only to the authenticated user.
-        """
-        # Global plants (for Treatment reference page)
+        # Global plants for Treatment
         # Returns plants owned by superusers/admins (System Plants)
         if self.request.query_params.get('global') == 'true':
-            # We want unique names, but since we ensure_plants creates distinct names for superuser,
+            # We want unique names but since we ensure_plants creates distinct names for superuser,
             # this should be fine.
             return Plant.objects.filter(user__is_superuser=True).order_by('name')
 
         # Start with all plants and then filter down to the owner
         queryset = Plant.objects.filter(user=self.request.user)
         
-        # We prefetch diseases so that when the UI asks for them, we don't have to 
-        # keep hitting the database over and over (avoids the N+1 problem).
         queryset = queryset.prefetch_related('diseases')
         
-        # If the user wants to find easy-to-care-for plants, we filter them here.
+        # If the user wants to find easy-to-care-for plants we filter them here.
         if self.request.query_params.get('low_maintenance') == 'true':
             queryset = queryset.filter(
                 difficulty_level__in=['beginner', 'intermediate']
@@ -156,72 +105,24 @@ class PlantViewSet(viewsets.ModelViewSet):
         return queryset
     
     def list(self, request, *args, **kwargs):
-        """
-        Lists all plants with pagination and filtering.
-        
-        Supports query parameters:
-            - sunlight_requirement: Filter by sunlight needs
-            - water_frequency: Filter by watering frequency
-            - difficulty_level: Filter by care difficulty
-            - is_edible: Filter edible plants
-            - low_maintenance: Show only beginner/intermediate plants
-            - search: Search in name, scientific name, description
-            - ordering: Order results by specified field
-        
-        Returns:
-            Paginated list of plants
-        """
+       
         return super().list(request, *args, **kwargs)
     
     def retrieve(self, request, *args, **kwargs):
-        """
-        Retrieves detailed information for a single plant.
-        
-        Includes comprehensive plant data, care instructions,
-        and count of associated diseases.
-        
-        Returns:
-            Detailed plant information
-        """
+      
         return super().retrieve(request, *args, **kwargs)
     
     def destroy(self, request, *args, **kwargs):
-        """
-        Deletes a plant entry (admin only).
-        
-        Note: This will also affect related disease associations
-        due to many-to-many relationship.
-        
-        Returns:
-            204 No Content on success
-        """
+       
         return super().destroy(request, *args, **kwargs)
 
     def perform_create(self, serializer):
-        """
-        Automatically assigns the currently logged-in user as the owner of the plant.
-        
-        This is a standard security practice to ensure that users can't create
-        records for other people.
-        """
+      
         serializer.save(user=self.request.user)
     
     @action(detail=False, methods=['get'])
     def statistics(self, request):
-        """
-        Custom endpoint providing plant statistics.
         
-        Returns aggregated data about plants in the system:
-            - Total plant count
-            - Count by difficulty level
-            - Count by sunlight requirement
-            - Edible/medicinal/toxic counts
-        
-        Endpoint: GET /api/plants/statistics/
-        
-        Returns:
-            Dictionary with statistical data
-        """
         total_plants = self.get_queryset().count()
         
         # Count by difficulty level
@@ -252,17 +153,7 @@ class PlantViewSet(viewsets.ModelViewSet):
     
     @action(detail=True, methods=['get'])
     def diseases(self, request, pk=None):
-        """
-        Custom endpoint to get all diseases affecting a specific plant.
         
-        Returns list of diseases associated with this plant,
-        including severity and treatment information.
-        
-        Endpoint: GET /api/plants/{id}/diseases/
-        
-        Returns:
-            List of diseases affecting this plant
-        """
         plant = self.get_object()
         diseases = plant.diseases.all()
         

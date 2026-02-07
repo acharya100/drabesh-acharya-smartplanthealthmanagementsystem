@@ -1,12 +1,5 @@
 """
 Disease and Treatment Models for Smart Plant Health Management System
-
-This module defines models for plant diseases and their treatments.
-Diseases can affect multiple plant species and have various severity levels.
-Treatments provide step-by-step solutions for disease management.
-
-Author: Smart Plant Health Management System
-Sprint: 3 - Plant and Disease Management
 """
 
 from django.db import models
@@ -15,13 +8,6 @@ from plants.models import Plant
 
 
 class Disease(models.Model):
-    """
-    Represents a plant disease that can affect one or more plant species.
-    
-    This model stores comprehensive information about plant diseases including
-    symptoms, causes, affected plants, and severity levels. Used for disease
-    identification and providing treatment recommendations.
-    """
     
     # Severity level choices
     SEVERITY_CHOICES = [
@@ -61,8 +47,7 @@ class Disease(models.Model):
         help_text="Category of the disease"
     )
     
-    # Relationships
-    # Many-to-many: A disease can affect multiple plants, and a plant can have multiple diseases
+    # A disease can affect multiple plants and a plant can have multiple diseases
     affected_plants = models.ManyToManyField(
         Plant,
         related_name='diseases',
@@ -151,31 +136,16 @@ class Disease(models.Model):
     
     @property
     def affected_plant_count(self):
-        """
-        Returns the number of plant species affected by this disease
-        
-        Returns:
-            int: Count of affected plants
-        """
+
         return self.affected_plants.count()
     
     @property
     def treatment_count(self):
-        """
-        Returns the number of available treatments for this disease
-        
-        Returns:
-            int: Count of treatments
-        """
+       
         return self.treatments.count()
     
     def get_severity_color(self):
-        """
-        Returns a color code for UI display based on severity
-        
-        Returns:
-            str: Color code (e.g., 'green', 'yellow', 'red')
-        """
+    
         severity_colors = {
             'mild': 'green',
             'moderate': 'yellow',
@@ -186,14 +156,7 @@ class Disease(models.Model):
 
 
 class Treatment(models.Model):
-    """
-    Represents a treatment method for a specific plant disease.
-    
-    This model stores detailed treatment information including type,
-    instructions, products, and effectiveness data. Multiple treatments
-    can be available for a single disease (organic vs chemical options).
-    """
-    
+ 
     # Treatment type choices
     TYPE_CHOICES = [
         ('organic', 'Organic/Natural'),
@@ -300,7 +263,7 @@ class Treatment(models.Model):
     )
     
     class Meta:
-        """Meta options for the Treatment model"""
+        # Meta options for the Treatment model
         ordering = ['disease', 'treatment_type', 'name']
         verbose_name = 'Treatment'
         verbose_name_plural = 'Treatments'
@@ -309,39 +272,24 @@ class Treatment(models.Model):
         ]
     
     def __str__(self):
-        """String representation of the treatment"""
+        # String representation of the treatment
         return f"{self.get_treatment_type_display()} - {self.name} for {self.disease.name}"
     
     @property
     def is_highly_effective(self):
-        """
-        Determines if the treatment has high effectiveness
         
-        Returns:
-            bool: True if effectiveness is 70% or higher
-        """
         if self.effectiveness_rate:
             return self.effectiveness_rate >= 70
         return False
     
     def get_instruction_steps(self):
-        """
-        Parses the instructions text into a list of steps
-        
-        Returns:
-            list: List of instruction steps
-        """
+       
         # Split by newlines and filter out empty lines
         steps = [step.strip() for step in self.instructions.split('\n') if step.strip()]
         return steps
     
     def get_products_list(self):
-        """
-        Parses the products_needed text into a list
-        
-        Returns:
-            list: List of products/materials needed
-        """
+       
         if not self.products_needed:
             return []
         # Split by commas or newlines

@@ -1,9 +1,5 @@
 """
 Predictions API URL Configuration
-Defines routing for AI-based plant identification and diagnosis.
-
-Author: Smart Plant Health Management System
-Sprint: 4 - Disease Detection & AI Assistance
 """
 
 from django.urls import path, include

@@ -1,9 +1,5 @@
 """
 Predictions API Views
-Provides endpoints for AI-based identification and diagnosis.
-
-Author: Smart Plant Health Management System
-
 """
 
 from rest_framework import viewsets, status
@@ -23,9 +19,7 @@ from diseases.models import Disease
 from plants.models import Plant
 
 class PredictionViewSet(viewsets.ModelViewSet):
-    """
-    ViewSet for handling AI predictions and identification.
-    """
+  
     queryset = Prediction.objects.all()
     permission_classes = [IsAuthenticated]
     
@@ -40,16 +34,10 @@ class PredictionViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['post'])
     def identify(self, request):
-        """
-        Identifies a plant from an uploaded image without saving a permanent prediction.
-        Ideal for auto-filling the "Add Plant" form.
-        
-        Endpoint: POST /api/predictions/identify/
-        """
+      
         serializer = PredictionCreateSerializer(data=request.data)
         if serializer.is_valid():
-            # In a real app, we'd save it temporarily or process the byte stream
-            # For now, we save it to handle the file path for inference
+           
             prediction_obj = serializer.save(user=request.user, confidence=0)
             
             try:
@@ -87,11 +75,7 @@ class PredictionViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['post'])
     def detect(self, request):
-        """
-        Diagnoses plant diseases and saves a prediction record.
-        
-        Endpoint: POST /api/predictions/detect/
-        """
+       
         serializer = PredictionCreateSerializer(data=request.data)
         if serializer.is_valid():
             prediction_obj = serializer.save(user=request.user, confidence=0)

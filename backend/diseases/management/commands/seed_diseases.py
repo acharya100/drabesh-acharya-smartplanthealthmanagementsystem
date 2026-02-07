@@ -71,7 +71,6 @@ class Command(BaseCommand):
                 ]
             }
             # Adding more to reach at least 15 in a real scenario, 
-            # but for now seeding core classes to fix the immediate error.
         ]
 
         # Add remaining classes from the plan

@@ -1,11 +1,5 @@
 """
 Serializers for Disease and Treatment APIs
-
-This module defines DRF serializers for Disease and Treatment models,
-providing comprehensive JSON serialization with nested relationships.
-
-Author: Smart Plant Health Management System
-Sprint: 3 - Plant and Disease Management
 """
 
 from rest_framework import serializers
@@ -15,12 +9,6 @@ from plants.serializers import PlantListSerializer
 
 
 class TreatmentListSerializer(serializers.ModelSerializer):
-    """
-    Lightweight serializer for treatment list views.
-    
-    Used when displaying treatments as part of disease details
-    or in treatment listing endpoints.
-    """
     
     # Display human-readable treatment type
     treatment_type_display = serializers.CharField(
@@ -49,12 +37,6 @@ class TreatmentListSerializer(serializers.ModelSerializer):
 
 
 class TreatmentDetailSerializer(serializers.ModelSerializer):
-    """
-    Comprehensive serializer for treatment detail views.
-    
-    Includes all treatment information including step-by-step instructions,
-    products needed, and safety precautions.
-    """
     
     # Display values
     treatment_type_display = serializers.CharField(
@@ -100,37 +82,16 @@ class TreatmentDetailSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'created_at', 'updated_at']
     
     def get_instruction_steps(self, obj):
-        """
-        Returns instructions as a list of steps.
-        
-        Args:
-            obj: Treatment instance
-            
-        Returns:
-            list: List of instruction steps
-        """
+
         return obj.get_instruction_steps()
     
     def get_products_list(self, obj):
-        """
-        Returns products needed as a list.
-        
-        Args:
-            obj: Treatment instance
-            
-        Returns:
-            list: List of products/materials
-        """
+       
         return obj.get_products_list()
 
 
 class DiseaseListSerializer(serializers.ModelSerializer):
-    """
-    Lightweight serializer for disease list views.
-    
-    Used for listing multiple diseases with essential information.
-    Includes affected plant count and treatment count for quick overview.
-    """
+   
     
     # Display values for choice fields
     disease_type_display = serializers.CharField(
@@ -168,25 +129,12 @@ class DiseaseListSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'created_at']
     
     def get_severity_color(self, obj):
-        """
-        Returns color code for severity level.
         
-        Args:
-            obj: Disease instance
-            
-        Returns:
-            str: Color code for UI display
-        """
         return obj.get_severity_color()
 
 
 class DiseaseDetailSerializer(serializers.ModelSerializer):
-    """
-    Comprehensive serializer for disease detail views.
-    
-    Includes all disease information, affected plants, and available treatments.
-    Used for single disease retrieval with complete related data.
-    """
+
     
     # Display values
     disease_type_display = serializers.CharField(
@@ -236,25 +184,12 @@ class DiseaseDetailSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'created_at', 'updated_at']
     
     def get_severity_color(self, obj):
-        """
-        Returns color code for severity level.
-        
-        Args:
-            obj: Disease instance
-            
-        Returns:
-            str: Color code for UI display
-        """
+       
         return obj.get_severity_color()
 
 
 class DiseaseCreateUpdateSerializer(serializers.ModelSerializer):
-    """
-    Serializer for creating and updating diseases.
-    
-    Handles many-to-many relationships with plants and includes
-    comprehensive validation for disease data.
-    """
+   
     
     # Accept plant IDs for many-to-many relationship
     affected_plant_ids = serializers.PrimaryKeyRelatedField(
@@ -284,36 +219,14 @@ class DiseaseCreateUpdateSerializer(serializers.ModelSerializer):
         ]
     
     def validate_name(self, value):
-        """
-        Validates disease name is properly formatted.
         
-        Args:
-            value: Disease name to validate
-            
-        Returns:
-            str: Validated and cleaned name
-            
-        Raises:
-            ValidationError: If name is invalid
-        """
         if not value or not value.strip():
             raise serializers.ValidationError("Disease name cannot be empty")
         
         return value.strip()
     
     def validate_symptoms(self, value):
-        """
-        Ensures symptoms field is not empty.
-        
-        Args:
-            value: Symptoms text to validate
-            
-        Returns:
-            str: Validated symptoms
-            
-        Raises:
-            ValidationError: If symptoms are empty
-        """
+       
         if not value or not value.strip():
             raise serializers.ValidationError(
                 "Symptoms description is required for disease identification"
@@ -322,18 +235,7 @@ class DiseaseCreateUpdateSerializer(serializers.ModelSerializer):
         return value.strip()
     
     def validate(self, data):
-        """
-        Cross-field validation for disease data.
-        
-        Args:
-            data: Dictionary of all field values
-            
-        Returns:
-            dict: Validated data
-            
-        Raises:
-            ValidationError: If data is invalid
-        """
+       
         # Ensure contagious diseases have spread rate information
         if data.get('is_contagious') and not data.get('spread_rate'):
             raise serializers.ValidationError({
@@ -344,11 +246,7 @@ class DiseaseCreateUpdateSerializer(serializers.ModelSerializer):
 
 
 class TreatmentCreateUpdateSerializer(serializers.ModelSerializer):
-    """
-    Serializer for creating and updating treatments.
-    
-    Includes validation for effectiveness rates and required fields.
-    """
+   
     
     class Meta:
         model = Treatment
@@ -369,18 +267,7 @@ class TreatmentCreateUpdateSerializer(serializers.ModelSerializer):
         ]
     
     def validate_effectiveness_rate(self, value):
-        """
-        Validates effectiveness rate is within valid range.
         
-        Args:
-            value: Effectiveness rate to validate
-            
-        Returns:
-            int: Validated effectiveness rate
-            
-        Raises:
-            ValidationError: If rate is out of range
-        """
         if value is not None and (value < 0 or value > 100):
             raise serializers.ValidationError(
                 "Effectiveness rate must be between 0 and 100"
@@ -389,18 +276,7 @@ class TreatmentCreateUpdateSerializer(serializers.ModelSerializer):
         return value
     
     def validate_instructions(self, value):
-        """
-        Ensures instructions are provided and meaningful.
-        
-        Args:
-            value: Instructions text to validate
-            
-        Returns:
-            str: Validated instructions
-            
-        Raises:
-            ValidationError: If instructions are insufficient
-        """
+       
         if not value or not value.strip():
             raise serializers.ValidationError(
                 "Detailed instructions are required for treatment application"

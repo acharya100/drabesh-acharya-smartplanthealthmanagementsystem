@@ -47,13 +47,7 @@ class ChangePasswordView(APIView):
         )
 
 class UpdateProfileView(APIView):
-    """
-    Handles fetching and updating the user's personal profile information.
-    
-    This is where users can come to change their display name (username) or 
-    update their email address if it changes. We make sure to check for 
-    duplicates so nobody accidentally takes someone else's username or email!
-    """
+   
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -103,10 +97,7 @@ class UpdateProfileView(APIView):
 
 class DeleteAccountView(APIView):
     """
-    The 'Danger Zone' view. This allows a user to permanently say goodbye
-    and remove their account from our system.
-    
-    WARNING: This action is destructive and removes all plants and history
+    The 'Danger Zone' view action is destructive and removes all plants and history
     associated with the user.
     """
     permission_classes = [IsAuthenticated]
@@ -122,10 +113,7 @@ class DeleteAccountView(APIView):
         )
 
 class UserListView(APIView):
-    """
-    Provides a list of all registered users.
-    Useful for the 'Switch Account' feature to see available identities.
-    """
+    
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -133,10 +121,7 @@ class UserListView(APIView):
         return Response(list(users))
 
 class SwitchUserView(APIView):
-    """
-    Allows an authenticated user to switch to another account by obtaining its token.
-    This facilitates easy testing and multi-account management.
-    """
+  
     permission_classes = [IsAuthenticated]
 
     def post(self, request):

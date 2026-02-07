@@ -6,13 +6,7 @@ from django.db.models import Q
 User = get_user_model()
 
 class EmailOrUsernameModelBackend(ModelBackend):
-    """
-    Custom authentication backend that allows users to log in using either
-    their email address or their username.
-    
-    This provides a more flexible and user-friendly login experience,
-    as requested by the user.
-    """
+   
     def authenticate(self, request, username=None, password=None, **kwargs):
         if username is None:
             username = kwargs.get(User.USERNAME_FIELD)

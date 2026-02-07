@@ -1,11 +1,5 @@
 """
 Django Admin Configuration for Plant Model
-
-This module configures the Django admin interface for managing plant data,
-providing an intuitive interface for adding and editing plant information.
-
-Author: Smart Plant Health Team
-Sprint: 3 - Plant and Disease Management
 """
 
 from django.contrib import admin
@@ -14,9 +8,7 @@ from .models import Plant
 
 @admin.register(Plant)
 class PlantAdmin(admin.ModelAdmin):
-    """
-    Admin interface for Plant model with comprehensive display and filtering options.
-    """
+    
     # Fields to display in the list view
     list_display = (
         'name',
