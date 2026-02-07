@@ -54,10 +54,10 @@ const Login = () => {
         password: formData.password
       });
 
-      localStorage.setItem("access_token", data.access);
-      localStorage.setItem("refresh_token", data.refresh);
-      localStorage.setItem("username", data.username);
-      localStorage.setItem("isAuthenticated", "true");
+      sessionStorage.setItem("access_token", data.access);
+      sessionStorage.setItem("refresh_token", data.refresh);
+      sessionStorage.setItem("username", data.username);
+      sessionStorage.setItem("isAuthenticated", "true");
       navigate("/dashboard");
     } catch (err) {
       console.error(err);

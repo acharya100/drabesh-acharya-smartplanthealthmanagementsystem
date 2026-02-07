@@ -41,10 +41,10 @@ const SwitchAccountModal = ({ isOpen, onClose }) => {
             const { data } = await authService.switchUser(userId);
 
             // Update local storage with new session data
-            localStorage.setItem("access_token", data.access);
-            localStorage.setItem("refresh_token", data.refresh);
-            localStorage.setItem("username", data.username);
-            localStorage.setItem("isAuthenticated", "true");
+            sessionStorage.setItem("access_token", data.access);
+            sessionStorage.setItem("refresh_token", data.refresh);
+            sessionStorage.setItem("username", data.username);
+            sessionStorage.setItem("isAuthenticated", "true");
 
             // Reload to apply new user context across the app
             window.location.reload();

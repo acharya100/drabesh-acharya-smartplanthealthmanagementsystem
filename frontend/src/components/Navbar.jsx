@@ -15,14 +15,14 @@ import SwitchAccountModal from "./SwitchAccountModal";
 const Navbar = ({ activePage }) => {
   const navigate = useNavigate();
   const [isSwitchModalOpen, setIsSwitchModalOpen] = useState(false);
-  const username = localStorage.getItem("username") || "User";
+  const username = sessionStorage.getItem("username") || "User";
 
   // This function handles user logout, clearing session data and redirecting to the login page.
   const handleLogout = () => {
-    localStorage.removeItem("isAuthenticated");
-    localStorage.removeItem("username");
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("refresh_token");
+    sessionStorage.removeItem("isAuthenticated");
+    sessionStorage.removeItem("username");
+    sessionStorage.removeItem("access_token");
+    sessionStorage.removeItem("refresh_token");
     navigate("/");
   };
 

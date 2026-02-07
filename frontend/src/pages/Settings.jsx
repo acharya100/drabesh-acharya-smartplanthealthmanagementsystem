@@ -63,7 +63,7 @@ const Settings = () => {
         try {
             const response = await authService.updateProfile(profile);
             setSuccess("Profile updated successfully!");
-            localStorage.setItem("username", profile.username);
+            sessionStorage.setItem("username", profile.username);
             // Reload to reflect changes in Navbar
             setTimeout(() => {
                 window.location.reload();
@@ -103,7 +103,7 @@ const Settings = () => {
             try {
                 setLoading(true);
                 await authService.deleteAccount();
-                localStorage.clear();
+                sessionStorage.clear();
                 navigate("/");
             } catch (err) {
                 setError("Failed to delete account. Please try again later.");

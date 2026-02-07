@@ -28,7 +28,7 @@ import "./App.css";
  * If not, it politely redirects them back to the login page.
  */
 const ProtectedRoute = ({ children }) => {
-  const isAuth = localStorage.getItem("isAuthenticated");
+  const isAuth = sessionStorage.getItem("isAuthenticated");
   return isAuth ? children : <Navigate to="/" />;
 };
 
