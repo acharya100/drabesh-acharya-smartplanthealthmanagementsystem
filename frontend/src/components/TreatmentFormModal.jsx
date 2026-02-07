@@ -1,3 +1,7 @@
+/**
+ * Treatment Form Modal Component
+ */
+
 import { useState, useEffect } from "react";
 import ReactDOM from "react-dom";
 import { X, Save, AlertTriangle } from "lucide-react";

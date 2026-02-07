@@ -1,11 +1,5 @@
 /**
  * Navigation Bar Component
- * 
- * The main top navigation for the application. It provides access to all major modules
- * like Dashboard, Plants, Diseases, Detection, and Settings.
- * Includes user session management and account switching access.
- * 
- * Author: Drabesh Acharya
  */
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";

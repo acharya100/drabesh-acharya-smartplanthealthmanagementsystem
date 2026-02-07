@@ -1,10 +1,5 @@
 /**
  * Main Dashboard
- * 
- * The control center of the application. It provides a high-level overview
- * of the user's plant collection health, displaying key statistics
- * like total plants, disease counts, and available treatments.
- * 
  * Author: Drabesh Acharya
  */
 import { useState, useEffect } from "react";

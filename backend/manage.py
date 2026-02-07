@@ -4,7 +4,6 @@ import os
 import sys
 
 
-# ------------------------------------------------------------------------------
 # AUTO-FIX: Ensure project dependencies are found even if venv is not active.
 # This allows 'python manage.py runserver' to work with the global python.
 try:

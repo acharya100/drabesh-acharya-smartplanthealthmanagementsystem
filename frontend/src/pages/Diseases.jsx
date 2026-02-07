@@ -1,10 +1,5 @@
 /**
  * Disease Reference Database
- * 
- * A comprehensive encylopedia of plant diseases. Users can browse this catalog
- * to understand symptoms, causes, and severity levels of various infections.
- * It links diseases to the plants they commonly affect.
- * 
  * Author: Drabesh Acharya
  */
 

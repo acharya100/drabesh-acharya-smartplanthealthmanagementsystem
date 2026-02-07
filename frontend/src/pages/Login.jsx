@@ -1,10 +1,5 @@
 /**
  * User Login Page
- * 
- * This is the gateway to our application. It handles user authentication by
- * collecting credentials and verifying them with the backend.
- * Upon success, it securely stores the session tokens and redirects to the dashboard.
- * 
  * Author: Drabesh Acharya
  */
 import { useState } from "react";
@@ -13,7 +8,6 @@ import { authService } from "../services/api";
 import { Eye, EyeOff } from "lucide-react";
 
 /**
- * Login Component
  * Only unauthenticated users should see this.
  */
 const Login = () => {
@@ -41,13 +35,7 @@ const Login = () => {
     }
 
     try {
-      // NOTE: Our backend uses 'email' as the username field, but the form uses 'username'.
-      // If the user inputs a username, we map it to 'email' if valid, or just send it as is.
-      // However, our backend explicitly expects 'email' in the login body if we use the default TokenObtainPairView
-      // BUT we customized the User model to use 'email'. TokenObtainPairView expects 'username' key by default unless configured.
-      // Let's check settings... defaulting to standard behavior: it sends 'username' and 'password'.
-      // Django's authenticate() method uses the USERNAME_FIELD which is 'email'.
-      // So sending JSON { "username": "user@example.com", "password": "..." } should work even if the field is 'email'.
+    
 
       const { data } = await authService.login({
         username: formData.username, // TokenObtainPairView expects 'username' key

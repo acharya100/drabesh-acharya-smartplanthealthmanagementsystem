@@ -1,10 +1,5 @@
 /**
  * Diagnosis History Log
- * 
- * Your personal archive of all past AI scans. This page allows users to review
- * previous diagnoses, track the health progress of their plants over time,
- * and quickly access treatment plans for past issues.
- * 
  * Author: Drabesh Acharya
  */
 

@@ -1,11 +1,5 @@
 /**
  * Plant Collection Management
- * 
- * This page serves as the digital garden for the user. It lists all tracked plants,
- * allowing users to add new ones, view details, or edit existing records.
- * It also integrates with the AI service to auto-identify plant species from photos.
- * 
- * Author: Drabesh Acharya
  */
 
 import { useState, useEffect } from "react";

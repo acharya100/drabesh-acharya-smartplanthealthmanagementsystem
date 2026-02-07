@@ -6,11 +6,6 @@ import { Upload, Camera, AlertTriangle, CheckCircle, ArrowRight, RefreshCw, X } 
 
 /**
  * AI Disease Detection Lab
- * 
- * The core AI feature of the application. Users can upload photos or use their camera
- * to scan plants. The image is sent to the backend where a PyTorch model analyzes it
- * and returns a diagnosis with confidence scores and treatment recommendations.
- * 
  * Author: Drabesh Acharya
  */
 const DiseaseDetection = () => {

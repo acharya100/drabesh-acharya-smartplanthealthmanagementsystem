@@ -6,14 +6,6 @@ import { User, Mail, Lock, Trash2, Moon, Sun, ShieldCheck, AlertTriangle } from 
 
 /**
  * User Settings & Preferences
- * 
- * The control panel for user-specific configurations. Here, users can:
- * 1. Switch between Light and Dark themes.
- * 2. Update their profile information (username/email).
- * 3. Change their security credentials (password).
- * 4. Permanently delete their account (Danger Zone).
- * 
- * Author: Drabesh Acharya
  */
 const Settings = () => {
     const navigate = useNavigate();

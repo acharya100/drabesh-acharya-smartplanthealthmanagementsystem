@@ -1,11 +1,5 @@
 /**
  * User Registration Page
- * 
- * Allows new users to create an account in the system.
- * It includes real-time validation for passwords and handles communication
- * with the backend to create the new user record.
- * 
- * Author: Drabesh Acharya
  */
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";

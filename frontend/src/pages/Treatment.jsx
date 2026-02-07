@@ -1,11 +1,5 @@
 /**
  * Treatment Protocols
- * 
- * A knowledge base of remedial actions for plant diseases. Each treatment plan
- * includes step-by-step instructions, required products, and effectiveness ratings.
- * Users can browse by Host Plant to find relevant issues.
- * 
- * Author: Drabesh Acharya
  */
 
 import { useState, useEffect } from "react";

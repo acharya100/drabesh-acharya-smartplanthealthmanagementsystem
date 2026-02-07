@@ -1,8 +1,5 @@
 /**
  * Switch Account Modal
- * 
- * Provides a user-friendly interface to browse all registered accounts
- * and switch identities with a single click.
  */
 import { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
