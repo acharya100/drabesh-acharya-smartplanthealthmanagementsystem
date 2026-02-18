@@ -1,11 +1,5 @@
 /**
  * Main Application Routing Component
- * 
- * This is the central hub of our React application. It handles all the client-side routing,
- * determining which page to show based on the URL. It also manages global theme states
- * and ensures that sensitive pages are protected from unauthorized access.
- * 
- * Author: Drabesh Acharya
  */
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";

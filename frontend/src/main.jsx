@@ -1,11 +1,5 @@
 /**
  * Application Entry Point
- * 
- * This is where the React application starts. It mounts our main App component
- * onto the DOM (the 'root' element in index.html).
- * We use StrictMode to help catch potential problems during development.
- * 
- * Author: Drabesh Acharya
  */
 import React from "react";
 import ReactDOM from "react-dom/client";
