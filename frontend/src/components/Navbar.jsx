@@ -10,13 +10,11 @@ const Navbar = ({ activePage }) => {
   const navigate = useNavigate();
   const [isSwitchModalOpen, setIsSwitchModalOpen] = useState(false);
   const username = sessionStorage.getItem("username") || "User";
+  const isAdmin = sessionStorage.getItem("is_staff") === "true" || sessionStorage.getItem("is_superuser") === "true";
 
   // This function handles user logout, clearing session data and redirecting to the login page.
   const handleLogout = () => {
-    sessionStorage.removeItem("isAuthenticated");
-    sessionStorage.removeItem("username");
-    sessionStorage.removeItem("access_token");
-    sessionStorage.removeItem("refresh_token");
+    sessionStorage.clear();
     navigate("/");
   };
 
@@ -59,6 +57,24 @@ const Navbar = ({ activePage }) => {
           <SettingsIcon size={18} />
           <span>Settings</span>
         </Link>
+
+        {isAdmin && (
+          <Link
+            to="/admin-panel"
+            style={{
+              display: 'flex', alignItems: 'center', gap: '0.4rem',
+              padding: '0.4rem 0.9rem', borderRadius: '8px',
+              background: 'linear-gradient(135deg, #10b981, #059669)',
+              color: '#fff', fontWeight: 700, fontSize: '0.82rem',
+              textDecoration: 'none', marginLeft: '0.25rem',
+              boxShadow: '0 2px 8px rgba(16,185,129,0.3)',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            <ShieldCheck size={15} />
+            <span>Admin</span>
+          </Link>
+        )}
 
         <div className="nav-user-greeting" style={{ marginLeft: '0.5rem', marginRight: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.3rem', color: 'var(--text-muted)', fontWeight: 600, fontSize: '0.8rem' }}>
           {/* We show a warm greeting to the user to make the platform feel friendly */}

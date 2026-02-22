@@ -1,6 +1,5 @@
 /**
  * User Login Page
- * Author: Drabesh Acharya
  */
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
@@ -35,7 +34,7 @@ const Login = () => {
     }
 
     try {
-    
+
 
       const { data } = await authService.login({
         username: formData.username, // TokenObtainPairView expects 'username' key
@@ -45,8 +44,18 @@ const Login = () => {
       sessionStorage.setItem("access_token", data.access);
       sessionStorage.setItem("refresh_token", data.refresh);
       sessionStorage.setItem("username", data.username);
+      sessionStorage.setItem("email", data.email || "");
+      sessionStorage.setItem("user_id", data.user_id || "");
+      sessionStorage.setItem("is_staff", data.is_staff ? "true" : "false");
+      sessionStorage.setItem("is_superuser", data.is_superuser ? "true" : "false");
       sessionStorage.setItem("isAuthenticated", "true");
-      navigate("/dashboard");
+
+      // Redirect admins to admin panel, regular users to dashboard
+      if (data.is_staff || data.is_superuser) {
+        navigate("/admin-panel");
+      } else {
+        navigate("/dashboard");
+      }
     } catch (err) {
       console.error(err);
       setError("Invalid credentials or server error");

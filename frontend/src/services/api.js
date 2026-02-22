@@ -1,15 +1,5 @@
-/**
+/*
  * API Service Layer
- * 
- * This module acts as the bridge between our frontend UI and the backend Django server.
- * Instead of scattering fetch calls everywhere, we centralize them here.
- * 
- * Key Features:
- * 1. Automatic Token Management: Attaches your access token to every request.
- * 2. Smart Error Handling: Automatically tries to refresh your session if it expires.
- * 3. Organized Endpoints: Grouped by feature (Auth, Plants, Diseases, etc.) for easy maintenance.
- * 
- * Author: Drabesh Acharya
  */
 
 import axios from 'axios';
@@ -26,10 +16,6 @@ const api = axios.create({
 
 /**
  * Request Interceptor
- * 
- * Before any request leaves the browser, this function runs.
- * It checks if we have a logged-in user (access_token exists) and stamps
- * the request with an Authorization header. This works like a VIP pass.
  */
 api.interceptors.request.use(
     (config) => {
@@ -44,14 +30,6 @@ api.interceptors.request.use(
 
 /**
  * Response Interceptor
- * 
- * This function watches every response coming back from the server.
- * If everything is fine, it just passes the data through.
- * 
- * But if we get a 401 Unauthorized error (meaning the token expired),
- * it silently tries to use the refresh token to get a new access pass.
- * If successful, it retries the failed request so the user never notices.
- * If that fails too, it logs the user out for security.
  */
 api.interceptors.response.use(
     (response) => response,
@@ -144,6 +122,16 @@ export const predictionService = {
     getDetails: (id) => api.get(`/predictions/${id}/`),
     delete: (id) => api.delete(`/predictions/${id}/`),
     update: (id, data) => api.patch(`/predictions/${id}/`, data),
+};
+
+// --- Admin Services ---
+export const adminService = {
+    getDashboard: () => api.get('/auth/admin/dashboard/'),
+    getUsers: () => api.get('/auth/admin/users/'),
+    getUserDetail: (userId) => api.get(`/auth/admin/users/${userId}/`),
+    deleteUser: (userId) => api.delete(`/auth/admin/users/${userId}/`),
+    getAllPredictions: () => api.get('/auth/admin/predictions/'),
+    toggleStaff: (userId) => api.post(`/auth/admin/users/${userId}/toggle-staff/`),
 };
 
 export default api;

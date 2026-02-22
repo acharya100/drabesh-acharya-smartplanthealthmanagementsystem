@@ -11,6 +11,7 @@ import Diseases from "./pages/Diseases";
 import Treatment from "./pages/Treatment";
 import Settings from "./pages/Settings";
 import History from "./pages/History";
+import AdminPanel from "./pages/AdminPanel";
 import { useEffect } from "react";
 import "./App.css";
 
@@ -24,6 +25,16 @@ import "./App.css";
 const ProtectedRoute = ({ children }) => {
   const isAuth = sessionStorage.getItem("isAuthenticated");
   return isAuth ? children : <Navigate to="/" />;
+};
+
+// Admin-only route: must be authenticated AND be staff/superuser
+const AdminRoute = ({ children }) => {
+  const isAuth = sessionStorage.getItem("isAuthenticated");
+  const isStaff = sessionStorage.getItem("is_staff") === "true";
+  const isSuperuser = sessionStorage.getItem("is_superuser") === "true";
+  if (!isAuth) return <Navigate to="/" />;
+  if (!isStaff && !isSuperuser) return <Navigate to="/dashboard" />;
+  return children;
 };
 
 const App = () => {
@@ -98,6 +109,15 @@ const App = () => {
             <ProtectedRoute>
               <Settings />
             </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin-panel"
+          element={
+            <AdminRoute>
+              <AdminPanel />
+            </AdminRoute>
           }
         />
       </Routes>
