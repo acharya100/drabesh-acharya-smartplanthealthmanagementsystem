@@ -29,8 +29,6 @@ class PredictionCreateSerializer(serializers.ModelSerializer):
 class PredictionDetailSerializer(serializers.ModelSerializer):
     
     user_name = serializers.CharField(source='user.username', read_only=True)
-    plant_name = serializers.CharField(source='predicted_plant.name', read_only=True)
-    disease_name = serializers.CharField(source='predicted_disease.name', read_only=True)
     
     class Meta:
         model = Prediction
@@ -38,6 +36,7 @@ class PredictionDetailSerializer(serializers.ModelSerializer):
             'id', 'user', 'user_name', 'image', 
             'predicted_plant', 'plant_name',
             'predicted_disease', 'disease_name',
-            'confidence', 'severity', 'is_healthy', 'created_at'
+            'confidence', 'severity', 'is_healthy', 
+            'is_plant_image', 'created_at'
         ]
         read_only_fields = ['id', 'user', 'created_at']

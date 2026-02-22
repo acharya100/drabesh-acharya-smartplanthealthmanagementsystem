@@ -83,6 +83,24 @@ class PlantIdentifier:
             "Peach", "Pepper", "Potato", "Raspberry", "Soybean", "Squash", 
             "Strawberry", "Tomato"
         ]
+        
+        # Proper scientific names mapping
+        self.scientific_names_map = {
+            "Apple": "Malus domestica",
+            "Blueberry": "Vaccinium corymbosum",
+            "Cherry": "Prunus avium",
+            "Corn": "Zea mays",
+            "Grape": "Vitis vinifera",
+            "Orange": "Citrus x sinensis",
+            "Peach": "Prunus persica",
+            "Pepper": "Capsicum annuum",
+            "Potato": "Solanum tuberosum",
+            "Raspberry": "Rubus idaeus",
+            "Soybean": "Glycine max",
+            "Squash": "Cucurbita pepo",
+            "Strawberry": "Fragaria x ananassa",
+            "Tomato": "Solanum lycopersicum",
+        }
 
     def _log(self, message):
         """Helper to log inference events to a file."""
@@ -121,34 +139,54 @@ class PlantIdentifier:
             disease_guess = detector.predict(image_path)
             
             # 3. Intelligent Decision Logic
-           
             
             name = generic_name.title()
             confidence = mobilenet_conf
             
-            # List of keywords that suggest ImageNet failed to find a plant
-            likely_garbage_labels = ['stole', 'frog', 'lizard', 'garment', 'plate', 'person', 'dog', 'cat', 'furniture']
+            # Expanded list of keywords that suggest ImageNet failed to find a plant
+            likely_garbage_labels = [
+                'stole', 'frog', 'lizard', 'garment', 'plate', 'person', 'dog', 'cat', 
+                'furniture', 'car', 'vehicle', 'bicycle', 'building', 'room', 'mountain',
+                'ocean', 'sea', 'sky', 'text', 'digital', 'screen', 'laptop', 'tablet'
+            ]
             is_image_net_garbage = any(word in generic_name.lower() for word in likely_garbage_labels)
             
-            if disease_guess and disease_guess['is_plant_image']:
+            is_plant_image = True
+            if is_image_net_garbage:
+                is_plant_image = False
+
+            if disease_guess:
+                if not disease_guess['is_plant_image']:
+                    is_plant_image = False
+                
                 d_name = disease_guess['plant_type']
                 d_conf = disease_guess['confidence']
                 
                 # Biased decision:
-
-                if (d_conf > 20 and d_name != 'Unknown') or is_image_net_garbage:
+                if (d_conf > 25 and d_name != 'Unknown') or is_image_net_garbage:
                     self._log(f"Preference: Using Disease Model Guess '{d_name}' instead of ImageNet '{generic_name}'")
                     name = d_name.title()
                     confidence = max(mobilenet_conf, d_conf)
+                    # If disease model is very confident it is a plant, trust it
+                    if d_conf > 30:
+                        is_plant_image = True
             
-            # Final cleanup: If we still have a known garbage label from ImageNet, and no disease guess
-            if is_image_net_garbage and name == generic_name.title():
-                name = "Unknown Leaf"
+            # Final cleanup
+            if not is_plant_image and name == generic_name.title():
+                name = "Unknown Object"
+            elif not is_plant_image:
+                name = f"Possible {name} (Low Confidence)"
+
+            # Get proper scientific name
+            sci_name = self.scientific_names_map.get(name, f"{name} Sp.")
+            if not is_plant_image:
+                sci_name = "N/A"
 
             return {
                 "name": name,
                 "confidence": confidence,
-                "scientific_name": f"{name} Sp.",
+                "scientific_name": sci_name,
+                "is_plant_image": is_plant_image,
                 "suggestions": {
                     "sunlight": "full_sun",
                     "water": "weekly",

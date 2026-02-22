@@ -45,9 +45,16 @@ class PredictionViewSet(viewsets.ModelViewSet):
                 results = identifier.predict(prediction_obj.image.path)
                 
                 if results:
-                    # Cleanup the temporary prediction object if we don't want to keep it
-                    # Or update it with the results
+                    # Update it with the results
                     prediction_obj.confidence = results['confidence']
+                    prediction_obj.plant_name = results['name'] # Save raw AI name
+                    prediction_obj.is_plant_image = results.get('is_plant_image', True)
+                    
+                    # Try to link to a database plant entry
+                    plant_obj = Plant.objects.filter(name__icontains=results['name']).first()
+                    if plant_obj:
+                        prediction_obj.predicted_plant = plant_obj
+                        
                     prediction_obj.save()
                     
                     return Response({
@@ -89,7 +96,9 @@ class PredictionViewSet(viewsets.ModelViewSet):
                     prediction_obj.confidence = results['confidence']
                     prediction_obj.severity = results['severity']
                     prediction_obj.is_healthy = results['is_healthy']
-                    prediction_obj.is_plant_image = results.get('is_plant_image', True)  # NEW FIELD
+                    prediction_obj.is_plant_image = results.get('is_plant_image', True)
+                    prediction_obj.plant_name = results.get('plant_type', 'Unknown')
+                    prediction_obj.disease_name = results.get('disease_name', 'Healthy' if results['is_healthy'] else 'Unknown')
                     
                     # Try to link to a database disease entry
                     disease_name = results['disease_name']
@@ -98,6 +107,13 @@ class PredictionViewSet(viewsets.ModelViewSet):
                         if disease_obj:
                             prediction_obj.predicted_disease = disease_obj
                     
+                    # Try to link plant too if possible
+                    plant_name = results.get('plant_type')
+                    if plant_name:
+                        plant_obj = Plant.objects.filter(name__icontains=plant_name).first()
+                        if plant_obj:
+                            prediction_obj.predicted_plant = plant_obj
+
                     prediction_obj.save()
                     
                     # Include recommendations if disease found

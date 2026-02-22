@@ -49,7 +49,6 @@ const Login = () => {
       sessionStorage.setItem("is_superuser", data.is_superuser ? "true" : "false");
       sessionStorage.setItem("isAuthenticated", "true");
 
-      // Redirect admins to admin panel, regular users to dashboard
       if (data.is_staff || data.is_superuser) {
         navigate("/admin-panel");
       } else {
@@ -63,23 +62,25 @@ const Login = () => {
   };
 
   return (
-    <div className="login-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '80vh' }}>
-      <div className="login-card animate-slide-up" style={{ maxWidth: '440px', width: '100%', padding: '3rem', boxShadow: '0 20px 40px rgba(0,0,0,0.1)' }}>
-        <div className="auth-header" style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
-          <div className="auth-logo" style={{ fontSize: '3.5rem', marginBottom: '1rem' }}>🌿</div>
-          <h1 style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--primary)', marginBottom: '0.5rem' }}>{t("login.title")}</h1>
-          <p className="subtitle" style={{ fontSize: '1rem', color: 'var(--text-muted)' }}>{t("login.subtitle")}</p>
+    <div className="login-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: 'var(--bg-main)' }}>
+      <div className="login-card animate-slide-up" style={{ maxWidth: '440px', width: '100%', padding: '3rem', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.15)', borderRadius: 'var(--radius-lg)', background: 'white' }}>
+        <div className="auth-header" style={{ textAlign: 'center', marginBottom: '3rem' }}>
+          <div className="auth-logo" style={{ fontSize: '4rem', marginBottom: '1.5rem' }}>🌿</div>
+          <h1 style={{ fontSize: '2.25rem', fontWeight: 800, color: 'var(--primary)', marginBottom: '0.75rem', letterSpacing: '-0.02em' }}>{t("login.title")}</h1>
+          <p className="subtitle" style={{ fontSize: '1.1rem', color: 'var(--text-muted)', lineHeight: 1.6 }}>{t("login.subtitle")}</p>
         </div>
 
         <form onSubmit={handleSubmit}>
           {error && (
-            <div className="error-banner mb-8" style={{ background: '#fef2f2', border: '1px solid #fee2e2', color: '#dc2626', padding: '0.75rem', borderRadius: 'var(--radius-sm)', fontSize: '0.85rem', fontWeight: 600 }}>
-              {error}
+            <div className="error-banner mb-8" style={{ background: '#fef2f2', border: '1px solid #fee2e2', color: '#dc2626', padding: '1rem', borderRadius: 'var(--radius-sm)', fontSize: '0.875rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span>⚠️</span> {error}
             </div>
           )}
 
-          <div className="form-group">
-            <label style={{ fontSize: '0.85rem', color: 'var(--secondary)', fontWeight: 700 }}>{t("login.usernameLabel")}</label>
+          <div className="form-group" style={{ marginBottom: '1.5rem' }}>
+            <label style={{ display: 'block', fontSize: '0.875rem', color: 'var(--secondary)', fontWeight: 700, marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              {t("login.usernameLabel")}
+            </label>
             <input
               type="text"
               name="username"
@@ -88,12 +89,14 @@ const Login = () => {
               onChange={handleChange}
               required
               disabled={loading}
-              style={{ height: '50px' }}
+              style={{ height: '52px', fontSize: '1rem', padding: '0 1rem', borderRadius: 'var(--radius-md)', border: '1px solid #e2e8f0', transition: 'all 0.2s' }}
             />
           </div>
 
-          <div className="form-group" style={{ marginBottom: '1.5rem' }}>
-            <label style={{ fontSize: '0.85rem', color: 'var(--secondary)', fontWeight: 700 }}>{t("login.passwordLabel")}</label>
+          <div className="form-group" style={{ marginBottom: '2rem' }}>
+            <label style={{ display: 'block', fontSize: '0.875rem', color: 'var(--secondary)', fontWeight: 700, marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              {t("login.passwordLabel")}
+            </label>
             <div style={{ position: 'relative' }}>
               <input
                 type={showPassword ? "text" : "password"}
@@ -103,7 +106,7 @@ const Login = () => {
                 onChange={handleChange}
                 required
                 disabled={loading}
-                style={{ paddingRight: '46px', height: '50px' }}
+                style={{ height: '52px', fontSize: '1rem', padding: '0 1rem', paddingRight: '48px', borderRadius: 'var(--radius-md)', border: '1px solid #e2e8f0', width: '100%', transition: 'all 0.2s' }}
               />
               <button
                 type="button"
@@ -118,7 +121,9 @@ const Login = () => {
                   cursor: 'pointer',
                   color: 'var(--text-muted)',
                   display: 'flex',
-                  alignItems: 'center'
+                  alignItems: 'center',
+                  padding: '8px',
+                  borderRadius: '50%'
                 }}
               >
                 {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
@@ -126,13 +131,16 @@ const Login = () => {
             </div>
           </div>
 
-          <button type="submit" className="btn-primary" style={{ width: '100%', height: '54px', fontSize: '1rem', marginTop: '1rem' }} disabled={loading}>
+          <button type="submit" className="btn-primary" style={{ width: '100%', height: '56px', fontSize: '1.1rem', fontWeight: 700, marginTop: '0.5rem', borderRadius: 'var(--radius-md)', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', transition: 'transform 0.1s active' }} disabled={loading}>
             {loading ? t("login.loggingIn") : t("login.loginBtn")}
           </button>
         </form>
 
-        <div className="auth-footer" style={{ marginTop: '2.5rem', textAlign: 'center', fontSize: '0.95rem', color: 'var(--text-muted)' }}>
-          {t("login.noAccount")} <Link to="/signup" style={{ color: 'var(--primary)', fontWeight: 700, textDecoration: 'none', marginLeft: '0.5rem' }}>{t("login.signUp")}</Link>
+        <div className="auth-footer" style={{ marginTop: '3rem', textAlign: 'center', fontSize: '1rem', color: 'var(--text-muted)' }}>
+          {t("login.noAccount")}
+          <Link to="/signup" style={{ color: 'var(--primary)', fontWeight: 800, textDecoration: 'none', marginLeft: '0.5rem', borderBottom: '2px solid transparent', transition: 'border-color 0.2s' }}>
+            {t("login.signUp")}
+          </Link>
         </div>
       </div>
     </div>

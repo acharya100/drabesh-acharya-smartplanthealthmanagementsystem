@@ -9,6 +9,10 @@ class Prediction(models.Model):
     image = models.ImageField(upload_to='predictions/images/')
     predicted_plant = models.ForeignKey(Plant, on_delete=models.SET_NULL, null=True, blank=True)
     predicted_disease = models.ForeignKey(Disease, on_delete=models.SET_NULL, null=True, blank=True)
+    # Raw AI results
+    plant_name = models.CharField(max_length=100, blank=True, null=True)
+    disease_name = models.CharField(max_length=150, blank=True, null=True)
+    
     confidence = models.DecimalField(max_digits=5, decimal_places=2, help_text="Confidence core (0-100)")
     severity = models.CharField(max_length=20, blank=True, null=True)
     is_healthy = models.BooleanField(default=False)

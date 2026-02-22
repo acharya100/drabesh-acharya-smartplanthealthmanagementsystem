@@ -1,12 +1,11 @@
-/**
- * User Registration Page
- */
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { authService } from "../services/api";
 import { Eye, EyeOff } from "lucide-react";
+import { useLanguage } from "../context/LanguageContext";
 
 const SignUp = () => {
+    const { t } = useLanguage();
     const [formData, setFormData] = useState({
         email: "",
         username: "",
@@ -29,15 +28,14 @@ const SignUp = () => {
         setError("");
         setLoading(true);
 
-        // Validation
         if (!formData.email.trim() || !formData.username.trim() || !formData.password.trim()) {
-            setError("Please fill in all fields");
+            setError(t("signup.signupFailed"));
             setLoading(false);
             return;
         }
 
         if (formData.password !== formData.confirmPassword) {
-            setError("Passwords do not match");
+            setError(t("signup.passwordMismatch"));
             setLoading(false);
             return;
         }
@@ -55,8 +53,7 @@ const SignUp = () => {
                 password: formData.password
             });
 
-            // Registration successful, redirect to login
-            navigate("/", { state: { message: "Account created successfully! Please login." } });
+            navigate("/", { state: { message: t("signup.title") + " successful! Please login." } });
         } catch (err) {
             console.error(err);
             if (err.response?.data) {
@@ -66,34 +63,34 @@ const SignUp = () => {
                 } else if (errors.username) {
                     setError(errors.username[0]);
                 } else {
-                    setError("Registration failed. Please try again.");
+                    setError(t("signup.signupFailed"));
                 }
             } else {
-                setError("Server error. Please try again later.");
+                setError(t("login.serverError") || "Server error.");
             }
             setLoading(false);
         }
     };
 
     return (
-        <div className="login-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '90vh', padding: '2rem' }}>
-            <div className="login-card animate-slide-up" style={{ maxWidth: '500px', width: '100%', padding: '3rem', boxShadow: '0 20px 40px rgba(0,0,0,0.1)' }}>
-                <div className="auth-header" style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
-                    <div className="auth-logo" style={{ fontSize: '3.5rem', marginBottom: '1rem' }}>🌿</div>
-                    <h1 style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--primary)', marginBottom: '0.5rem' }}>Smart Plant Health</h1>
-                    <p className="subtitle" style={{ fontSize: '1rem', color: 'var(--text-muted)' }}>Create an account to manage your plants</p>
+        <div className="login-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', padding: '2rem', background: 'var(--bg-main)' }}>
+            <div className="login-card animate-slide-up" style={{ maxWidth: '500px', width: '100%', padding: '3rem', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.15)', borderRadius: 'var(--radius-lg)', background: 'white' }}>
+                <div className="auth-header" style={{ textAlign: 'center', marginBottom: '3rem' }}>
+                    <div className="auth-logo" style={{ fontSize: '4rem', marginBottom: '1.5rem' }}>🌿</div>
+                    <h1 style={{ fontSize: '2.25rem', fontWeight: 800, color: 'var(--primary)', marginBottom: '0.75rem', letterSpacing: '-0.02em' }}>{t("signup.title")}</h1>
+                    <p className="subtitle" style={{ fontSize: '1.1rem', color: 'var(--text-muted)', lineHeight: 1.6 }}>{t("signup.subtitle")}</p>
                 </div>
 
                 <div style={{ marginTop: '2rem' }}>
                     <form onSubmit={handleSubmit}>
                         {error && (
-                            <div className="error-banner mb-8" style={{ background: '#fef2f2', border: '1px solid #fee2e2', color: '#dc2626', padding: '0.75rem', borderRadius: 'var(--radius-sm)', fontSize: '0.85rem', fontWeight: 600 }}>
-                                {error}
+                            <div className="error-banner mb-8" style={{ background: '#fef2f2', border: '1px solid #fee2e2', color: '#dc2626', padding: '1rem', borderRadius: 'var(--radius-sm)', fontSize: '0.875rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <span>⚠️</span> {error}
                             </div>
                         )}
 
-                        <div className="form-group">
-                            <label style={{ fontSize: '0.85rem', color: 'var(--secondary)', fontWeight: 700 }}>Username</label>
+                        <div className="form-group" style={{ marginBottom: '1.5rem' }}>
+                            <label style={{ display: 'block', fontSize: '0.875rem', color: 'var(--secondary)', fontWeight: 700, marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t("signup.firstNameLabel")}</label>
                             <input
                                 type="text"
                                 name="username"
@@ -101,13 +98,13 @@ const SignUp = () => {
                                 onChange={handleChange}
                                 required
                                 disabled={loading}
-                                placeholder="Choose a username"
-                                style={{ height: '50px' }}
+                                placeholder={t("signup.firstNamePlaceholder")}
+                                style={{ height: '52px', fontSize: '1rem', padding: '0 1rem', borderRadius: 'var(--radius-md)', border: '1px solid #e2e8f0' }}
                             />
                         </div>
 
-                        <div className="form-group">
-                            <label style={{ fontSize: '0.85rem', color: 'var(--secondary)', fontWeight: 700 }}>Email Address</label>
+                        <div className="form-group" style={{ marginBottom: '1.5rem' }}>
+                            <label style={{ display: 'block', fontSize: '0.875rem', color: 'var(--secondary)', fontWeight: 700, marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t("signup.emailLabel")}</label>
                             <input
                                 type="email"
                                 name="email"
@@ -115,13 +112,13 @@ const SignUp = () => {
                                 onChange={handleChange}
                                 required
                                 disabled={loading}
-                                placeholder="your.name@example.com"
-                                style={{ height: '50px' }}
+                                placeholder={t("signup.emailPlaceholder")}
+                                style={{ height: '52px', fontSize: '1rem', padding: '0 1rem', borderRadius: 'var(--radius-md)', border: '1px solid #e2e8f0' }}
                             />
                         </div>
 
-                        <div className="form-group">
-                            <label style={{ fontSize: '0.85rem', color: 'var(--secondary)', fontWeight: 700 }}>Password</label>
+                        <div className="form-group" style={{ marginBottom: '1.5rem' }}>
+                            <label style={{ display: 'block', fontSize: '0.875rem', color: 'var(--secondary)', fontWeight: 700, marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t("signup.passwordLabel")}</label>
                             <div style={{ position: 'relative' }}>
                                 <input
                                     type={showPassword ? "text" : "password"}
@@ -130,8 +127,8 @@ const SignUp = () => {
                                     onChange={handleChange}
                                     required
                                     disabled={loading}
-                                    placeholder="At least 8 characters"
-                                    style={{ paddingRight: '46px', height: '50px' }}
+                                    placeholder={t("signup.passwordPlaceholder")}
+                                    style={{ height: '52px', fontSize: '1rem', padding: '0 1rem', paddingRight: '48px', borderRadius: 'var(--radius-md)', border: '1px solid #e2e8f0', width: '100%' }}
                                 />
                                 <button
                                     type="button"
@@ -146,7 +143,9 @@ const SignUp = () => {
                                         cursor: 'pointer',
                                         color: 'var(--text-muted)',
                                         display: 'flex',
-                                        alignItems: 'center'
+                                        alignItems: 'center',
+                                        padding: '8px',
+                                        borderRadius: '50%'
                                     }}
                                 >
                                     {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
@@ -154,8 +153,8 @@ const SignUp = () => {
                             </div>
                         </div>
 
-                        <div className="form-group" style={{ marginBottom: '1.5rem' }}>
-                            <label style={{ fontSize: '0.85rem', color: 'var(--secondary)', fontWeight: 700 }}>Confirm Password</label>
+                        <div className="form-group" style={{ marginBottom: '2rem' }}>
+                            <label style={{ display: 'block', fontSize: '0.875rem', color: 'var(--secondary)', fontWeight: 700, marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t("signup.confirmPasswordLabel")}</label>
                             <div style={{ position: 'relative' }}>
                                 <input
                                     type={showConfirmPassword ? "text" : "password"}
@@ -164,8 +163,8 @@ const SignUp = () => {
                                     onChange={handleChange}
                                     required
                                     disabled={loading}
-                                    placeholder="Repeat your password"
-                                    style={{ paddingRight: '46px', height: '50px' }}
+                                    placeholder={t("signup.confirmPasswordPlaceholder")}
+                                    style={{ height: '52px', fontSize: '1rem', padding: '0 1rem', paddingRight: '48px', borderRadius: 'var(--radius-md)', border: '1px solid #e2e8f0', width: '100%' }}
                                 />
                                 <button
                                     type="button"
@@ -180,7 +179,9 @@ const SignUp = () => {
                                         cursor: 'pointer',
                                         color: 'var(--text-muted)',
                                         display: 'flex',
-                                        alignItems: 'center'
+                                        alignItems: 'center',
+                                        padding: '8px',
+                                        borderRadius: '50%'
                                     }}
                                 >
                                     {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
@@ -188,14 +189,17 @@ const SignUp = () => {
                             </div>
                         </div>
 
-                        <button type="submit" className="btn-primary" style={{ width: '100%', height: '54px', fontSize: '1rem', marginTop: '1rem' }} disabled={loading}>
-                            {loading ? "Creating account..." : "Sign Up"}
+                        <button type="submit" className="btn-primary" style={{ width: '100%', height: '56px', fontSize: '1.1rem', fontWeight: 700, marginTop: '0.5rem', borderRadius: 'var(--radius-md)', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }} disabled={loading}>
+                            {loading ? t("signup.creatingAccount") : t("signup.signupBtn")}
                         </button>
                     </form>
                 </div>
 
-                <div className="auth-footer" style={{ marginTop: '2.5rem', textAlign: 'center', fontSize: '0.95rem', color: 'var(--text-muted)' }}>
-                    Already have an account? <Link to="/" style={{ color: 'var(--primary)', fontWeight: 700, textDecoration: 'none', marginLeft: '0.5rem' }}>Login</Link>
+                <div className="auth-footer" style={{ marginTop: '3rem', textAlign: 'center', fontSize: '1rem', color: 'var(--text-muted)' }}>
+                    {t("signup.haveAccount")}
+                    <Link to="/" style={{ color: 'var(--primary)', fontWeight: 800, textDecoration: 'none', marginLeft: '0.5rem', borderBottom: '2px solid transparent' }}>
+                        {t("signup.loginLink")}
+                    </Link>
                 </div>
             </div>
         </div>
