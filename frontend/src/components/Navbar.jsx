@@ -5,17 +5,22 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { LayoutDashboard, Leaf, Activity, Camera, ShieldCheck, LogOut, Settings as SettingsIcon, Users, History as HistoryIcon } from "lucide-react";
 import SwitchAccountModal from "./SwitchAccountModal";
+import { useLanguage } from "../context/LanguageContext";
 
 const Navbar = ({ activePage }) => {
   const navigate = useNavigate();
   const [isSwitchModalOpen, setIsSwitchModalOpen] = useState(false);
   const username = sessionStorage.getItem("username") || "User";
   const isAdmin = sessionStorage.getItem("is_staff") === "true" || sessionStorage.getItem("is_superuser") === "true";
+  const { t, language, setLanguage } = useLanguage();
 
-  // This function handles user logout, clearing session data and redirecting to the login page.
   const handleLogout = () => {
     sessionStorage.clear();
     navigate("/");
+  };
+
+  const toggleLanguage = () => {
+    setLanguage(language === "en" ? "ne" : "en");
   };
 
   return (
@@ -24,38 +29,38 @@ const Navbar = ({ activePage }) => {
         <Link to="/dashboard" style={{ textDecoration: 'none' }}>
           <h2 style={{ fontSize: '1.25rem', margin: 0 }}>
             <Leaf size={24} className="text-primary" />
-            <span>Smart Plant Health Management System</span>
+            <span>{t("nav.brand")}</span>
           </h2>
         </Link>
       </div>
       <div className="navbar-links">
         <Link to="/dashboard" className={`nav-link ${activePage === "dashboard" ? "active" : ""}`}>
           <LayoutDashboard size={18} />
-          <span>Dashboard</span>
+          <span>{t("nav.dashboard")}</span>
         </Link>
         <Link to="/plants" className={`nav-link ${activePage === "plants" ? "active" : ""}`}>
           <Leaf size={18} />
-          <span>My Plants</span>
+          <span>{t("nav.plants")}</span>
         </Link>
         <Link to="/diseases" className={`nav-link ${activePage === "diseases" ? "active" : ""}`}>
           <Activity size={18} />
-          <span>Diseases</span>
+          <span>{t("nav.diseases")}</span>
         </Link>
         <Link to="/disease" className={`nav-link ${activePage === "disease" ? "active" : ""}`}>
           <Camera size={18} />
-          <span>Detection</span>
+          <span>{t("nav.detection")}</span>
         </Link>
         <Link to="/history" className={`nav-link ${activePage === "history" ? "active" : ""}`}>
           <HistoryIcon size={18} />
-          <span>History</span>
+          <span>{t("nav.history")}</span>
         </Link>
         <Link to="/treatment" className={`nav-link ${activePage === "treatment" ? "active" : ""}`}>
           <ShieldCheck size={18} />
-          <span>Treatments</span>
+          <span>{t("nav.treatments")}</span>
         </Link>
         <Link to="/settings" className={`nav-link ${activePage === "settings" ? "active" : ""}`}>
           <SettingsIcon size={18} />
-          <span>Settings</span>
+          <span>{t("nav.settings")}</span>
         </Link>
 
         {isAdmin && (
@@ -72,18 +77,27 @@ const Navbar = ({ activePage }) => {
             }}
           >
             <ShieldCheck size={15} />
-            <span>Admin</span>
+            <span>{t("nav.admin")}</span>
           </Link>
         )}
 
+        {/* Language toggle button */}
+        <button
+          onClick={toggleLanguage}
+          title={language === "en" ? "Switch to Nepali" : "English मा फेर्नुहोस्"}
+          className="lang-toggle-btn"
+        >
+          <span className="lang-flag">{language === "en" ? "🇳🇵" : "🇬🇧"}</span>
+          <span className="lang-code">{language === "en" ? "NE" : "EN"}</span>
+        </button>
+
         <div className="nav-user-greeting" style={{ marginLeft: '0.5rem', marginRight: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.3rem', color: 'var(--text-muted)', fontWeight: 600, fontSize: '0.8rem' }}>
-          {/* We show a warm greeting to the user to make the platform feel friendly */}
-          <span>Welcome,</span>
+          <span>{t("nav.welcome")}</span>
           <span style={{ color: 'var(--primary)', fontWeight: 800 }}>{username}</span>
 
           <button
             onClick={() => setIsSwitchModalOpen(true)}
-            title="Switch Account"
+            title={t("nav.switchAccount")}
             style={{
               background: 'transparent',
               border: 'none',
@@ -102,7 +116,7 @@ const Navbar = ({ activePage }) => {
         </div>
         <button onClick={handleLogout} className="logout-btn">
           <LogOut size={18} />
-          <span>Logout</span>
+          <span>{t("nav.logout")}</span>
         </button>
 
         <SwitchAccountModal
@@ -115,4 +129,3 @@ const Navbar = ({ activePage }) => {
 };
 
 export default Navbar;
-

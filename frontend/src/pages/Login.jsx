@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { authService } from "../services/api";
 import { Eye, EyeOff } from "lucide-react";
+import { useLanguage } from "../context/LanguageContext";
 
 /**
  * Only unauthenticated users should see this.
@@ -15,12 +16,12 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     setError("");
   };
-
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -28,16 +29,14 @@ const Login = () => {
     setLoading(true);
 
     if (!formData.username.trim() || !formData.password.trim()) {
-      setError("Please fill in all fields");
+      setError(t("login.errorEmpty"));
       setLoading(false);
       return;
     }
 
     try {
-
-
       const { data } = await authService.login({
-        username: formData.username, // TokenObtainPairView expects 'username' key
+        username: formData.username,
         password: formData.password
       });
 
@@ -58,7 +57,7 @@ const Login = () => {
       }
     } catch (err) {
       console.error(err);
-      setError("Invalid credentials or server error");
+      setError(t("login.errorInvalid"));
       setLoading(false);
     }
   };
@@ -68,8 +67,8 @@ const Login = () => {
       <div className="login-card animate-slide-up" style={{ maxWidth: '440px', width: '100%', padding: '3rem', boxShadow: '0 20px 40px rgba(0,0,0,0.1)' }}>
         <div className="auth-header" style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
           <div className="auth-logo" style={{ fontSize: '3.5rem', marginBottom: '1rem' }}>🌿</div>
-          <h1 style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--primary)', marginBottom: '0.5rem' }}>Smart Plant Health</h1>
-          <p className="subtitle" style={{ fontSize: '1rem', color: 'var(--text-muted)' }}>Sign in to manage your plant health</p>
+          <h1 style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--primary)', marginBottom: '0.5rem' }}>{t("login.title")}</h1>
+          <p className="subtitle" style={{ fontSize: '1rem', color: 'var(--text-muted)' }}>{t("login.subtitle")}</p>
         </div>
 
         <form onSubmit={handleSubmit}>
@@ -80,11 +79,11 @@ const Login = () => {
           )}
 
           <div className="form-group">
-            <label style={{ fontSize: '0.85rem', color: 'var(--secondary)', fontWeight: 700 }}>Username or Email</label>
+            <label style={{ fontSize: '0.85rem', color: 'var(--secondary)', fontWeight: 700 }}>{t("login.usernameLabel")}</label>
             <input
               type="text"
               name="username"
-              placeholder="Enter your username"
+              placeholder={t("login.usernamePlaceholder")}
               value={formData.username}
               onChange={handleChange}
               required
@@ -94,12 +93,12 @@ const Login = () => {
           </div>
 
           <div className="form-group" style={{ marginBottom: '1.5rem' }}>
-            <label style={{ fontSize: '0.85rem', color: 'var(--secondary)', fontWeight: 700 }}>Password</label>
+            <label style={{ fontSize: '0.85rem', color: 'var(--secondary)', fontWeight: 700 }}>{t("login.passwordLabel")}</label>
             <div style={{ position: 'relative' }}>
               <input
                 type={showPassword ? "text" : "password"}
                 name="password"
-                placeholder="Enter your password"
+                placeholder={t("login.passwordPlaceholder")}
                 value={formData.password}
                 onChange={handleChange}
                 required
@@ -128,12 +127,12 @@ const Login = () => {
           </div>
 
           <button type="submit" className="btn-primary" style={{ width: '100%', height: '54px', fontSize: '1rem', marginTop: '1rem' }} disabled={loading}>
-            {loading ? "Logging in..." : "Login"}
+            {loading ? t("login.loggingIn") : t("login.loginBtn")}
           </button>
         </form>
 
         <div className="auth-footer" style={{ marginTop: '2.5rem', textAlign: 'center', fontSize: '0.95rem', color: 'var(--text-muted)' }}>
-          Don't have an account? <Link to="/signup" style={{ color: 'var(--primary)', fontWeight: 700, textDecoration: 'none', marginLeft: '0.5rem' }}>Sign Up</Link>
+          {t("login.noAccount")} <Link to="/signup" style={{ color: 'var(--primary)', fontWeight: 700, textDecoration: 'none', marginLeft: '0.5rem' }}>{t("login.signUp")}</Link>
         </div>
       </div>
     </div>

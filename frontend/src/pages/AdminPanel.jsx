@@ -257,7 +257,7 @@ const AdminPanel = () => {
                         </div>
                     )}
 
-                    {/* ==================== DASHBOARD TAB ==================== */}
+                    {/* == DASHBOARD TAB ==*/}
                     {activeTab === "dashboard" && (
                         <div>
                             <div style={{ marginBottom: "2rem" }}>
@@ -359,7 +359,7 @@ const AdminPanel = () => {
                         </div>
                     )}
 
-                    {/* ==================== USERS TAB ==================== */}
+                    {/* === USERS TAB == */}
                     {activeTab === "users" && (
                         <div>
                             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1.5rem" }}>
@@ -468,7 +468,7 @@ const AdminPanel = () => {
                         </div>
                     )}
 
-                    {/* ==================== USER DETAIL TAB ==================== */}
+                    {/* == USER DETAIL TAB == */}
                     {activeTab === "user-detail" && userDetail && (
                         <div>
                             <button
@@ -614,7 +614,7 @@ const AdminPanel = () => {
                         </div>
                     )}
 
-                    {/* ==================== ALL PREDICTIONS TAB ==================== */}
+                    {/* ==ALL PREDICTIONS TAB ==== */}
                     {activeTab === "predictions" && (
                         <div>
                             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1.5rem" }}>

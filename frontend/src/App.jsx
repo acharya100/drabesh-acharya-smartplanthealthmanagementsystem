@@ -17,10 +17,6 @@ import "./App.css";
 
 /**
  * Protected Route Wrapper
- * 
- * A security guard component that checks if the user is logged in.
- * If they are authenticated, it lets them through to the child component.
- * If not, it politely redirects them back to the login page.
  */
 const ProtectedRoute = ({ children }) => {
   const isAuth = sessionStorage.getItem("isAuthenticated");

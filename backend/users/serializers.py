@@ -24,8 +24,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     username_field = 'username'
     
     def validate(self, attrs):
-        # Our EmailOrUsernameModelBackend will check if the input is an email or username
-        # and verify the password accordingly.
+        # EmailOrUsernameModelBackend will check if input is an email or username and verify the password.
         user = authenticate(
             request=self.context.get('request'),
             username=attrs.get('username'), 
