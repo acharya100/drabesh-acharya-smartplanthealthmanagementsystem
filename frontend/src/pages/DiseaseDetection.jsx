@@ -3,12 +3,14 @@ import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { predictionService } from "../services/api";
 import { Upload, Camera, AlertTriangle, CheckCircle, ArrowRight, RefreshCw, X } from "lucide-react";
+import { useLanguage } from "../context/LanguageContext";
 
 /**
  * AI Disease Detection Lab
  * Author: Drabesh Acharya
  */
 const DiseaseDetection = () => {
+  const { t } = useLanguage();
   const [selectedFile, setSelectedFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [result, setResult] = useState(null);
@@ -66,11 +68,11 @@ const DiseaseDetection = () => {
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
-      setError("Please select an image file");
+      setError(t("detection.errorImage") || "Please select an image file");
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      setError("File size must be less than 5MB");
+      setError(t("detection.errorSize") || "File size must be less than 5MB");
       return;
     }
 
@@ -107,7 +109,7 @@ const DiseaseDetection = () => {
 
   const handleDetect = async () => {
     if (!selectedFile) {
-      setError("Please select an image first");
+      setError(t("detection.errorFirst") || "Please select an image first");
       return;
     }
 
@@ -123,13 +125,13 @@ const DiseaseDetection = () => {
       if (response.data.success) {
         setResult(response.data.data);
       } else {
-        setError(response.data.message || "Detection failed");
+        setError(response.data.message || t("detection.detectionFailed") || "Detection failed");
       }
     } catch (err) {
       console.error("Detection error:", err);
       const serverData = err.response?.data;
       const errorMsg = serverData?.message || serverData?.error || (serverData ? JSON.stringify(serverData) : null);
-      setError(errorMsg || "An error occurred during diagnosis.");
+      setError(errorMsg || t("detection.detectionFailed") || "An error occurred during diagnosis.");
     } finally {
       setLoading(false);
     }
@@ -149,9 +151,9 @@ const DiseaseDetection = () => {
       <div className="discovery-content animate-slide-up">
         <header className="discovery-header mb-8" style={{ textAlign: 'center' }}>
           {/* Badge is a nice tiny UI detail that makes the page feel premium */}
-          <div className="header-badge" style={{ display: 'inline-block', padding: '0.4rem 1rem', background: 'var(--primary-subtle)', color: 'var(--primary)', borderRadius: '100px', fontSize: '0.75rem', fontWeight: 800, letterSpacing: '0.1em', marginBottom: '1rem' }}>AI DISEASE DETECTION</div>
-          <h1 style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--secondary)', marginBottom: '0.5rem' }}>Detect Plant Disease</h1>
-          <p style={{ maxWidth: '600px', margin: '0 auto', fontSize: '1rem', color: 'var(--text-muted)' }}>Upload a photo of your plant for instant AI-based diagnosis.</p>
+          <div className="header-badge" style={{ display: 'inline-block', padding: '0.4rem 1rem', background: 'var(--primary-subtle)', color: 'var(--primary)', borderRadius: '100px', fontSize: '0.75rem', fontWeight: 800, letterSpacing: '0.1em', marginBottom: '1rem' }}>{t("detection.aiDetectionBadge")}</div>
+          <h1 style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--secondary)', marginBottom: '0.5rem' }}>{t("detection.title")}</h1>
+          <p style={{ maxWidth: '600px', margin: '0 auto', fontSize: '1rem', color: 'var(--text-muted)' }}>{t("detection.subtitle")}</p>
         </header>
 
         <div className="detection-layout">
@@ -162,18 +164,18 @@ const DiseaseDetection = () => {
                   <div className="upload-dropzone" style={{ border: '2px dashed var(--border-light)', borderRadius: 'var(--radius-md)', padding: '2rem', textAlign: 'center', cursor: 'pointer', background: 'var(--bg-card)', display: 'flex', gap: '1rem', justifyContent: 'center' }}>
                     <div onClick={() => document.getElementById('fileInput').click()} style={{ flex: 1 }}>
                       <Upload size={32} style={{ color: 'var(--primary)', marginBottom: '0.5rem' }} />
-                      <h4 style={{ fontSize: '1rem' }}>Upload Image</h4>
+                      <h4 style={{ fontSize: '1rem' }}>{t("detection.uploadImage")}</h4>
                       <input id="fileInput" type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
                     </div>
                     <div style={{ width: '1px', background: 'var(--border-light)' }}></div>
                     <div onClick={() => document.getElementById('folderInput').click()} style={{ flex: 1 }}>
                       <Upload size={32} style={{ color: 'var(--secondary)', marginBottom: '0.5rem' }} />
-                      <h4 style={{ fontSize: '1rem' }}>Upload Folder</h4>
+                      <h4 style={{ fontSize: '1rem' }}>{t("detection.uploadFolder")}</h4>
                       <input id="folderInput" type="file" webkitdirectory="true" directory="true" multiple onChange={handleFileChange} className="hidden" />
                     </div>
                   </div>
 
-                  <div className="or-divider" style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: 600 }}>OR</div>
+                  <div className="or-divider" style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: 600 }}>{t("detection.orDivider")}</div>
 
                   <div
                     className="camera-zone"
@@ -184,8 +186,8 @@ const DiseaseDetection = () => {
                       <Camera size={32} />
                     </div>
                     <div>
-                      <h3 style={{ fontSize: '1.2rem', margin: 0 }}>Use Camera</h3>
-                      <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', margin: 0 }}>Take a photo directly</p>
+                      <h3 style={{ fontSize: '1.2rem', margin: 0 }}>{t("detection.useCamera")}</h3>
+                      <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', margin: 0 }}>{t("detection.takePhoto")}</p>
                     </div>
                   </div>
                 </div>
@@ -218,12 +220,12 @@ const DiseaseDetection = () => {
                         {loading ? (
                           <div className="loader-inline" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem' }}>
                             <RefreshCw className="animate-spin" size={20} />
-                            <span>Analyzing...</span>
+                            <span>{t("detection.analyzing")}</span>
                           </div>
                         ) : (
                           <div className="loader-inline" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem' }}>
                             <RefreshCw size={20} />
-                            <span>Detect Disease</span>
+                            <span>{t("detection.detectBtn")}</span>
                           </div>
                         )}
                       </button>
@@ -247,12 +249,12 @@ const DiseaseDetection = () => {
                     {/* Status pills help users quickly see if their plant is okay or not */}
                     <div className={`status-pill ${result.is_healthy ? 'healthy' : 'infected'}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.4rem 0.8rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', marginBottom: '1.5rem', background: result.is_healthy ? 'var(--primary-subtle)' : '#fee2e2', color: result.is_healthy ? 'var(--primary)' : '#dc2626' }}>
                       {result.is_healthy ? <CheckCircle size={16} /> : <AlertTriangle size={16} />}
-                      {result.is_healthy ? 'Plant is Healthy' : 'Disease Detected'}
+                      {result.is_healthy ? t("detection.healthyStatus") : t("detection.infectedStatus")}
                     </div>
                     <h2 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '2rem' }}>{result.disease_name}</h2>
                     <div className="confidence-meter">
                       <div className="meter-label" style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', fontWeight: 700, marginBottom: '0.5rem', opacity: 0.7 }}>
-                        <span>AI CONFIDENCE</span>
+                        <span>{t("detection.confidenceLabel")}</span>
                         <span>{result.confidence.toFixed(1)}%</span>
                       </div>
                       <div className="meter-bar" style={{ height: '8px', background: 'var(--border-light)', borderRadius: '100px', overflow: 'hidden' }}>
@@ -264,7 +266,7 @@ const DiseaseDetection = () => {
                   <div className="result-details" style={{ padding: '2.5rem' }}>
                     {!result.is_healthy && (
                       <div className="severity-info" style={{ marginBottom: '2.5rem' }}>
-                        <span className="label" style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', display: 'block', marginBottom: '0.5rem' }}>Disease Severity:</span>
+                        <span className="label" style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', display: 'block', marginBottom: '0.5rem' }}>{t("detection.severityLabel")}:</span>
                         <span className={`value severity-${result.severity}`} style={{ fontSize: '1.25rem', fontWeight: 800, color: result.severity === 'critical' ? '#dc2626' : 'var(--secondary)' }}>
                           {result.severity.toUpperCase()}
                         </span>
@@ -273,20 +275,20 @@ const DiseaseDetection = () => {
 
                     <div className="action-steps">
                       {result.is_healthy ? (
-                        <p className="healthy-tip" style={{ color: 'var(--text-muted)', lineHeight: 1.6 }}>No diseases detected. Keep up with your regular plant care routine and monitor for any changes.</p>
+                        <p className="healthy-tip" style={{ color: 'var(--text-muted)', lineHeight: 1.6 }}>{t("detection.healthyTip")}</p>
                       ) : (
                         <div className="next-steps-container">
-                          <h4 style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 800, textTransform: 'uppercase', fontSize: '0.85rem', color: 'var(--primary)', marginBottom: '1.5rem' }}><ArrowRight size={18} /> Recommended Actions</h4>
+                          <h4 style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 800, textTransform: 'uppercase', fontSize: '0.85rem', color: 'var(--primary)', marginBottom: '1.5rem' }}><ArrowRight size={18} /> {t("detection.recommendedActions")}</h4>
                           <div className="treatment-preview">
                             {result.recommended_treatment ? (
                               <div className="treatment-cta" style={{ background: 'var(--bg-main)', padding: '1.5rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-light)' }}>
                                 <p style={{ fontSize: '0.95rem', marginBottom: '1.5rem', lineHeight: 1.5 }}>Recommended treatment: <strong style={{ color: 'var(--secondary)' }}>{result.recommended_treatment.name}</strong></p>
                                 <Link to="/treatment" className="btn-primary" style={{ display: 'flex', justifyContent: 'center', padding: '0.8rem', fontSize: '0.9rem', width: '100%' }}>
-                                  View Treatment Guide
+                                  {t("detection.viewTreatmentGuide")}
                                 </Link>
                               </div>
                             ) : (
-                              <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>No specific treatment found in our database. Check the Disease Records for more information.</p>
+                              <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>{t("detection.noTreatmentFound")}</p>
                             )}
                           </div>
                         </div>
@@ -299,8 +301,8 @@ const DiseaseDetection = () => {
                   <div className="icon-pulse" style={{ color: 'var(--text-light)', marginBottom: '2rem' }}>
                     <Camera size={80} style={{ opacity: 0.2 }} />
                   </div>
-                  <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem', color: 'var(--secondary)' }}>Ready for Detection</h3>
-                  <p style={{ color: 'var(--text-muted)', maxWidth: '280px' }}>Upload a plant photo on the left to start the AI analysis.</p>
+                  <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem', color: 'var(--secondary)' }}>{t("detection.readyTitle")}</h3>
+                  <p style={{ color: 'var(--text-muted)', maxWidth: '280px' }}>{t("detection.readySubtitle")}</p>
                 </div>
               )}
             </aside>

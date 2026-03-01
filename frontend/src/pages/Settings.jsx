@@ -3,11 +3,13 @@ import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { authService } from "../services/api";
 import { User, Mail, Lock, Trash2, Moon, Sun, ShieldCheck, AlertTriangle } from "lucide-react";
+import { useLanguage } from "../context/LanguageContext";
 
 /**
  * User Settings & Preferences
  */
 const Settings = () => {
+    const { t } = useLanguage();
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const [theme, setTheme] = useState(localStorage.getItem("theme") || "light");
@@ -37,7 +39,7 @@ const Settings = () => {
             });
         } catch (err) {
             console.error("Error loading profile:", err);
-            setError("Failed to load profile details.");
+            setError(t("settings.loadProfileFailed") || "Failed to load profile details.");
         }
     };
 
@@ -54,14 +56,14 @@ const Settings = () => {
         setSuccess("");
         try {
             const response = await authService.updateProfile(profile);
-            setSuccess("Profile updated successfully!");
+            setSuccess(t("settings.profileUpdated") || "Profile updated successfully!");
             sessionStorage.setItem("username", profile.username);
             // Reload to reflect changes in Navbar
             setTimeout(() => {
                 window.location.reload();
             }, 1000);
         } catch (err) {
-            setError(err.response?.data?.error || "Failed to update profile.");
+            setError(err.response?.data?.error || t("settings.updateProfileFailed") || "Failed to update profile.");
         } finally {
             setLoading(false);
         }
@@ -70,7 +72,7 @@ const Settings = () => {
     const handlePasswordChange = async (e) => {
         e.preventDefault();
         if (passwords.new_password !== passwords.confirm_password) {
-            setError("New passwords do not match.");
+            setError(t("settings.passwordsNoMatch") || "New passwords do not match.");
             return;
         }
         setLoading(true);
@@ -81,24 +83,24 @@ const Settings = () => {
                 old_password: passwords.old_password,
                 new_password: passwords.new_password
             });
-            setSuccess("Password changed successfully!");
+            setSuccess(t("settings.passwordChanged") || "Password changed successfully!");
             setPasswords({ old_password: "", new_password: "", confirm_password: "" });
         } catch (err) {
-            setError(err.response?.data?.error || "Failed to change password.");
+            setError(err.response?.data?.error || t("settings.passwordChangeFailed") || "Failed to change password.");
         } finally {
             setLoading(false);
         }
     };
 
     const handleDeleteAccount = async () => {
-        if (window.confirm("CRITICAL: Are you sure you want to delete your account? This will permanently remove all your data, plants, and history. This action cannot be undone.")) {
+        if (window.confirm(t("settings.deleteAccountConfirm") || "CRITICAL: Are you sure you want to delete your account? This will permanently remove all your data, plants, and history. This action cannot be undone.")) {
             try {
                 setLoading(true);
                 await authService.deleteAccount();
                 sessionStorage.clear();
                 navigate("/");
             } catch (err) {
-                setError("Failed to delete account. Please try again later.");
+                setError(t("settings.deleteAccountFailed") || "Failed to delete account. Please try again later.");
                 setLoading(false);
             }
         }
@@ -110,8 +112,8 @@ const Settings = () => {
             <div className="page-content animate-slide-up">
                 <div className="page-header">
                     <div>
-                        <h1>Settings</h1>
-                        <p className="subtitle">Manage your account and app preferences</p>
+                        <h1>{t("settings.title")}</h1>
+                        <p className="subtitle">{t("settings.subtitle")}</p>
                     </div>
                 </div>
 
@@ -134,10 +136,10 @@ const Settings = () => {
                     <div className="settings-section">
                         <div className="settings-card" style={{ background: 'var(--bg-card)', padding: '2rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-light)', boxShadow: 'var(--shadow-sm)', marginBottom: '2rem' }}>
                             <h3 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                                <Sun size={24} className="text-primary" /> Display Preference
+                                <Sun size={24} className="text-primary" /> {t("settings.displayPref")}
                             </h3>
                             <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '2rem' }}>
-                                Switch between Light and Dark themes for better visibility.
+                                {t("settings.displayDesc")}
                             </p>
                             <button
                                 className="btn-secondary"
@@ -145,23 +147,23 @@ const Settings = () => {
                                 onClick={toggleTheme}
                             >
                                 {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
-                                <span>{theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}</span>
+                                <span>{theme === 'light' ? t("settings.darkMode") : t("settings.lightMode")}</span>
                             </button>
                         </div>
 
                         <div className="settings-card" style={{ background: 'var(--bg-card)', padding: '2rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-light)', boxShadow: 'var(--shadow-sm)', borderColor: '#fee2e2' }}>
                             <h3 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#dc2626' }}>
-                                <Trash2 size={24} /> Danger Zone
+                                <Trash2 size={24} /> {t("settings.dangerZone")}
                             </h3>
                             <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '2rem' }}>
-                                Permanently delete your account and all associated data.
+                                {t("settings.deleteDesc")}
                             </p>
                             <button
                                 className="btn-secondary"
                                 style={{ width: '100%', color: '#dc2626', borderColor: '#dc2626' }}
                                 onClick={handleDeleteAccount}
                             >
-                                Delete Account
+                                {t("settings.deleteAccount")}
                             </button>
                         </div>
                     </div>
@@ -170,11 +172,11 @@ const Settings = () => {
                     <div className="settings-forms">
                         <div className="settings-card" style={{ background: 'var(--bg-card)', padding: '2.5rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-light)', boxShadow: 'var(--shadow-sm)', marginBottom: '3rem' }}>
                             <h3 style={{ marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                                <User size={24} className="text-primary" /> Profile Information
+                                <User size={24} className="text-primary" /> {t("settings.profileInfo")}
                             </h3>
                             <form onSubmit={handleProfileUpdate}>
                                 <div className="form-group">
-                                    <label>Username</label>
+                                    <label>{t("settings.username")}</label>
                                     <div style={{ position: 'relative' }}>
                                         <User size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
                                         <input
@@ -182,13 +184,13 @@ const Settings = () => {
                                             value={profile.username}
                                             onChange={(e) => setProfile({ ...profile, username: e.target.value })}
                                             style={{ paddingLeft: '3rem' }}
-                                            placeholder="Enter your username"
+                                            placeholder={t("settings.usernamePlaceholder")}
                                             required
                                         />
                                     </div>
                                 </div>
                                 <div className="form-group">
-                                    <label>Email Address</label>
+                                    <label>{t("settings.email")}</label>
                                     <div style={{ position: 'relative' }}>
                                         <Mail size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
                                         <input
@@ -196,24 +198,24 @@ const Settings = () => {
                                             value={profile.email}
                                             onChange={(e) => setProfile({ ...profile, email: e.target.value })}
                                             style={{ paddingLeft: '3rem' }}
-                                            placeholder="Enter your email"
+                                            placeholder={t("settings.emailPlaceholder")}
                                             required
                                         />
                                     </div>
                                 </div>
                                 <button type="submit" className="btn-primary" disabled={loading} style={{ marginTop: '1rem' }}>
-                                    {loading ? "Updating..." : "Save Changes"}
+                                    {loading ? t("settings.updating") : t("settings.saveChanges")}
                                 </button>
                             </form>
                         </div>
 
                         <div className="settings-card" style={{ background: 'var(--bg-card)', padding: '2.5rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-light)', boxShadow: 'var(--shadow-sm)' }}>
                             <h3 style={{ marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                                <Lock size={24} className="text-primary" /> Security
+                                <Lock size={24} className="text-primary" /> {t("settings.security")}
                             </h3>
                             <form onSubmit={handlePasswordChange}>
                                 <div className="form-group">
-                                    <label>Current Password</label>
+                                    <label>{t("settings.currentPassword")}</label>
                                     <input
                                         type="password"
                                         value={passwords.old_password}
@@ -223,7 +225,7 @@ const Settings = () => {
                                 </div>
                                 <div className="form-group-row">
                                     <div className="form-group">
-                                        <label>New Password</label>
+                                        <label>{t("settings.newPassword")}</label>
                                         <input
                                             type="password"
                                             value={passwords.new_password}
@@ -232,7 +234,7 @@ const Settings = () => {
                                         />
                                     </div>
                                     <div className="form-group">
-                                        <label>Confirm Password</label>
+                                        <label>{t("settings.confirmPassword")}</label>
                                         <input
                                             type="password"
                                             value={passwords.confirm_password}
@@ -242,7 +244,7 @@ const Settings = () => {
                                     </div>
                                 </div>
                                 <button type="submit" className="btn-primary" disabled={loading} style={{ marginTop: '1rem' }}>
-                                    {loading ? "Changing..." : "Update Password"}
+                                    {loading ? t("settings.changing") : t("settings.updatePassword")}
                                 </button>
                             </form>
                         </div>

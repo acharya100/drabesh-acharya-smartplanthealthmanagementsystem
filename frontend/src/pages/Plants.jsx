@@ -7,8 +7,10 @@ import { useLocation } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { plantService, predictionService } from "../services/api";
 import { Search, Filter, Plus, Thermometer, Droplets, Sun, Info, Trash2 } from "lucide-react";
+import { useLanguage } from "../context/LanguageContext";
 
 const Plants = () => {
+  const { t } = useLanguage();
   const [plants, setPlants] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -106,7 +108,7 @@ const Plants = () => {
 
   const handleAnalyzeAI = async () => {
     if (!plantImage) {
-      alert("Please upload an image first for AI analysis.");
+      alert(t("plants.uploadFirstError") || "Please upload an image first for AI analysis.");
       return;
     }
 
@@ -131,7 +133,7 @@ const Plants = () => {
     } catch (error) {
       console.error("AI Analysis failed:", error);
       setIsAnalyzing(false);
-      alert("AI analysis failed. Please fill the details manually.");
+      alert(t("plants.aiAnalysisFailed") || "AI analysis failed. Please fill the details manually.");
     }
   };
 
@@ -160,14 +162,14 @@ const Plants = () => {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this plant? This action cannot be undone.")) {
+    if (window.confirm(t("plants.deleteConfirm") || "Are you sure you want to delete this plant? This action cannot be undone.")) {
       try {
         setLoading(true);
         await plantService.delete(id);
         await loadPlants();
       } catch (error) {
         console.error("Error deleting plant:", error);
-        alert("Failed to delete plant. Check your permissions or network connection.");
+        alert(t("plants.deleteFailed") || "Failed to delete plant. Check your permissions or network connection.");
         setLoading(false);
       }
     }
@@ -197,8 +199,8 @@ const Plants = () => {
     } catch (error) {
       console.error("Error saving plant:", error);
       setLoading(false);
-      const errorMsg = error.response?.data ? JSON.stringify(error.response.data) : "Check if name is unique and image is valid.";
-      alert(`Failed to save plant: ${errorMsg}`);
+      const errorMsg = error.response?.data ? JSON.stringify(error.response.data) : (t("plants.saveFailedInfo") || "Check if name is unique and image is valid.");
+      alert(`${t("plants.saveFailed") || "Failed to save plant:"} ${errorMsg}`);
     }
   };
 
@@ -227,15 +229,15 @@ const Plants = () => {
       <div className="page-content animate-slide-up">
         <div className="page-header">
           <div>
-            <h1>Plant Collection</h1>
-            <p className="subtitle">A complete list of your plants and their care requirements</p>
+            <h1>{t("plants.title")}</h1>
+            <p className="subtitle">{t("plants.subtitle")}</p>
           </div>
           <button
             className="btn-primary"
             onClick={() => { resetForm(); setShowAddModal(true); }}
           >
             <Plus size={20} />
-            <span>Add New Plant</span>
+            <span>{t("plants.addNewPlant")}</span>
           </button>
         </div>
 
@@ -246,12 +248,12 @@ const Plants = () => {
               <Search className="search-icon" size={20} />
               <input
                 type="text"
-                placeholder="Search plants or scientific names..."
+                placeholder={t("plants.searchPlaceholder")}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            <button type="submit" className="btn-primary">Search</button>
+            <button type="submit" className="btn-primary">{t("plants.searchButton")}</button>
           </form>
         </div>
 
@@ -259,7 +261,7 @@ const Plants = () => {
         {loading ? (
           <div className="loading-spinner-container">
             <div className="spinner"></div>
-            <p>Loading plant list...</p>
+            <p>{t("plants.loading")}</p>
           </div>
         ) : (
           <div className="plants-grid">
@@ -286,17 +288,17 @@ const Plants = () => {
 
                     <div className="plant-footer">
                       <div className="plant-badges">
-                        {plant.is_edible && <span className="badge badge-edible">Edible</span>}
-                        {plant.is_toxic && <span className="badge badge-toxic">Toxic</span>}
+                        {plant.is_edible && <span className="badge badge-edible">{t("plants.edible")}</span>}
+                        {plant.is_toxic && <span className="badge badge-toxic">{t("plants.toxic")}</span>}
                       </div>
                       <div style={{ display: 'flex', gap: '0.5rem', width: '100%', justifyContent: 'flex-end' }}>
                         <button className="btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }} onClick={() => handleEdit(plant)}>
-                          Edit
+                          {t("plants.editPlant")}
                         </button>
                         <button className="btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }} onClick={() => handleViewDetails(plant)}>
-                          View Details
+                          {t("plants.viewDetails")}
                         </button>
-                        <button className="btn-secondary" style={{ padding: '0.4rem', fontSize: '0.8rem', color: 'var(--danger)', borderColor: 'var(--danger)' }} onClick={() => handleDelete(plant.id)} title="Delete Plant">
+                        <button className="btn-secondary" style={{ padding: '0.4rem', fontSize: '0.8rem', color: 'var(--danger)', borderColor: 'var(--danger)' }} onClick={() => handleDelete(plant.id)} title={t("plants.deleteTitle") || "Delete Plant"}>
                           <Trash2 size={16} />
                         </button>
                       </div>
@@ -307,8 +309,8 @@ const Plants = () => {
             ) : (
               <div className="no-results">
                 <Search size={64} className="text-muted" />
-                <h3>No Plants Found</h3>
-                <p>Try searching for a different plant name.</p>
+                <h3>{t("plants.noPlantsTitle")}</h3>
+                <p>{t("plants.noPlantsDesc")}</p>
               </div>
             )}
           </div>
@@ -320,7 +322,7 @@ const Plants = () => {
         <div className="modal-overlay">
           <div className="modal-content-large animate-slide-up">
             <div className="modal-header">
-              <h2>{isEditing ? "Edit Plant" : "Add New Plant"}</h2>
+              <h2>{isEditing ? t("plants.editPlant") : t("plants.addNewPlantTitle")}</h2>
               <button className="close-btn" onClick={() => setShowAddModal(false)}>&times;</button>
             </div>
 
@@ -335,7 +337,7 @@ const Plants = () => {
                     ) : (
                       <>
                         <Plus size={40} className="text-muted" />
-                        <span className="mt-4 text-muted font-bold text-center">UPLOAD PHOTO</span>
+                        <span className="mt-4 text-muted font-bold text-center">{t("plants.uploadPhoto")}</span>
                       </>
                     )}
                     <input id="plant-image-input" type="file" accept="image/*" onChange={handleImageChange} hidden />
@@ -349,7 +351,7 @@ const Plants = () => {
                       onClick={handleAnalyzeAI}
                       disabled={isAnalyzing || !plantImage}
                     >
-                      {isAnalyzing ? "Identifying..." : "Identify with AI"}
+                      {isAnalyzing ? t("plants.identifying") : t("plants.identifyAI")}
                     </button>
                   )}
                 </div>
@@ -357,59 +359,59 @@ const Plants = () => {
                 <div className="form-right">
                   <div className="form-group-row">
                     <div className="form-group">
-                      <label>Plant Name</label>
+                      <label>{t("plants.plantName")}</label>
                       <input
                         type="text"
                         value={newPlant.name}
                         onChange={(e) => setNewPlant({ ...newPlant, name: e.target.value })}
                         required
-                        placeholder="e.g. Fiddle Leaf Fig"
+                        placeholder={t("plants.plantNamePlaceholder") || "e.g. Fiddle Leaf Fig"}
                       />
                     </div>
                     <div className="form-group">
-                      <label>Scientific Name</label>
+                      <label>{t("plants.scientificName")}</label>
                       <input
                         type="text"
                         value={newPlant.scientific_name}
                         onChange={(e) => setNewPlant({ ...newPlant, scientific_name: e.target.value })}
-                        placeholder="e.g. Ficus lyrata"
+                        placeholder={t("plants.scientificNamePlaceholder") || "e.g. Ficus lyrata"}
                       />
                     </div>
                   </div>
 
                   <div className="form-group">
-                    <label>Description</label>
+                    <label>{t("plants.descriptionLabel")}</label>
                     <textarea
                       value={newPlant.description}
                       onChange={(e) => setNewPlant({ ...newPlant, description: e.target.value })}
                       rows="4"
-                      placeholder="Enter a description of the plant..."
+                      placeholder={t("plants.descriptionPlaceholder") || "Enter a description of the plant..."}
                     ></textarea>
                   </div>
 
                   <div className="form-group-row">
                     <div className="form-group">
-                      <label>Sunlight Requirement</label>
+                      <label>{t("plants.sunlightReq")}</label>
                       <select
                         value={newPlant.sunlight_requirement}
                         onChange={(e) => setNewPlant({ ...newPlant, sunlight_requirement: e.target.value })}
                       >
-                        <option value="full_sun">Full Sun</option>
-                        <option value="partial_sun">Partial Sun</option>
-                        <option value="partial_shade">Partial Shade</option>
-                        <option value="full_shade">Full Shade</option>
+                        <option value="full_sun">{t("plants.sunFull") || "Full Sun"}</option>
+                        <option value="partial_sun">{t("plants.sunPartialSun") || "Partial Sun"}</option>
+                        <option value="partial_shade">{t("plants.sunPartialShade") || "Partial Shade"}</option>
+                        <option value="full_shade">{t("plants.sunFullShade") || "Full Shade"}</option>
                       </select>
                     </div>
                     <div className="form-group">
-                      <label>Watering Frequency</label>
+                      <label>{t("plants.waterFreq")}</label>
                       <select
                         value={newPlant.water_frequency}
                         onChange={(e) => setNewPlant({ ...newPlant, water_frequency: e.target.value })}
                       >
-                        <option value="daily">Daily</option>
-                        <option value="every_2_days">Every 2 Days</option>
-                        <option value="weekly">Weekly</option>
-                        <option value="bi_weekly">Every 2 Weeks</option>
+                        <option value="daily">{t("plants.waterDaily") || "Daily"}</option>
+                        <option value="every_2_days">{t("plants.waterEvery2Days") || "Every 2 Days"}</option>
+                        <option value="weekly">{t("plants.waterWeekly") || "Weekly"}</option>
+                        <option value="bi_weekly">{t("plants.waterBiWeekly") || "Every 2 Weeks"}</option>
                       </select>
                     </div>
                   </div>
@@ -417,19 +419,19 @@ const Plants = () => {
                   <div className="form-checkbox-group" style={{ display: 'flex', gap: '2rem', border: '1px solid var(--border-light)', padding: '1.5rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-main)' }}>
                     <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 'bold' }}>
                       <input type="checkbox" checked={newPlant.is_edible} onChange={(e) => setNewPlant({ ...newPlant, is_edible: e.target.checked })} style={{ width: '20px', height: '20px' }} />
-                      Edible
+                      {t("plants.edibleLabel")}
                     </label>
                     <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 'bold' }}>
                       <input type="checkbox" checked={newPlant.is_toxic} onChange={(e) => setNewPlant({ ...newPlant, is_toxic: e.target.checked })} style={{ width: '20px', height: '20px' }} />
-                      Toxic
+                      {t("plants.toxicLabel")}
                     </label>
                   </div>
                 </div>
               </div>
 
               <div className="modal-footer" style={{ marginTop: '3rem', paddingTop: '2rem', borderTop: '1px solid var(--border-light)', display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
-                <button type="button" className="btn-secondary" onClick={() => setShowAddModal(false)}>Cancel</button>
-                <button type="submit" className="btn-primary">{isEditing ? "Update Plant" : "Save Plant"}</button>
+                <button type="button" className="btn-secondary" onClick={() => setShowAddModal(false)}>{t("plants.cancel")}</button>
+                <button type="submit" className="btn-primary">{isEditing ? t("plants.updatePlant") : t("plants.savePlant")}</button>
               </div>
             </form>
           </div>
@@ -441,7 +443,7 @@ const Plants = () => {
         <div className="modal-overlay">
           <div className="modal-content-large animate-slide-up">
             <div className="modal-header">
-              <h2>Plant Details</h2>
+              <h2>{t("plants.plantDetails")}</h2>
               <button className="close-btn" onClick={() => setShowViewModal(false)}>&times;</button>
             </div>
             <div className="add-plant-form">
@@ -451,18 +453,18 @@ const Plants = () => {
                     <img src={selectedPlant.image || "https://images.unsplash.com/photo-1545239351-ef35f43d514b?q=80&w=500&h=400&auto=format&fit=crop"} alt={selectedPlant.name} />
                   </div>
                   <div style={{ background: 'var(--bg-main)', padding: '1.5rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-light)' }}>
-                    <h4 style={{ marginBottom: '1rem', color: 'var(--primary)' }}>Quick Stats</h4>
+                    <h4 style={{ marginBottom: '1rem', color: 'var(--primary)' }}>{t("plants.quickStats")}</h4>
                     <div style={{ fontSize: '0.9rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span style={{ fontWeight: 700 }}>Sunlight:</span>
+                        <span style={{ fontWeight: 700 }}>{t("plants.sunlightLabel")}</span>
                         <span>{selectedPlant.sunlight_display}</span>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span style={{ fontWeight: 700 }}>Watering:</span>
+                        <span style={{ fontWeight: 700 }}>{t("plants.wateringLabel")}</span>
                         <span>{selectedPlant.water_frequency_display}</span>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span style={{ fontWeight: 700 }}>Difficulty:</span>
+                        <span style={{ fontWeight: 700 }}>{t("plants.difficultyLabel")}</span>
                         <span>{selectedPlant.difficulty_level_display}</span>
                       </div>
                     </div>
@@ -475,21 +477,21 @@ const Plants = () => {
                   </div>
 
                   <div style={{ marginBottom: '2rem' }}>
-                    <h4 style={{ color: 'var(--primary)', marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Description</h4>
-                    <p style={{ lineHeight: 1.8, color: 'var(--text-main)' }}>{selectedPlant.description || "No description available for this plant."}</p>
+                    <h4 style={{ color: 'var(--primary)', marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t("plants.description")}</h4>
+                    <p style={{ lineHeight: 1.8, color: 'var(--text-main)' }}>{selectedPlant.description || (t("plants.noDescription") || "No description available for this plant.")}</p>
                   </div>
 
                   <div style={{ display: 'flex', gap: '1rem' }}>
-                    {selectedPlant.is_edible && <span className="badge badge-edible" style={{ padding: '0.6rem 1.2rem' }}>Edible Species</span>}
-                    {selectedPlant.is_toxic && <span className="badge badge-toxic" style={{ padding: '0.6rem 1.2rem' }}>Toxic Species</span>}
-                    {selectedPlant.is_medicinal && <span className="badge" style={{ padding: '0.6rem 1.2rem', background: '#e0f2fe', color: '#0369a1' }}>Medicinal Use</span>}
+                    {selectedPlant.is_edible && <span className="badge badge-edible" style={{ padding: '0.6rem 1.2rem' }}>{t("plants.edibleSpecies")}</span>}
+                    {selectedPlant.is_toxic && <span className="badge badge-toxic" style={{ padding: '0.6rem 1.2rem' }}>{t("plants.toxicSpecies")}</span>}
+                    {selectedPlant.is_medicinal && <span className="badge" style={{ padding: '0.6rem 1.2rem', background: '#e0f2fe', color: '#0369a1' }}>{t("plants.medicinalUse")}</span>}
                   </div>
                 </div>
               </div>
             </div>
             <div className="modal-footer" style={{ padding: '2rem 3rem', borderTop: '1px solid var(--border-light)', display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
-              <button className="btn-secondary" onClick={() => setShowViewModal(false)}>Close View</button>
-              <button className="btn-primary" onClick={() => { setShowViewModal(false); handleEdit(selectedPlant); }}>Edit Record</button>
+              <button className="btn-secondary" onClick={() => setShowViewModal(false)}>{t("plants.closeView")}</button>
+              <button className="btn-primary" onClick={() => { setShowViewModal(false); handleEdit(selectedPlant); }}>{t("plants.editRecord")}</button>
             </div>
           </div>
         </div>

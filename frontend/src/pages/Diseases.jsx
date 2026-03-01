@@ -1,5 +1,4 @@
 /**
- * Disease Reference Database
  * Author: Drabesh Acharya
  */
 
@@ -7,8 +6,10 @@ import { useState, useEffect } from "react";
 import Navbar from "../components/Navbar";
 import { diseaseService } from "../services/api";
 import { Search, Filter, AlertTriangle, Activity, Info, Trash2 } from "lucide-react";
+import { useLanguage } from "../context/LanguageContext";
 
 const Diseases = () => {
+    const { t } = useLanguage();
     const [diseases, setDiseases] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
@@ -159,15 +160,15 @@ const Diseases = () => {
             <div className="page-content animate-slide-up">
                 <div className="page-header">
                     <div>
-                        <h1>Disease Database</h1>
-                        <p className="subtitle">Search for plant diseases, symptoms, and causes</p>
+                        <h1>{t("diseases.title")}</h1>
+                        <p className="subtitle">{t("diseases.subtitle")}</p>
                     </div>
                     <button
                         className="btn-primary"
                         onClick={() => { resetForm(); setShowAddModal(true); }}
                     >
                         <Activity size={20} />
-                        <span>Add New Disease</span>
+                        <span>{t("diseases.addDisease")}</span>
                     </button>
                 </div>
 
@@ -178,7 +179,7 @@ const Diseases = () => {
                             <Search className="search-icon" size={20} />
                             <input
                                 type="text"
-                                placeholder="Search by disease name, symptoms, or origin..."
+                                placeholder={t("diseases.searchPlaceholder")}
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
@@ -191,7 +192,7 @@ const Diseases = () => {
                 {loading ? (
                     <div className="loading-spinner-container">
                         <div className="spinner"></div>
-                        <p>Searching disease records...</p>
+                        <p>{t("diseases.loading")}</p>
                     </div>
                 ) : (
                     <div className="diseases-grid">
@@ -227,9 +228,9 @@ const Diseases = () => {
                                     <div className="disease-card-footer" style={{ padding: '1.5rem 2rem', borderTop: '1px solid var(--border-light)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                         <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--primary)' }}>{disease.treatment_count} Treatments</span>
                                         <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                            <button className="btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }} onClick={() => handleEdit(disease)}>Edit</button>
-                                            <button className="btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }} onClick={() => handleViewDetails(disease)}>View Details</button>
-                                            <button className="btn-secondary" style={{ padding: '0.4rem', fontSize: '0.8rem', color: 'var(--danger)', borderColor: 'var(--danger)' }} onClick={() => handleDelete(disease.id)} title="Delete Disease">
+                                            <button className="btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }} onClick={() => handleEdit(disease)}>{t("diseases.editDisease")}</button>
+                                            <button className="btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }} onClick={() => handleViewDetails(disease)}>{t("plants.viewDetails")}</button>
+                                            <button className="btn-secondary" style={{ padding: '0.4rem', fontSize: '0.8rem', color: 'var(--danger)', borderColor: 'var(--danger)' }} onClick={() => handleDelete(disease.id)} title={t("diseases.deleteDisease")}>
                                                 <Trash2 size={16} />
                                             </button>
                                         </div>

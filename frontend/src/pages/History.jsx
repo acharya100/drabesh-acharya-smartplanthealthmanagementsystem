@@ -57,13 +57,13 @@ const History = () => {
     };
 
     const handleDelete = async (id) => {
-        if (window.confirm("Delete this scan record? This cannot be undone.")) {
+        if (window.confirm(t("history.deleteConfirm") || "Delete this scan record? This cannot be undone.")) {
             try {
                 await predictionService.delete(id);
                 loadHistory();
             } catch (e) {
                 console.error(e);
-                alert("Failed to delete record");
+                alert(t("history.deleteFailed") || "Failed to delete record");
             }
         }
     };
@@ -80,7 +80,7 @@ const History = () => {
             loadHistory();
         } catch (error) {
             console.error("Error updating prediction:", error);
-            alert("Failed to update record");
+            alert(t("history.updateFailed") || "Failed to update record");
         }
     };
 
@@ -90,8 +90,8 @@ const History = () => {
             <div className="page-content animate-slide-up">
                 <div className="page-header">
                     <div>
-                        <h1>Diagnosis History</h1>
-                        <p className="subtitle">Archive of all your plant health scans</p>
+                        <h1>{t("history.title")}</h1>
+                        <p className="subtitle">{t("history.subtitle")}</p>
                     </div>
                     <div className="filter-group" style={{ display: 'flex', gap: '0.5rem' }}>
                         <button
@@ -99,14 +99,14 @@ const History = () => {
                             onClick={() => setFilter("all")}
                             style={{ background: filter === 'all' ? 'var(--primary)' : 'transparent', color: filter === 'all' ? 'white' : 'inherit' }}
                         >
-                            All Scans
+                            {t("history.filterAll")}
                         </button>
                         <button
                             className={`btn-secondary ${filter === 'infected' ? 'active' : ''}`}
                             onClick={() => setFilter("infected")}
                             style={{ background: filter === 'infected' ? '#dc2626' : 'transparent', color: filter === 'infected' ? 'white' : 'inherit' }}
                         >
-                            Infected
+                            {t("history.filterInfected")}
                         </button>
                     </div>
                 </div>
@@ -114,7 +114,7 @@ const History = () => {
                 {loading ? (
                     <div className="loading-spinner-container">
                         <div className="spinner"></div>
-                        <p>Loading scan history...</p>
+                        <p>{t("history.loading")}</p>
                     </div>
                 ) : (
                     <div className="history-grid">
@@ -191,7 +191,7 @@ const History = () => {
                                                     className="btn-secondary"
                                                     style={{ fontSize: '0.85rem', padding: '0.5rem 1rem' }}
                                                 >
-                                                    View Treatment
+                                                    {t("history.viewTreatment")}
                                                 </Link>
                                                 <button
                                                     onClick={() => handleEdit(pred)}
@@ -199,7 +199,7 @@ const History = () => {
                                                     style={{ fontSize: '0.85rem', padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
                                                 >
                                                     <Edit size={16} />
-                                                    Edit
+                                                    {t("history.edit")}
                                                 </button>
                                                 <button
                                                     onClick={() => handleDelete(pred.id)}
@@ -224,9 +224,9 @@ const History = () => {
                         ) : (
                             <div className="no-results">
                                 <Clock size={64} className="text-muted" />
-                                <h3>No History Found</h3>
-                                <p>You haven't scanned any plants yet.</p>
-                                <Link to="/disease" className="btn-primary mt-4">Start New Scan</Link>
+                                <h3>{t("history.noHistoryTitle")}</h3>
+                                <p>{t("history.noHistoryDesc")}</p>
+                                <Link to="/disease" className="btn-primary mt-4">{t("history.startNewScan")}</Link>
                             </div>
                         )}
                     </div>
@@ -237,11 +237,11 @@ const History = () => {
             {showEditModal && editingPrediction && (
                 <div className="modal-overlay" onClick={() => setShowEditModal(false)}>
                     <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '500px' }}>
-                        <h2 style={{ marginBottom: '1.5rem' }}>Edit Scan Record</h2>
+                        <h2 style={{ marginBottom: '1.5rem' }}>{t("history.editTitle")}</h2>
                         <form onSubmit={handleUpdatePrediction}>
                             <div style={{ marginBottom: '1.5rem' }}>
                                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>
-                                    Health Status
+                                    {t("history.healthStatus")}
                                 </label>
                                 <select
                                     value={editingPrediction.is_healthy}
@@ -255,15 +255,15 @@ const History = () => {
                                         color: 'var(--text-primary)'
                                     }}
                                 >
-                                    <option value="true">Healthy</option>
-                                    <option value="false">Diseased</option>
+                                    <option value="true">{t("history.optionHealthy")}</option>
+                                    <option value="false">{t("history.optionDiseased")}</option>
                                 </select>
                             </div>
 
                             {!editingPrediction.is_healthy && (
                                 <div style={{ marginBottom: '1.5rem' }}>
                                     <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>
-                                        Severity Level
+                                        {t("history.severityLevel")}
                                     </label>
                                     <select
                                         value={editingPrediction.severity || 'moderate'}
@@ -277,17 +277,17 @@ const History = () => {
                                             color: 'var(--text-primary)'
                                         }}
                                     >
-                                        <option value="low">Low</option>
-                                        <option value="moderate">Moderate</option>
-                                        <option value="high">High</option>
-                                        <option value="critical">Critical</option>
+                                        <option value="low">{t("history.severityLow")}</option>
+                                        <option value="moderate">{t("history.severityModerate")}</option>
+                                        <option value="high">{t("history.severityHigh")}</option>
+                                        <option value="critical">{t("history.severityCritical")}</option>
                                     </select>
                                 </div>
                             )}
 
                             <div style={{ marginBottom: '1.5rem' }}>
                                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>
-                                    Confidence (%)
+                                    {t("history.confidenceLabel")}
                                 </label>
                                 <input
                                     type="number"
@@ -312,10 +312,10 @@ const History = () => {
                                     onClick={() => setShowEditModal(false)}
                                     className="btn-secondary"
                                 >
-                                    Cancel
+                                    {t("history.cancel")}
                                 </button>
                                 <button type="submit" className="btn-primary">
-                                    Save Changes
+                                    {t("history.saveChanges")}
                                 </button>
                             </div>
                         </form>

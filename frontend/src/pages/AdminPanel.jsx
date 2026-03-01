@@ -10,9 +10,11 @@ import {
     TrendingUp, CheckCircle, XCircle, Crown, RefreshCw,
     BarChart2, Clock, Search
 } from "lucide-react";
+import { useLanguage } from "../context/LanguageContext";
 
 const AdminPanel = () => {
     const navigate = useNavigate();
+    const { t } = useLanguage();
     const [activeTab, setActiveTab] = useState("dashboard");
     const [dashboardData, setDashboardData] = useState(null);
     const [users, setUsers] = useState([]);
@@ -42,11 +44,11 @@ const AdminPanel = () => {
             const { data } = await adminService.getDashboard();
             setDashboardData(data);
         } catch (e) {
-            setError("Failed to load dashboard data.");
+            setError(t("admin.errorLoadDashboard") || "Failed to load dashboard data.");
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [t]);
 
     const fetchUsers = useCallback(async () => {
         try {
@@ -54,11 +56,11 @@ const AdminPanel = () => {
             const { data } = await adminService.getUsers();
             setUsers(data);
         } catch (e) {
-            setError("Failed to load users.");
+            setError(t("admin.errorLoadUsers") || "Failed to load users.");
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [t]);
 
     const fetchAllPredictions = useCallback(async () => {
         try {
@@ -66,11 +68,11 @@ const AdminPanel = () => {
             const { data } = await adminService.getAllPredictions();
             setAllPredictions(data);
         } catch (e) {
-            setError("Failed to load predictions.");
+            setError(t("admin.errorLoadPredictions") || "Failed to load predictions.");
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [t]);
 
     const fetchUserDetail = useCallback(async (userId) => {
         try {
@@ -78,11 +80,11 @@ const AdminPanel = () => {
             const { data } = await adminService.getUserDetail(userId);
             setUserDetail(data);
         } catch (e) {
-            setError("Failed to load user details.");
+            setError(t("admin.errorLoadUser") || "Failed to load user details.");
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [t]);
 
     useEffect(() => {
         if (activeTab === "dashboard") fetchDashboard();
@@ -106,7 +108,7 @@ const AdminPanel = () => {
                 setUserDetail(null);
             }
         } catch (e) {
-            setError("Failed to delete user.");
+            setError(t("admin.errorDeleteUser") || "Failed to delete user.");
         }
     };
 
@@ -118,7 +120,7 @@ const AdminPanel = () => {
                 setUserDetail(prev => ({ ...prev, user: { ...prev.user, is_staff: data.is_staff } }));
             }
         } catch (e) {
-            setError(e.response?.data?.error || "Failed to toggle staff status.");
+            setError(e.response?.data?.error || t("admin.errorToggleStaff") || "Failed to toggle staff status.");
         }
     };
 
@@ -170,8 +172,8 @@ const AdminPanel = () => {
                                 fontSize: "1.2rem"
                             }}>🌿</div>
                             <div>
-                                <div style={{ color: "#fff", fontWeight: 800, fontSize: "0.95rem", lineHeight: 1.2 }}>Admin Panel</div>
-                                <div style={{ color: "#64748b", fontSize: "0.75rem" }}>Smart Plant Health</div>
+                                <div style={{ color: "#fff", fontWeight: 800, fontSize: "0.95rem", lineHeight: 1.2 }}>{t("admin.title")}</div>
+                                <div style={{ color: "#64748b", fontSize: "0.75rem" }}>{t("admin.subtitle")}</div>
                             </div>
                         </div>
                         <div style={{
@@ -182,7 +184,7 @@ const AdminPanel = () => {
                             <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                                 <Crown size={14} color="#10b981" />
                                 <span style={{ color: "#10b981", fontWeight: 700, fontSize: "0.8rem" }}>
-                                    {isSuperuser ? "Superuser" : "Staff Admin"}
+                                    {isSuperuser ? t("admin.roleSuperuser") : t("admin.roleStaff")}
                                 </span>
                             </div>
                             <div style={{ color: "#94a3b8", fontSize: "0.8rem", marginTop: "0.2rem" }}>{username}</div>
@@ -192,9 +194,9 @@ const AdminPanel = () => {
                     {/* Nav Items */}
                     <nav style={{ flex: 1, padding: "1rem 0.75rem" }}>
                         {[
-                            { id: "dashboard", icon: <BarChart2 size={18} />, label: "Dashboard" },
-                            { id: "users", icon: <Users size={18} />, label: "All Users" },
-                            { id: "predictions", icon: <Activity size={18} />, label: "All Predictions" },
+                            { id: "dashboard", icon: <BarChart2 size={18} />, label: t("admin.tabDashboard") },
+                            { id: "users", icon: <Users size={18} />, label: t("admin.tabUsers") },
+                            { id: "predictions", icon: <Activity size={18} />, label: t("admin.tabPredictions") },
                         ].map(item => (
                             <button
                                 key={item.id}
@@ -226,7 +228,7 @@ const AdminPanel = () => {
                                 marginBottom: "0.5rem", textAlign: "left"
                             }}
                         >
-                            <Leaf size={16} /> User Dashboard
+                            <Leaf size={16} /> {t("admin.navUserDashboard")}
                         </button>
                         <button
                             onClick={handleLogout}
@@ -237,7 +239,7 @@ const AdminPanel = () => {
                                 textAlign: "left"
                             }}
                         >
-                            <LogOut size={16} /> Logout
+                            <LogOut size={16} /> {t("admin.navLogout")}
                         </button>
                     </div>
                 </aside>
@@ -262,10 +264,10 @@ const AdminPanel = () => {
                         <div>
                             <div style={{ marginBottom: "2rem" }}>
                                 <h1 style={{ fontSize: "1.75rem", fontWeight: 800, color: "var(--text-main)", marginBottom: "0.25rem" }}>
-                                    Admin Dashboard
+                                    {t("admin.dashboardTitle")}
                                 </h1>
                                 <p style={{ color: "var(--text-muted)", fontSize: "0.95rem" }}>
-                                    System-wide overview of all user activity
+                                    {t("admin.dashboardDesc")}
                                 </p>
                             </div>
 
@@ -275,14 +277,14 @@ const AdminPanel = () => {
                                 <>
                                     {/* Stats Grid */}
                                     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1.25rem", marginBottom: "2rem" }}>
-                                        <StatCard icon={<Users size={22} />} label="Total Users" value={s.total_users} color="#3b82f6" />
-                                        <StatCard icon={<Leaf size={22} />} label="Total Plants" value={s.total_plants} color="#10b981" />
-                                        <StatCard icon={<Activity size={22} />} label="Total Scans" value={s.total_predictions} color="#8b5cf6" />
-                                        <StatCard icon={<AlertTriangle size={22} />} label="Diseased Scans" value={s.diseased_predictions} color="#ef4444" />
-                                        <StatCard icon={<CheckCircle size={22} />} label="Healthy Scans" value={s.healthy_predictions} color="#10b981" />
-                                        <StatCard icon={<TrendingUp size={22} />} label="New Users (7d)" value={s.new_users_7d} color="#f59e0b" />
-                                        <StatCard icon={<Activity size={22} />} label="Scans (7d)" value={s.new_predictions_7d} color="#06b6d4" />
-                                        <StatCard icon={<BarChart2 size={22} />} label="Scans (30d)" value={s.new_predictions_30d} color="#ec4899" />
+                                        <StatCard icon={<Users size={22} />} label={t("admin.statTotalUsers")} value={s.total_users} color="#3b82f6" />
+                                        <StatCard icon={<Leaf size={22} />} label={t("admin.statTotalPlants")} value={s.total_plants} color="#10b981" />
+                                        <StatCard icon={<Activity size={22} />} label={t("admin.statTotalScans")} value={s.total_predictions} color="#8b5cf6" />
+                                        <StatCard icon={<AlertTriangle size={22} />} label={t("admin.statDiseasedScans")} value={s.diseased_predictions} color="#ef4444" />
+                                        <StatCard icon={<CheckCircle size={22} />} label={t("admin.statHealthyScans")} value={s.healthy_predictions} color="#10b981" />
+                                        <StatCard icon={<TrendingUp size={22} />} label={t("admin.statNewUsers7d")} value={s.new_users_7d} color="#f59e0b" />
+                                        <StatCard icon={<Activity size={22} />} label={t("admin.statScans7d")} value={s.new_predictions_7d} color="#06b6d4" />
+                                        <StatCard icon={<BarChart2 size={22} />} label={t("admin.statScans30d")} value={s.new_predictions_30d} color="#ec4899" />
                                     </div>
 
                                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem" }}>
@@ -290,7 +292,7 @@ const AdminPanel = () => {
                                         <div style={{ background: "var(--bg-card)", borderRadius: 16, border: "1px solid var(--border-light)", overflow: "hidden" }}>
                                             <div style={{ padding: "1.25rem 1.5rem", borderBottom: "1px solid var(--border-light)", display: "flex", alignItems: "center", gap: "0.5rem" }}>
                                                 <Clock size={16} color="var(--primary)" />
-                                                <h3 style={{ fontSize: "1rem", fontWeight: 700, color: "var(--text-main)" }}>Recent Scans</h3>
+                                                <h3 style={{ fontSize: "1rem", fontWeight: 700, color: "var(--text-main)" }}>{t("admin.recentScans")}</h3>
                                             </div>
                                             <div style={{ maxHeight: 380, overflowY: "auto" }}>
                                                 {dashboardData.recent_predictions.map(p => (
@@ -307,7 +309,7 @@ const AdminPanel = () => {
                                                                 {p.disease}
                                                             </div>
                                                             <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
-                                                                by <strong>{p.username}</strong> · {p.confidence.toFixed(1)}% conf
+                                                                {t("admin.byUser")} <strong>{p.username}</strong> · {p.confidence.toFixed(1)}{t("admin.confSuffix")}
                                                             </div>
                                                         </div>
                                                         <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", flexShrink: 0 }}>
@@ -322,7 +324,7 @@ const AdminPanel = () => {
                                         <div style={{ background: "var(--bg-card)", borderRadius: 16, border: "1px solid var(--border-light)", overflow: "hidden" }}>
                                             <div style={{ padding: "1.25rem 1.5rem", borderBottom: "1px solid var(--border-light)", display: "flex", alignItems: "center", gap: "0.5rem" }}>
                                                 <Crown size={16} color="#f59e0b" />
-                                                <h3 style={{ fontSize: "1rem", fontWeight: 700, color: "var(--text-main)" }}>Most Active Users</h3>
+                                                <h3 style={{ fontSize: "1rem", fontWeight: 700, color: "var(--text-main)" }}>{t("admin.topUsers")}</h3>
                                             </div>
                                             <div>
                                                 {dashboardData.top_users.map((u, i) => (
@@ -347,7 +349,7 @@ const AdminPanel = () => {
                                                             background: "var(--primary-subtle)", color: "var(--primary)",
                                                             padding: "0.25rem 0.75rem", borderRadius: 99, fontSize: "0.8rem", fontWeight: 700
                                                         }}>
-                                                            {u.pred_count} scans
+                                                            {u.pred_count} {t("admin.scansCount")}
                                                         </div>
                                                     </div>
                                                 ))}
@@ -364,11 +366,11 @@ const AdminPanel = () => {
                         <div>
                             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1.5rem" }}>
                                 <div>
-                                    <h1 style={{ fontSize: "1.75rem", fontWeight: 800, color: "var(--text-main)", marginBottom: "0.25rem" }}>All Users</h1>
-                                    <p style={{ color: "var(--text-muted)", fontSize: "0.9rem" }}>{users.length} registered accounts</p>
+                                    <h1 style={{ fontSize: "1.75rem", fontWeight: 800, color: "var(--text-main)", marginBottom: "0.25rem" }}>{t("admin.usersTitle")}</h1>
+                                    <p style={{ color: "var(--text-muted)", fontSize: "0.9rem" }}>{users.length} {t("admin.usersDesc")}</p>
                                 </div>
                                 <button onClick={fetchUsers} style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.6rem 1rem", background: "var(--bg-card)", border: "1px solid var(--border-light)", borderRadius: 8, cursor: "pointer", fontSize: "0.85rem", fontWeight: 600, color: "var(--text-muted)" }}>
-                                    <RefreshCw size={14} /> Refresh
+                                    <RefreshCw size={14} /> {t("admin.refreshBtn")}
                                 </button>
                             </div>
 
@@ -376,20 +378,20 @@ const AdminPanel = () => {
                             <div style={{ position: "relative", marginBottom: "1.5rem" }}>
                                 <Search size={16} style={{ position: "absolute", left: "1rem", top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />
                                 <input
-                                    placeholder="Search by username or email..."
+                                    placeholder={t("admin.searchUsers")}
                                     value={searchQuery}
                                     onChange={e => setSearchQuery(e.target.value)}
                                     style={{ paddingLeft: "2.75rem", height: 44, borderRadius: 10 }}
                                 />
                             </div>
 
-                            {loading ? <LoadingSpinner /> : (
+                            {loading ? <LoadingSpinner t={t} /> : (
                                 <div style={{ background: "var(--bg-card)", borderRadius: 16, border: "1px solid var(--border-light)", overflow: "hidden" }}>
                                     <table style={{ width: "100%", borderCollapse: "collapse" }}>
                                         <thead>
                                             <tr style={{ background: "var(--bg-main)" }}>
-                                                {["User", "Email", "Plants", "Scans", "Joined", "Role", "Actions"].map(h => (
-                                                    <th key={h} style={{ padding: "0.875rem 1rem", textAlign: "left", fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em", borderBottom: "1px solid var(--border-light)" }}>
+                                                {[t("admin.tableUser"), t("admin.tableEmail"), t("admin.tablePlants"), t("admin.tableScans"), t("admin.tableJoined"), t("admin.tableRole"), t("admin.tableActions")].map((h, idx) => (
+                                                    <th key={idx} style={{ padding: "0.875rem 1rem", textAlign: "left", fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em", borderBottom: "1px solid var(--border-light)" }}>
                                                         {h}
                                                     </th>
                                                 ))}
@@ -424,31 +426,31 @@ const AdminPanel = () => {
                                                             background: u.is_superuser ? "#fef3c7" : u.is_staff ? "#d1fae5" : "#f1f5f9",
                                                             color: u.is_superuser ? "#d97706" : u.is_staff ? "#059669" : "#64748b"
                                                         }}>
-                                                            {u.is_superuser ? "Superuser" : u.is_staff ? "Staff" : "User"}
+                                                            {u.is_superuser ? t("admin.roleSuperuser") : u.is_staff ? t("admin.roleStaff") : t("admin.roleUser")}
                                                         </span>
                                                     </td>
                                                     <td style={{ padding: "1rem" }}>
                                                         <div style={{ display: "flex", gap: "0.5rem" }}>
                                                             <button
                                                                 onClick={() => handleViewUser(u)}
-                                                                title="View Activity"
+                                                                title={t("admin.actionView")}
                                                                 style={{ padding: "0.4rem 0.75rem", background: "var(--primary-subtle)", color: "var(--primary)", border: "none", borderRadius: 6, cursor: "pointer", display: "flex", alignItems: "center", gap: "0.3rem", fontSize: "0.8rem", fontWeight: 600 }}
                                                             >
-                                                                <Eye size={13} /> View
+                                                                <Eye size={13} /> {t("admin.actionView")}
                                                             </button>
                                                             {isSuperuser && !u.is_superuser && (
                                                                 <button
                                                                     onClick={() => handleToggleStaff(u.id)}
-                                                                    title={u.is_staff ? "Remove Staff" : "Make Staff"}
+                                                                    title={u.is_staff ? t("admin.actionDemote") : t("admin.actionPromote")}
                                                                     style={{ padding: "0.4rem 0.75rem", background: u.is_staff ? "#fef3c7" : "#f0fdf4", color: u.is_staff ? "#d97706" : "#059669", border: "none", borderRadius: 6, cursor: "pointer", display: "flex", alignItems: "center", gap: "0.3rem", fontSize: "0.8rem", fontWeight: 600 }}
                                                                 >
-                                                                    <ShieldCheck size={13} /> {u.is_staff ? "Demote" : "Promote"}
+                                                                    <ShieldCheck size={13} /> {u.is_staff ? t("admin.actionDemote") : t("admin.actionPromote")}
                                                                 </button>
                                                             )}
                                                             {!u.is_superuser && (
                                                                 <button
                                                                     onClick={() => setConfirmDelete(u)}
-                                                                    title="Delete User"
+                                                                    title={t("admin.deleteUserBtn")}
                                                                     style={{ padding: "0.4rem 0.75rem", background: "#fef2f2", color: "#ef4444", border: "none", borderRadius: 6, cursor: "pointer", display: "flex", alignItems: "center", gap: "0.3rem", fontSize: "0.8rem", fontWeight: 600 }}
                                                                 >
                                                                     <Trash2 size={13} />
@@ -461,7 +463,7 @@ const AdminPanel = () => {
                                         </tbody>
                                     </table>
                                     {filteredUsers.length === 0 && (
-                                        <div style={{ padding: "3rem", textAlign: "center", color: "var(--text-muted)" }}>No users found.</div>
+                                        <div style={{ padding: "3rem", textAlign: "center", color: "var(--text-muted)" }}>{t("admin.noUsers")}</div>
                                     )}
                                 </div>
                             )}
@@ -475,10 +477,10 @@ const AdminPanel = () => {
                                 onClick={() => { setActiveTab("users"); setUserDetail(null); }}
                                 style={{ display: "flex", alignItems: "center", gap: "0.5rem", background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)", fontWeight: 600, marginBottom: "1.5rem", fontSize: "0.9rem" }}
                             >
-                                <ChevronLeft size={16} /> Back to Users
+                                <ChevronLeft size={16} /> {t("admin.backToUsers")}
                             </button>
 
-                            {loading ? <LoadingSpinner /> : (
+                            {loading ? <LoadingSpinner t={t} /> : (
                                 <>
                                     {/* User Header */}
                                     <div style={{ background: "var(--bg-card)", borderRadius: 16, border: "1px solid var(--border-light)", padding: "1.5rem 2rem", marginBottom: "1.5rem", display: "flex", alignItems: "center", gap: "1.5rem" }}>
@@ -515,14 +517,14 @@ const AdminPanel = () => {
                                                     onClick={() => handleToggleStaff(userDetail.user.id)}
                                                     style={{ padding: "0.6rem 1rem", background: "#f0fdf4", color: "#059669", border: "1px solid #d1fae5", borderRadius: 8, cursor: "pointer", fontWeight: 600, fontSize: "0.85rem", display: "flex", alignItems: "center", gap: "0.4rem" }}
                                                 >
-                                                    <ShieldCheck size={14} /> Make Staff
+                                                    <ShieldCheck size={14} /> {t("admin.makeStaff")}
                                                 </button>
                                             )}
                                             <button
                                                 onClick={() => setConfirmDelete(userDetail.user)}
                                                 style={{ padding: "0.6rem 1rem", background: "#fef2f2", color: "#ef4444", border: "1px solid #fee2e2", borderRadius: 8, cursor: "pointer", fontWeight: 600, fontSize: "0.85rem", display: "flex", alignItems: "center", gap: "0.4rem" }}
                                             >
-                                                <Trash2 size={14} /> Delete User
+                                                <Trash2 size={14} /> {t("admin.deleteUserBtn")}
                                             </button>
                                         </div>
                                     </div>
@@ -530,11 +532,11 @@ const AdminPanel = () => {
                                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem" }}>
                                         {/* User Info */}
                                         <div style={{ background: "var(--bg-card)", borderRadius: 16, border: "1px solid var(--border-light)", padding: "1.5rem" }}>
-                                            <h3 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: "1rem", color: "var(--text-main)" }}>Account Info</h3>
+                                            <h3 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: "1rem", color: "var(--text-main)" }}>{t("admin.accountInfo")}</h3>
                                             {[
-                                                { label: "Joined", value: formatDate(userDetail.user.date_joined) },
-                                                { label: "Last Login", value: formatDate(userDetail.user.last_login) },
-                                                { label: "User ID", value: `#${userDetail.user.id}` },
+                                                { label: t("admin.tableJoined"), value: formatDate(userDetail.user.date_joined) },
+                                                { label: t("admin.lastLogin"), value: formatDate(userDetail.user.last_login) },
+                                                { label: t("admin.userId"), value: `#${userDetail.user.id}` },
                                             ].map(item => (
                                                 <div key={item.label} style={{ display: "flex", justifyContent: "space-between", padding: "0.6rem 0", borderBottom: "1px solid var(--border-light)" }}>
                                                     <span style={{ color: "var(--text-muted)", fontSize: "0.85rem" }}>{item.label}</span>
@@ -547,11 +549,11 @@ const AdminPanel = () => {
                                         <div style={{ background: "var(--bg-card)", borderRadius: 16, border: "1px solid var(--border-light)", overflow: "hidden" }}>
                                             <div style={{ padding: "1.25rem 1.5rem", borderBottom: "1px solid var(--border-light)", display: "flex", alignItems: "center", gap: "0.5rem" }}>
                                                 <Leaf size={16} color="var(--primary)" />
-                                                <h3 style={{ fontSize: "1rem", fontWeight: 700, color: "var(--text-main)" }}>Plants ({userDetail.plants.length})</h3>
+                                                <h3 style={{ fontSize: "1rem", fontWeight: 700, color: "var(--text-main)" }}>{t("admin.userPlantsCount")} ({userDetail.plants.length})</h3>
                                             </div>
                                             <div style={{ maxHeight: 200, overflowY: "auto" }}>
                                                 {userDetail.plants.length === 0 ? (
-                                                    <div style={{ padding: "2rem", textAlign: "center", color: "var(--text-muted)", fontSize: "0.9rem" }}>No plants added yet.</div>
+                                                    <div style={{ padding: "2rem", textAlign: "center", color: "var(--text-muted)", fontSize: "0.9rem" }}>{t("admin.noPlantsAdded")}</div>
                                                 ) : userDetail.plants.map(p => (
                                                     <div key={p.id} style={{ padding: "0.75rem 1.5rem", borderBottom: "1px solid var(--border-light)", display: "flex", justifyContent: "space-between" }}>
                                                         <span style={{ fontWeight: 600, fontSize: "0.85rem", color: "var(--text-main)" }}>{p.name}</span>
@@ -566,17 +568,17 @@ const AdminPanel = () => {
                                     <div style={{ background: "var(--bg-card)", borderRadius: 16, border: "1px solid var(--border-light)", overflow: "hidden", marginTop: "1.5rem" }}>
                                         <div style={{ padding: "1.25rem 1.5rem", borderBottom: "1px solid var(--border-light)", display: "flex", alignItems: "center", gap: "0.5rem" }}>
                                             <Activity size={16} color="#8b5cf6" />
-                                            <h3 style={{ fontSize: "1rem", fontWeight: 700, color: "var(--text-main)" }}>Scan History ({userDetail.predictions.length})</h3>
+                                            <h3 style={{ fontSize: "1rem", fontWeight: 700, color: "var(--text-main)" }}>{t("admin.scanHistory")} ({userDetail.predictions.length})</h3>
                                         </div>
                                         <div style={{ maxHeight: 400, overflowY: "auto" }}>
                                             {userDetail.predictions.length === 0 ? (
-                                                <div style={{ padding: "2rem", textAlign: "center", color: "var(--text-muted)" }}>No scans yet.</div>
+                                                <div style={{ padding: "2rem", textAlign: "center", color: "var(--text-muted)" }}>{t("admin.noScansYet")}</div>
                                             ) : (
                                                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
                                                     <thead>
                                                         <tr style={{ background: "var(--bg-main)" }}>
-                                                            {["Status", "Disease", "Confidence", "Severity", "Date"].map(h => (
-                                                                <th key={h} style={{ padding: "0.75rem 1rem", textAlign: "left", fontSize: "0.72rem", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>{h}</th>
+                                                            {[t("admin.tableStatus"), t("admin.tableDisease"), t("admin.tableConfidence"), t("admin.tableSeverity"), t("admin.tableDate")].map((h, idx) => (
+                                                                <th key={idx} style={{ padding: "0.75rem 1rem", textAlign: "left", fontSize: "0.72rem", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>{h}</th>
                                                             ))}
                                                         </tr>
                                                     </thead>
@@ -619,31 +621,31 @@ const AdminPanel = () => {
                         <div>
                             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1.5rem" }}>
                                 <div>
-                                    <h1 style={{ fontSize: "1.75rem", fontWeight: 800, color: "var(--text-main)", marginBottom: "0.25rem" }}>All Predictions</h1>
-                                    <p style={{ color: "var(--text-muted)", fontSize: "0.9rem" }}>Last 100 scans across all users</p>
+                                    <h1 style={{ fontSize: "1.75rem", fontWeight: 800, color: "var(--text-main)", marginBottom: "0.25rem" }}>{t("admin.predictionsTitle")}</h1>
+                                    <p style={{ color: "var(--text-muted)", fontSize: "0.9rem" }}>{t("admin.predictionsDesc")}</p>
                                 </div>
                                 <button onClick={fetchAllPredictions} style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.6rem 1rem", background: "var(--bg-card)", border: "1px solid var(--border-light)", borderRadius: 8, cursor: "pointer", fontSize: "0.85rem", fontWeight: 600, color: "var(--text-muted)" }}>
-                                    <RefreshCw size={14} /> Refresh
+                                    <RefreshCw size={14} /> {t("admin.refreshBtn")}
                                 </button>
                             </div>
 
                             <div style={{ position: "relative", marginBottom: "1.5rem" }}>
                                 <Search size={16} style={{ position: "absolute", left: "1rem", top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />
                                 <input
-                                    placeholder="Search by username or disease..."
+                                    placeholder={t("admin.searchPredictions")}
                                     value={searchQuery}
                                     onChange={e => setSearchQuery(e.target.value)}
                                     style={{ paddingLeft: "2.75rem", height: 44, borderRadius: 10 }}
                                 />
                             </div>
 
-                            {loading ? <LoadingSpinner /> : (
+                            {loading ? <LoadingSpinner t={t} /> : (
                                 <div style={{ background: "var(--bg-card)", borderRadius: 16, border: "1px solid var(--border-light)", overflow: "hidden" }}>
                                     <table style={{ width: "100%", borderCollapse: "collapse" }}>
                                         <thead>
                                             <tr style={{ background: "var(--bg-main)" }}>
-                                                {["Status", "User", "Disease", "Confidence", "Severity", "Date", "Action"].map(h => (
-                                                    <th key={h} style={{ padding: "0.875rem 1rem", textAlign: "left", fontSize: "0.72rem", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em", borderBottom: "1px solid var(--border-light)" }}>{h}</th>
+                                                {[t("admin.tableStatus"), t("admin.tableUser"), t("admin.tableDisease"), t("admin.tableConfidence"), t("admin.tableSeverity"), t("admin.tableDate"), t("admin.tableAction")].map((h, idx) => (
+                                                    <th key={idx} style={{ padding: "0.875rem 1rem", textAlign: "left", fontSize: "0.72rem", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em", borderBottom: "1px solid var(--border-light)" }}>{h}</th>
                                                 ))}
                                             </tr>
                                         </thead>
@@ -683,7 +685,7 @@ const AdminPanel = () => {
                                                     <td style={{ padding: "0.875rem 1rem" }}>
                                                         {p.image && (
                                                             <a href={p.image} target="_blank" rel="noreferrer" style={{ color: "var(--primary)", fontSize: "0.8rem", fontWeight: 600 }}>
-                                                                View Image
+                                                                {t("admin.viewImage")}
                                                             </a>
                                                         )}
                                                     </td>
@@ -692,7 +694,7 @@ const AdminPanel = () => {
                                         </tbody>
                                     </table>
                                     {filteredPredictions.length === 0 && (
-                                        <div style={{ padding: "3rem", textAlign: "center", color: "var(--text-muted)" }}>No predictions found.</div>
+                                        <div style={{ padding: "3rem", textAlign: "center", color: "var(--text-muted)" }}>{t("admin.noPredictions")}</div>
                                     )}
                                 </div>
                             )}
@@ -710,9 +712,9 @@ const AdminPanel = () => {
                     <div style={{ background: "var(--bg-card)", borderRadius: 16, padding: "2rem", maxWidth: 400, width: "90%", border: "1px solid var(--border-light)", boxShadow: "0 25px 50px rgba(0,0,0,0.3)" }}>
                         <div style={{ textAlign: "center", marginBottom: "1.5rem" }}>
                             <div style={{ fontSize: "3rem", marginBottom: "0.75rem" }}>⚠️</div>
-                            <h3 style={{ fontSize: "1.2rem", fontWeight: 800, color: "var(--text-main)", marginBottom: "0.5rem" }}>Delete User?</h3>
+                            <h3 style={{ fontSize: "1.2rem", fontWeight: 800, color: "var(--text-main)", marginBottom: "0.5rem" }}>{t("admin.deleteUserModalTitle")}</h3>
                             <p style={{ color: "var(--text-muted)", fontSize: "0.9rem" }}>
-                                This will permanently delete <strong>{confirmDelete.username}</strong> and all their data (plants, scans, history). This cannot be undone.
+                                {t("admin.deleteUserModalDesc1")} <strong>{confirmDelete.username}</strong> {t("admin.deleteUserModalDesc2")}
                             </p>
                         </div>
                         <div style={{ display: "flex", gap: "0.75rem" }}>
@@ -720,13 +722,13 @@ const AdminPanel = () => {
                                 onClick={() => setConfirmDelete(null)}
                                 style={{ flex: 1, padding: "0.75rem", background: "var(--bg-main)", border: "1px solid var(--border-light)", borderRadius: 8, cursor: "pointer", fontWeight: 600, color: "var(--text-muted)" }}
                             >
-                                Cancel
+                                {t("admin.cancelBtn")}
                             </button>
                             <button
                                 onClick={() => handleDeleteUser(confirmDelete.id)}
                                 style={{ flex: 1, padding: "0.75rem", background: "#ef4444", border: "none", borderRadius: 8, cursor: "pointer", fontWeight: 700, color: "#fff" }}
                             >
-                                Delete Permanently
+                                {t("admin.deletePermanently")}
                             </button>
                         </div>
                     </div>
@@ -757,7 +759,7 @@ const StatCard = ({ icon, label, value, color }) => (
     </div>
 );
 
-const LoadingSpinner = () => (
+const LoadingSpinner = ({ t }) => (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "4rem", gap: "0.75rem", color: "var(--text-muted)" }}>
         <div style={{
             width: 24, height: 24, border: "3px solid var(--border-light)",
@@ -765,7 +767,7 @@ const LoadingSpinner = () => (
             animation: "spin 0.8s linear infinite"
         }} />
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-        Loading...
+        {t ? t("admin.loading") : "Loading..."}
     </div>
 );
 

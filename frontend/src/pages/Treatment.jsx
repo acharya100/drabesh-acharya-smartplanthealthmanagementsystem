@@ -12,8 +12,10 @@ import {
   Plus, Edit2, Trash2
 } from "lucide-react";
 import TreatmentFormModal from "../components/TreatmentFormModal";
+import { useLanguage } from "../context/LanguageContext";
 
 const Treatment = () => {
+  const { t } = useLanguage();
   const [plants, setPlants] = useState([]);
   const [selectedPlant, setSelectedPlant] = useState(null);
   const [diseases, setDiseases] = useState([]);
@@ -134,13 +136,13 @@ const Treatment = () => {
   };
 
   const handleDeleteTreatment = async () => {
-    if (!window.confirm("Are you sure you want to delete this treatment protocol?")) return;
+    if (!window.confirm(t("treatment.deleteConfirm") || "Are you sure you want to delete this treatment protocol?")) return;
     try {
       await treatmentService.delete(selectedTreatment.id);
       setShowModal(false);
       if (selectedPlant) loadDiseases(selectedPlant.id);
     } catch (error) {
-      alert("Failed to delete treatment.");
+      alert(t("treatment.deleteFailed") || "Failed to delete treatment.");
     }
   };
 
@@ -172,10 +174,10 @@ const Treatment = () => {
           <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border-light)' }}>
             <h2 style={{ fontSize: '1.2rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <Sprout size={20} className="text-primary" />
-              Host Plants
+              {t("treatment.hostPlants")}
             </h2>
             <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
-              Select a plant to view its potential diseases and treatments.
+              {t("treatment.hostPlantsDesc")}
             </p>
           </div>
 
@@ -215,7 +217,7 @@ const Treatment = () => {
             <>
               <div style={{ padding: '1rem 1.5rem', borderTop: '1px solid var(--border-light)', borderBottom: '1px solid var(--border-light)', background: 'var(--bg-main)' }}>
                 <h3 style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  Custom Diseases
+                  {t("treatment.customDiseases")}
                 </h3>
               </div>
               <div style={{ padding: '1rem', maxHeight: '200px', overflowY: 'auto' }}>
@@ -276,14 +278,14 @@ const Treatment = () => {
                   onClick={openAddModal}
                 >
                   <Plus size={18} />
-                  <span>Add Treatment</span>
+                  <span>{t("treatment.addTreatment")}</span>
                 </button>
               </div>
 
               {loading ? (
                 <div className="loading-spinner-container">
                   <div className="spinner"></div>
-                  <p>Analyzing botanical records...</p>
+                  <p>{t("treatment.analyzingRecords")}</p>
                 </div>
               ) : diseases.length > 0 ? (
                 <div className="diseases-grid">
@@ -291,16 +293,16 @@ const Treatment = () => {
                   <div className="disease-card-v2" style={{ borderLeft: '4px solid var(--success)' }}>
                     <div className="disease-header-info" style={{ padding: '2rem' }}>
                       <div className="disease-title-row">
-                        <h3>Healthy {selectedPlant.name}</h3>
-                        <div className="badge badge-edible">Stable</div>
+                        <h3>{t("treatment.healthyPlantTitle")} {selectedPlant.name}</h3>
+                        <div className="badge badge-edible">{t("treatment.stable")}</div>
                       </div>
                       <p style={{ marginTop: '1rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
-                        No signs of infection. Plant is vigorous and productive.
+                        {t("treatment.noSigns")}
                       </p>
                     </div>
                     <div className="disease-card-footer" style={{ padding: '1.5rem', background: 'var(--bg-card)', borderTop: '1px solid var(--border-light)' }}>
                       <span style={{ fontSize: '0.85rem', color: 'var(--success)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <CheckCircle size={16} /> Optimal Condition
+                        <CheckCircle size={16} /> {t("treatment.optimalCondition")}
                       </span>
                     </div>
                   </div>
@@ -328,7 +330,7 @@ const Treatment = () => {
                           onClick={() => handleViewTreatment(disease)}
                         >
                           <ShieldCheck size={16} />
-                          View Treatment Plan
+                          {t("treatment.viewTreatmentPlan")}
                         </button>
                       </div>
                     </div>
@@ -337,16 +339,16 @@ const Treatment = () => {
               ) : (
                 <div className="no-results">
                   <CheckCircle size={64} className="text-success" style={{ opacity: 0.5 }} />
-                  <h3>No Diseases Found</h3>
-                  <p>We have no recorded diseases for this plant in our database yet.</p>
+                  <h3>{t("treatment.noDiseasesTitle")}</h3>
+                  <p>{t("treatment.noDiseasesDesc")}</p>
                 </div>
               )}
             </div>
           ) : (
             <div className="empty-state-container" style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
               <Sprout size={64} className="text-primary" style={{ opacity: 0.3 }} />
-              <h3>Select a Plant</h3>
-              <p>Choose a host plant from the sidebar to view its health guide.</p>
+              <h3>{t("treatment.selectPlantTitle")}</h3>
+              <p>{t("treatment.selectPlantDesc")}</p>
             </div>
           )}
         </div>
@@ -357,7 +359,7 @@ const Treatment = () => {
         <div className="modal-overlay">
           <div className="modal-content-large animate-slide-up" style={{ maxWidth: '800px' }}>
             <div className="modal-header">
-              <h2>Treatment Protocol</h2>
+              <h2>{t("treatment.title")}</h2>
               <button className="close-btn" onClick={() => setShowModal(false)}>&times;</button>
             </div>
 
@@ -365,7 +367,7 @@ const Treatment = () => {
               {modalLoading ? (
                 <div style={{ padding: '4rem', textAlign: 'center' }}>
                   <div className="spinner"></div>
-                  <p>Fetching protocol...</p>
+                  <p>{t("treatment.fetchingProtocol")}</p>
                 </div>
               ) : selectedTreatment?.error ? (
                 <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>
@@ -405,7 +407,7 @@ const Treatment = () => {
                       )}
                     </div>
                     <div style={{ color: 'var(--primary)', fontWeight: 800, fontSize: '0.8rem', textTransform: 'uppercase', marginBottom: '0.5rem' }}>
-                      TREATING {selectedTreatment.disease_name}
+                      {t("treatment.treatingLabel")} {selectedTreatment.disease_name}
                     </div>
                     <h1 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '1rem' }}>{selectedTreatment.name}</h1>
                     <p style={{ fontSize: '1.1rem', lineHeight: 1.6, color: 'var(--text-secondary)' }}>
@@ -414,15 +416,15 @@ const Treatment = () => {
 
                     <div style={{ display: 'flex', gap: '2rem', marginTop: '2rem' }}>
                       <div>
-                        <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: '0.25rem' }}>EFFECTIVENESS</span>
+                        <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: '0.25rem' }}>{t("treatment.effectiveness")}</span>
                         <span style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--success)' }}>{selectedTreatment.effectiveness_rate}%</span>
                       </div>
                       <div>
-                        <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: '0.25rem' }}>COST</span>
+                        <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: '0.25rem' }}>{t("treatment.cost")}</span>
                         <span style={{ fontSize: '1.25rem', fontWeight: 800 }}>{selectedTreatment.cost_estimate}</span>
                       </div>
                       <div>
-                        <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: '0.25rem' }}>TYPE</span>
+                        <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: '0.25rem' }}>{t("treatment.type")}</span>
                         <span style={{ fontSize: '1.25rem', fontWeight: 800 }}>{selectedTreatment.treatment_type?.toUpperCase()}</span>
                       </div>
                     </div>
@@ -433,7 +435,7 @@ const Treatment = () => {
                     <div style={{ marginBottom: '2.5rem' }}>
                       <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         <CheckCircle size={20} className="text-secondary" />
-                        Step-by-Step Instructions
+                        {t("treatment.stepByStep")}
                       </h3>
                       <div style={{ background: 'var(--bg-card)', padding: '1.5rem', borderRadius: '8px', borderLeft: '4px solid var(--secondary)', whiteSpace: 'pre-line', lineHeight: 1.8 }}>
                         {selectedTreatment.instructions}
@@ -444,7 +446,7 @@ const Treatment = () => {
                     {!selectedTreatment.id && selectedTreatment.error && (
                       <div style={{ textAlign: 'center', padding: '2rem' }}>
                         <button className="btn-primary" onClick={openAddModal}>
-                          <Plus size={16} /> Create Treatment Protocol
+                          <Plus size={16} /> {t("treatment.createProtocol")}
                         </button>
                       </div>
                     )}
@@ -453,7 +455,7 @@ const Treatment = () => {
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
                         <div>
                           <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <Package size={18} /> Required Products
+                            <Package size={18} /> {t("treatment.requiredProducts")}
                           </h3>
                           <p style={{ padding: '1rem', background: 'var(--bg-card)', border: '1px solid var(--border-light)', borderRadius: '6px' }}>
                             {selectedTreatment.products_needed}
@@ -461,10 +463,10 @@ const Treatment = () => {
                         </div>
                         <div>
                           <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <ShieldCheck size={18} /> Preventive
+                            <ShieldCheck size={18} /> {t("treatment.preventive")}
                           </h3>
                           <p style={{ padding: '1rem', background: 'var(--bg-card)', border: '1px solid var(--border-light)', borderRadius: '6px' }}>
-                            {selectedTreatment.is_preventive ? "Yes - Can be used to prevent infection." : "No - Use only when disease is present."}
+                            {selectedTreatment.is_preventive ? t("treatment.preventiveYes") : t("treatment.preventiveNo")}
                           </p>
                         </div>
                       </div>
@@ -475,7 +477,7 @@ const Treatment = () => {
             </div>
 
             <div className="modal-footer" style={{ padding: '1.5rem 2.5rem', borderTop: '1px solid var(--border-light)', display: 'flex', justifyContent: 'flex-end' }}>
-              <button className="btn-secondary" onClick={() => setShowModal(false)}>Close Protocol</button>
+              <button className="btn-secondary" onClick={() => setShowModal(false)}>{t("treatment.closeProtocol")}</button>
             </div>
           </div>
         </div>
