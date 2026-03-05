@@ -15,6 +15,19 @@ class Prediction(models.Model):
     
     confidence = models.DecimalField(max_digits=5, decimal_places=2, help_text="Confidence core (0-100)")
     severity = models.CharField(max_length=20, blank=True, null=True)
+    
+    TREATMENT_STATUS_CHOICES = [
+        ('untreated', 'Untreated'),
+        ('in_progress', 'Treatment in Progress'),
+        ('treated', 'Treated/Resolved'),
+    ]
+    treatment_status = models.CharField(
+        max_length=20,
+        choices=TREATMENT_STATUS_CHOICES,
+        default='untreated',
+        help_text="Status of the treatment for this diagnosis"
+    )
+    
     is_healthy = models.BooleanField(default=False)
     is_plant_image = models.BooleanField(default=True, help_text="False if image is not a plant leaf")
     created_at = models.DateTimeField(auto_now_add=True)

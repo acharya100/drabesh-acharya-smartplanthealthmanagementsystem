@@ -22,7 +22,7 @@ class PlantViewSet(viewsets.ModelViewSet):
     queryset = Plant.objects.all()
     permission_classes = [IsAuthenticatedOrReadOnly]
     
-    # Enable filtering, searching, and ordering
+    # Enable filtering, searching and ordering
     filter_backends = [
         DjangoFilterBackend,
         filters.SearchFilter,
@@ -76,10 +76,8 @@ class PlantViewSet(viewsets.ModelViewSet):
     
     def get_queryset(self):
         # Global plants for Treatment
-        # Returns plants owned by superusers/admins (System Plants)
+        
         if self.request.query_params.get('global') == 'true':
-            # We want unique names but since we ensure_plants creates distinct names for superuser,
-            # this should be fine.
             return Plant.objects.filter(user__is_superuser=True).order_by('name')
 
         # Start with all plants and then filter down to the owner
@@ -123,7 +121,22 @@ class PlantViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def statistics(self, request):
         
+        user = self.request.user
         total_plants = self.get_queryset().count()
+        
+        # Import dynamically to avoid circular dependencies
+        from predictions.models import Prediction
+        from diseases.models import Treatment
+        
+        # Count distinct plants diagnosed with disease vs healthy by looking at Predictions
+        diseases_detected = Prediction.objects.filter(user=user, is_healthy=False).count()
+        
+        # Determine healthy plants (total - plants that have diseases)
+        diseased_plants_count = Prediction.objects.filter(user=user, is_healthy=False).values('predicted_plant').distinct().count()
+        healthy_plants = max(0, total_plants - diseased_plants_count)
+        
+        # Treatments available globally
+        treatments_available = Treatment.objects.count()
         
         # Count by difficulty level
         difficulty_stats = {}
@@ -144,6 +157,9 @@ class PlantViewSet(viewsets.ModelViewSet):
         
         return Response({
             'total_plants': total_plants,
+            'healthy_plants': healthy_plants,
+            'diseases_detected': diseases_detected,
+            'treatments_available': treatments_available,
             'by_difficulty': difficulty_stats,
             'by_sunlight': sunlight_stats,
             'edible_plants': edible_count,

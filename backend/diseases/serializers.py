@@ -119,6 +119,7 @@ class DiseaseListSerializer(serializers.ModelSerializer):
             'severity_level',
             'severity_display',
             'severity_color',
+            'symptoms',
             'is_contagious',
             'spread_rate',
             'affected_plant_count',

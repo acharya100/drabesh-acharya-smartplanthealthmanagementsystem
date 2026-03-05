@@ -1,0 +1,44 @@
+Apple Black Rot
+Apple Scab
+Bacterial Spot
+Black Rot
+blackleg
+Cedar Apple Rust
+Cercospora Leaf Spot
+Cherry Powdery Mildew
+Common Rust
+Corn Cercospora Leaf Spot Gray Leaf
+Corn Common Rust
+Corn Northern Blight
+Early Blight
+Esca (Black Measles)
+Grape Black Rot
+Grape Esca (Black Measles)
+Grape Leaf Blight
+Late Blight
+Leaf Blight
+Leaf Mold
+Leaf Scorch
+Mosaic Virus
+Northern Leaf Blight
+Orange Haunglongbing
+Peach Bacterial Spot
+Pepper Bell Bacterial Spot
+Potato Early Blight
+Potato Late Blight
+Powdery Mildew
+Septoria Leaf Spot
+Spider Mites
+Squash Powdery Mildew
+Strawberry Leaf Scorch
+Target Spot
+Tomato Bacterial Spot
+Tomato Early Blight
+Tomato Late Blight
+Tomato Leaf Mold
+Tomato Mosaic Virus
+Tomato Septoria Leaf Spot
+Tomato Spider Mites
+Tomato Target Spot
+Tomato Yellow Leaf Curl Virus
+Yellow Leaf Curl Virus

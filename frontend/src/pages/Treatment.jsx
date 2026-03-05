@@ -3,6 +3,7 @@
  */
 
 import { useState, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { treatmentService, diseaseService, plantService } from "../services/api";
 import {
@@ -16,6 +17,8 @@ import { useLanguage } from "../context/LanguageContext";
 
 const Treatment = () => {
   const { t } = useLanguage();
+  const location = useLocation();
+  const navigate = useNavigate();
   const [plants, setPlants] = useState([]);
   const [selectedPlant, setSelectedPlant] = useState(null);
   const [diseases, setDiseases] = useState([]);
@@ -34,6 +37,16 @@ const Treatment = () => {
   useEffect(() => {
     loadPlants();
     loadCustomDiseases();
+
+    // Check if we came from another page with a specific disease to view
+    if (location.state?.initialDiseaseId) {
+      handleViewTreatment({
+        id: location.state.initialDiseaseId,
+        name: location.state.initialDiseaseName || "Detected Disease"
+      });
+      // Clear the state so it doesn't reopen if the user navigates away and back
+      navigate(location.pathname, { replace: true });
+    }
   }, []);
 
   useEffect(() => {
@@ -104,7 +117,12 @@ const Treatment = () => {
         // We take the first treatment for now as per requirement map
         const treatmentId = diseaseDetail.treatments[0].id;
         const { data: treatmentDetail } = await treatmentService.getById(treatmentId);
-        setSelectedTreatment({ ...treatmentDetail, disease_name: disease.name });
+        setSelectedTreatment({
+          ...treatmentDetail,
+          disease_name: diseaseDetail.name,
+          symptoms: diseaseDetail.symptoms,
+          prevention_measures: diseaseDetail.prevention_measures
+        });
       } else {
         // Handle case with no treatment
         setSelectedTreatment({
@@ -417,21 +435,47 @@ const Treatment = () => {
                     <div style={{ display: 'flex', gap: '2rem', marginTop: '2rem' }}>
                       <div>
                         <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: '0.25rem' }}>{t("treatment.effectiveness")}</span>
-                        <span style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--success)' }}>{selectedTreatment.effectiveness_rate}%</span>
+                        <span style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--success)' }}>
+                          {selectedTreatment.effectiveness_rate != null ? `${selectedTreatment.effectiveness_rate}%` : 'N/A'}
+                        </span>
                       </div>
                       <div>
                         <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: '0.25rem' }}>{t("treatment.cost")}</span>
-                        <span style={{ fontSize: '1.25rem', fontWeight: 800 }}>{selectedTreatment.cost_estimate}</span>
+                        <span style={{ fontSize: '1.25rem', fontWeight: 800 }}>{selectedTreatment.cost_estimate || 'N/A'}</span>
                       </div>
                       <div>
                         <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: '0.25rem' }}>{t("treatment.type")}</span>
-                        <span style={{ fontSize: '1.25rem', fontWeight: 800 }}>{selectedTreatment.treatment_type?.toUpperCase()}</span>
+                        <span style={{ fontSize: '1.25rem', fontWeight: 800 }}>{selectedTreatment.treatment_type?.toUpperCase() || 'N/A'}</span>
                       </div>
                     </div>
                   </div>
 
                   {/* DETAILED STEPS */}
                   <div style={{ padding: '2.5rem' }}>
+
+                    {/* SYMPTOMS */}
+                    {selectedTreatment.symptoms && (
+                      <div style={{ marginBottom: '2.5rem' }}>
+                        <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <AlertTriangle size={20} style={{ color: 'var(--warning)' }} />
+                          {t("diseases.symptoms") || "Symptoms"}
+                        </h3>
+                        <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6 }}>{selectedTreatment.symptoms}</p>
+                      </div>
+                    )}
+
+                    {/* PREVENTION */}
+                    {selectedTreatment.prevention_measures && (
+                      <div style={{ marginBottom: '2.5rem' }}>
+                        <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <ShieldCheck size={20} className="text-primary" />
+                          {t("treatment.preventive") || "Prevention Measures"}
+                        </h3>
+                        <div style={{ background: 'var(--primary-subtle)', padding: '1.5rem', borderRadius: '8px', color: 'var(--text-secondary)', whiteSpace: 'pre-line', lineHeight: 1.8 }}>
+                          {selectedTreatment.prevention_measures}
+                        </div>
+                      </div>
+                    )}
                     <div style={{ marginBottom: '2.5rem' }}>
                       <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         <CheckCircle size={20} className="text-secondary" />

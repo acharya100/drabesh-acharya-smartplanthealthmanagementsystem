@@ -283,7 +283,12 @@ const DiseaseDetection = () => {
                             {result.recommended_treatment ? (
                               <div className="treatment-cta" style={{ background: 'var(--bg-main)', padding: '1.5rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-light)' }}>
                                 <p style={{ fontSize: '0.95rem', marginBottom: '1.5rem', lineHeight: 1.5 }}>Recommended treatment: <strong style={{ color: 'var(--secondary)' }}>{result.recommended_treatment.name}</strong></p>
-                                <Link to="/treatment" className="btn-primary" style={{ display: 'flex', justifyContent: 'center', padding: '0.8rem', fontSize: '0.9rem', width: '100%' }}>
+                                <Link
+                                  to="/treatment"
+                                  state={{ initialDiseaseId: result.disease_id, initialDiseaseName: result.disease_name }}
+                                  className="btn-primary"
+                                  style={{ display: 'flex', justifyContent: 'center', padding: '0.8rem', fontSize: '0.9rem', width: '100%' }}
+                                >
                                   {t("detection.viewTreatmentGuide")}
                                 </Link>
                               </div>

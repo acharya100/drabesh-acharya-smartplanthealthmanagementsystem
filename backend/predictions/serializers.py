@@ -37,6 +37,6 @@ class PredictionDetailSerializer(serializers.ModelSerializer):
             'predicted_plant', 'plant_name',
             'predicted_disease', 'disease_name',
             'confidence', 'severity', 'is_healthy', 
-            'is_plant_image', 'created_at'
+            'treatment_status', 'is_plant_image', 'created_at'
         ]
         read_only_fields = ['id', 'user', 'created_at']

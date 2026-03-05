@@ -29,9 +29,9 @@ const Dashboard = () => {
       const { data } = await plantService.getStatistics();
       setStats({
         totalPlants: data.total_plants,
-        healthyPlants: data.total_plants - data.toxic_plants,
-        diseasesDetected: data.toxic_plants,
-        treatmentsAvailable: data.medicinal_plants
+        healthyPlants: data.healthy_plants,
+        diseasesDetected: data.diseases_detected,
+        treatmentsAvailable: data.treatments_available
       });
       setLoading(false);
     } catch (error) {

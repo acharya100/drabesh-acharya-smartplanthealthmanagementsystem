@@ -74,7 +74,8 @@ const History = () => {
             await predictionService.update(editingPrediction.id, {
                 is_healthy: editingPrediction.is_healthy,
                 severity: editingPrediction.severity,
-                confidence: editingPrediction.confidence
+                confidence: editingPrediction.confidence,
+                treatment_status: editingPrediction.treatment_status
             });
             setShowEditModal(false);
             loadHistory();
@@ -179,6 +180,14 @@ const History = () => {
                                                         {t("history.severity")}: <strong style={{ textTransform: 'uppercase', color: pred.severity === 'critical' ? 'red' : 'inherit' }}>{pred.severity}</strong>
                                                     </span>
                                                 )}
+
+                                                {!pred.is_healthy && pred.is_plant_image !== false && (
+                                                    <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                                                        {t("history.treatmentStatusLabel")}: <strong style={{ color: pred.treatment_status === 'treated' ? 'var(--success)' : (pred.treatment_status === 'in_progress' ? 'var(--warning)' : 'var(--text-muted)') }}>
+                                                            {pred.treatment_status === 'untreated' ? t("history.statusUntreated") : (pred.treatment_status === 'in_progress' ? t("history.statusInProgress") : t("history.statusTreated"))}
+                                                        </strong>
+                                                    </span>
+                                                )}
                                             </div>
                                         </div>
 
@@ -187,7 +196,11 @@ const History = () => {
                                             <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                                                 {/* View Treatment link for ALL cases */}
                                                 <Link
-                                                    to={pred.is_plant_image === false ? '/treatment?notplant=true' : (pred.is_healthy ? '/treatment?healthy=true' : `/treatment?disease=${pred.predicted_disease}`)}
+                                                    to="/treatment"
+                                                    state={{
+                                                        initialDiseaseId: pred.predicted_disease,
+                                                        initialDiseaseName: pred.disease_name
+                                                    }}
                                                     className="btn-secondary"
                                                     style={{ fontSize: '0.85rem', padding: '0.5rem 1rem' }}
                                                 >
@@ -281,6 +294,30 @@ const History = () => {
                                         <option value="moderate">{t("history.severityModerate")}</option>
                                         <option value="high">{t("history.severityHigh")}</option>
                                         <option value="critical">{t("history.severityCritical")}</option>
+                                    </select>
+                                </div>
+                            )}
+
+                            {!editingPrediction.is_healthy && (
+                                <div style={{ marginBottom: '1.5rem' }}>
+                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>
+                                        {t("history.treatmentStatusLabel")}
+                                    </label>
+                                    <select
+                                        value={editingPrediction.treatment_status || 'untreated'}
+                                        onChange={(e) => setEditingPrediction({ ...editingPrediction, treatment_status: e.target.value })}
+                                        style={{
+                                            width: '100%',
+                                            padding: '0.75rem',
+                                            borderRadius: 'var(--radius-sm)',
+                                            border: '1px solid var(--border-light)',
+                                            background: 'var(--bg-card)',
+                                            color: 'var(--text-primary)'
+                                        }}
+                                    >
+                                        <option value="untreated">{t("history.statusUntreated")}</option>
+                                        <option value="in_progress">{t("history.statusInProgress")}</option>
+                                        <option value="treated">{t("history.statusTreated")}</option>
                                     </select>
                                 </div>
                             )}
