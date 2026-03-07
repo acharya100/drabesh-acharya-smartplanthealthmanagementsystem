@@ -92,7 +92,29 @@ class PredictionViewSet(viewsets.ModelViewSet):
                 results = detector.predict(prediction_obj.image.path)
                 
                 if results:
-                    # Update prediction object
+                    # Check for low confidence (out of distribution)
+                    if results['confidence'] < 40.0:
+                        prediction_obj.confidence = results['confidence']
+                        prediction_obj.severity = 'unknown'
+                        prediction_obj.is_healthy = False
+                        prediction_obj.plant_name = 'Unrecognized'
+                        prediction_obj.disease_name = 'Unrecognized'
+                        prediction_obj.save()
+                        
+                        return Response({
+                            "success": True,
+                            "data": {
+                                "is_recognized": False,
+                                "disease_name": "Unrecognized Leaf",
+                                "confidence": results['confidence'],
+                                "severity": "Unknown",
+                                "is_healthy": False,
+                                "message": "This leaf does not appear to match any plant diseases in our database. It may be a plant we do not yet support, or the image may be unclear."
+                            },
+                            "prediction_id": prediction_obj.id
+                        })
+
+                    # Update prediction object for recognized leaves
                     prediction_obj.confidence = results['confidence']
                     prediction_obj.severity = results['severity']
                     prediction_obj.is_healthy = results['is_healthy']
@@ -118,6 +140,7 @@ class PredictionViewSet(viewsets.ModelViewSet):
                     
                     # Include recommendations if disease found
                     response_data = results.copy()
+                    response_data['is_recognized'] = True
                     if prediction_obj.predicted_disease:
                         response_data['disease_id'] = prediction_obj.predicted_disease.id
                         # Get first treatment if available

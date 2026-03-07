@@ -225,7 +225,7 @@ const TreatmentFormModal = ({ isOpen, onClose, onSubmit, initialData = null, dis
                                 name="cost_estimate"
                                 value={formData.cost_estimate}
                                 onChange={handleChange}
-                                placeholder="e.g. Low, $10-20"
+                                placeholder="e.g. NPR 500 - 1500"
                                 style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #ddd' }}
                             />
                         </div>

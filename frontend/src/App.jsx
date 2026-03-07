@@ -11,6 +11,7 @@ import Diseases from "./pages/Diseases";
 import Treatment from "./pages/Treatment";
 import Settings from "./pages/Settings";
 import History from "./pages/History";
+import TreatmentHistory from "./pages/TreatmentHistory";
 import AdminPanel from "./pages/AdminPanel";
 import { useEffect } from "react";
 import "./App.css";
@@ -95,6 +96,15 @@ const App = () => {
           element={
             <ProtectedRoute>
               <Treatment />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/treatment-history"
+          element={
+            <ProtectedRoute>
+              <TreatmentHistory />
             </ProtectedRoute>
           }
         />

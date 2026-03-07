@@ -12,6 +12,7 @@ const ne = {
         welcome: "स्वागत छ,",
         logout: "बाहिर जानुस्",
         switchAccount: "खाता फेर्नुस्",
+        treatmentHistory: "उपचार इतिहास",
         switchAccountTitle: "खाता फेर्नुस्",
         noOtherAccounts: "अन्य खाताहरू फेला परेनन्।",
         switchAccountFailed: "खाता फेर्न असफल भयो।",
@@ -396,9 +397,20 @@ const ne = {
         loading: "लोड हुँदैछ...",
     },
 
-    language: {
-        en: "English",
-        ne: "नेपाली",
+    treatmentHistory: {
+        title: "उपचार इतिहास",
+        subtitle: "तपाईंको बिरुवाको हालको उपचारको प्रगति र लागत ट्र्याक गर्नुहोस्।",
+        loading: "उपचार अभिलेखहरू लोड हुँदैछ...",
+        noActiveTreatments: "कुनै सक्रिय उपचार फेला परेन।",
+        noActiveTreatmentsDesc: "तपाईंले अहिलेसम्म कुनै पनि निदानलाई उपचारको लागि 'प्रगतिमा' भनेर चिन्ह लगाउनुभएको छैन।",
+        activeTreatments: "सक्रिय उपचारहरू",
+        completedTreatments: "पूरा भएका / उपचार गरिएका",
+        totalEstimatedCost: "जम्मा अनुमानित लागत",
+        updatingStatus: "स्थिति अद्यावधिक हुँदैछ...",
+        markAsTreated: "उपचार गरियो भनेर चिन्ह लगाउनुस्",
+        markInProgress: "प्रगतिमा भनेर चिन्ह लगाउनुस्",
+        viewProtocol: "प्रोटोकल हेर्नुस्",
+        diagnosisDate: "निदान मिति",
     },
 };
 

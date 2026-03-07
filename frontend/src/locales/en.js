@@ -12,6 +12,7 @@ const en = {
         welcome: "Welcome,",
         logout: "Logout",
         switchAccount: "Switch Account",
+        treatmentHistory: "Treatment History",
         switchAccountTitle: "Switch Account",
         noOtherAccounts: "No other accounts found.",
         switchAccountFailed: "Failed to switch account.",
@@ -396,9 +397,20 @@ const en = {
         loading: "Loading...",
     },
 
-    language: {
-        en: "English",
-        ne: "Nepali",
+    treatmentHistory: {
+        title: "Treatment History",
+        subtitle: "Track the progress and costs of your current plant treatments.",
+        loading: "Loading treatment records...",
+        noActiveTreatments: "No active treatments found.",
+        noActiveTreatmentsDesc: "You haven't marked any diagnoses as 'In Progress' for treatment yet.",
+        activeTreatments: "Active Treatments",
+        completedTreatments: "Completed / Treated",
+        totalEstimatedCost: "Total Estimated Cost",
+        updatingStatus: "Updating status...",
+        markAsTreated: "Mark as Treated",
+        markInProgress: "Mark as In Progress",
+        viewProtocol: "View Protocol",
+        diagnosisDate: "Diagnosis Date",
     },
 };
 

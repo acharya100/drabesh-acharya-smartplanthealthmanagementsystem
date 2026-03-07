@@ -58,6 +58,10 @@ const Navbar = ({ activePage }) => {
           <ShieldCheck size={18} />
           <span>{t("nav.treatments")}</span>
         </Link>
+        <Link to="/treatment-history" className={`nav-link ${activePage === "treatment-history" ? "active" : ""}`}>
+          <Activity size={18} />
+          <span>{t("nav.treatmentHistory")}</span>
+        </Link>
         <Link to="/settings" className={`nav-link ${activePage === "settings" ? "active" : ""}`}>
           <SettingsIcon size={18} />
           <span>{t("nav.settings")}</span>

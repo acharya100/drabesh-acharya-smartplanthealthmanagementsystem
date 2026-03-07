@@ -148,9 +148,11 @@ const History = () => {
                                                 <h3 style={{ fontSize: '1.2rem', fontWeight: 800 }}>
                                                     {pred.is_plant_image === false
                                                         ? t("history.nonPlantDetected")
-                                                        : (pred.disease_name === "Healthy" || pred.is_healthy
-                                                            ? `${pred.plant_name || ""} ${t("history.healthyStatus")}`
-                                                            : (pred.disease_name || t("history.unidentifiedIssue"))
+                                                        : (pred.disease_name === "Unrecognized"
+                                                            ? "Unrecognized (Out of Scope)"
+                                                            : (pred.disease_name === "Healthy" || pred.is_healthy
+                                                                ? `${pred.plant_name || ""} ${t("history.healthyStatus")}`
+                                                                : (pred.disease_name || t("history.unidentifiedIssue")))
                                                         )
                                                     }
                                                 </h3>
@@ -194,18 +196,20 @@ const History = () => {
                                         {/* Actions */}
                                         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                                             <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                                                {/* View Treatment link for ALL cases */}
-                                                <Link
-                                                    to="/treatment"
-                                                    state={{
-                                                        initialDiseaseId: pred.predicted_disease,
-                                                        initialDiseaseName: pred.disease_name
-                                                    }}
-                                                    className="btn-secondary"
-                                                    style={{ fontSize: '0.85rem', padding: '0.5rem 1rem' }}
-                                                >
-                                                    {t("history.viewTreatment")}
-                                                </Link>
+                                                {/* View Treatment link for ALL cases EXCEPT Unrecognized */}
+                                                {pred.disease_name !== 'Unrecognized' && pred.is_plant_image !== false && (
+                                                    <Link
+                                                        to="/treatment"
+                                                        state={{
+                                                            initialDiseaseId: pred.predicted_disease,
+                                                            initialDiseaseName: pred.disease_name
+                                                        }}
+                                                        className="btn-secondary"
+                                                        style={{ fontSize: '0.85rem', padding: '0.5rem 1rem' }}
+                                                    >
+                                                        {t("history.viewTreatment")}
+                                                    </Link>
+                                                )}
                                                 <button
                                                     onClick={() => handleEdit(pred)}
                                                     className="btn-secondary"

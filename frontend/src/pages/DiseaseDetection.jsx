@@ -242,64 +242,101 @@ const DiseaseDetection = () => {
             </div>
 
             <aside className="detection-sidebar">
-              {/* If we have a result, we show it here in a beautiful card */}
               {result ? (
                 <div className="result-card-v2 animate-slide-up" style={{ background: 'var(--bg-card)', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--glass-shadow)', overflow: 'hidden', border: '1px solid var(--border-light)' }}>
-                  <div className="result-header" style={{ padding: '2.5rem', background: 'var(--bg-main)', borderBottom: '1px solid var(--border-light)' }}>
-                    {/* Status pills help users quickly see if their plant is okay or not */}
-                    <div className={`status-pill ${result.is_healthy ? 'healthy' : 'infected'}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.4rem 0.8rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', marginBottom: '1.5rem', background: result.is_healthy ? 'var(--primary-subtle)' : '#fee2e2', color: result.is_healthy ? 'var(--primary)' : '#dc2626' }}>
-                      {result.is_healthy ? <CheckCircle size={16} /> : <AlertTriangle size={16} />}
-                      {result.is_healthy ? t("detection.healthyStatus") : t("detection.infectedStatus")}
-                    </div>
-                    <h2 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '2rem' }}>{result.disease_name}</h2>
-                    <div className="confidence-meter">
-                      <div className="meter-label" style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', fontWeight: 700, marginBottom: '0.5rem', opacity: 0.7 }}>
-                        <span>{t("detection.confidenceLabel")}</span>
-                        <span>{result.confidence.toFixed(1)}%</span>
-                      </div>
-                      <div className="meter-bar" style={{ height: '8px', background: 'var(--border-light)', borderRadius: '100px', overflow: 'hidden' }}>
-                        <div className="meter-fill" style={{ width: `${result.confidence}%`, height: '100%', background: 'var(--primary)', transition: 'width 1s cubic-bezier(0.4, 0, 0.2, 1)' }}></div>
-                      </div>
-                    </div>
-                  </div>
 
-                  <div className="result-details" style={{ padding: '2.5rem' }}>
-                    {!result.is_healthy && (
-                      <div className="severity-info" style={{ marginBottom: '2.5rem' }}>
-                        <span className="label" style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', display: 'block', marginBottom: '0.5rem' }}>{t("detection.severityLabel")}:</span>
-                        <span className={`value severity-${result.severity}`} style={{ fontSize: '1.25rem', fontWeight: 800, color: result.severity === 'critical' ? '#dc2626' : 'var(--secondary)' }}>
-                          {result.severity.toUpperCase()}
-                        </span>
-                      </div>
-                    )}
-
-                    <div className="action-steps">
-                      {result.is_healthy ? (
-                        <p className="healthy-tip" style={{ color: 'var(--text-muted)', lineHeight: 1.6 }}>{t("detection.healthyTip")}</p>
-                      ) : (
-                        <div className="next-steps-container">
-                          <h4 style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 800, textTransform: 'uppercase', fontSize: '0.85rem', color: 'var(--primary)', marginBottom: '1.5rem' }}><ArrowRight size={18} /> {t("detection.recommendedActions")}</h4>
-                          <div className="treatment-preview">
-                            {result.recommended_treatment ? (
-                              <div className="treatment-cta" style={{ background: 'var(--bg-main)', padding: '1.5rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-light)' }}>
-                                <p style={{ fontSize: '0.95rem', marginBottom: '1.5rem', lineHeight: 1.5 }}>Recommended treatment: <strong style={{ color: 'var(--secondary)' }}>{result.recommended_treatment.name}</strong></p>
-                                <Link
-                                  to="/treatment"
-                                  state={{ initialDiseaseId: result.disease_id, initialDiseaseName: result.disease_name }}
-                                  className="btn-primary"
-                                  style={{ display: 'flex', justifyContent: 'center', padding: '0.8rem', fontSize: '0.9rem', width: '100%' }}
-                                >
-                                  {t("detection.viewTreatmentGuide")}
-                                </Link>
-                              </div>
-                            ) : (
-                              <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>{t("detection.noTreatmentFound")}</p>
-                            )}
+                  {result.is_recognized === false ? (
+                    <>
+                      <div className="result-header" style={{ padding: '2.5rem', background: 'var(--bg-main)', borderBottom: '1px solid var(--border-light)' }}>
+                        <div className="status-pill" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.4rem 0.8rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', marginBottom: '1.5rem', background: 'var(--border-light)', color: 'var(--text-muted)' }}>
+                          <AlertTriangle size={16} />
+                          Unrecognized Leaf
+                        </div>
+                        <h2 style={{ fontSize: '1.8rem', fontWeight: 800, marginBottom: '2rem', color: 'var(--secondary)' }}>Outside Database Scope</h2>
+                        <div className="confidence-meter">
+                          <div className="meter-label" style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', fontWeight: 700, marginBottom: '0.5rem', opacity: 0.7 }}>
+                            <span>AI CONFIDENCE IN ANY KNOWN MATCH</span>
+                            <span>{result.confidence.toFixed(1)}%</span>
+                          </div>
+                          <div className="meter-bar" style={{ height: '8px', background: 'var(--border-light)', borderRadius: '100px', overflow: 'hidden' }}>
+                            <div className="meter-fill" style={{ width: `${result.confidence}%`, height: '100%', background: 'var(--text-muted)', transition: 'width 1s cubic-bezier(0.4, 0, 0.2, 1)' }}></div>
                           </div>
                         </div>
-                      )}
-                    </div>
-                  </div>
+                      </div>
+                      <div className="result-details" style={{ padding: '2.5rem' }}>
+                        <div className="action-steps">
+                          <h4 style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 800, textTransform: 'uppercase', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
+                            <ArrowRight size={18} /> EXPLANATION
+                          </h4>
+                          <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: '1rem', fontSize: '1rem' }}>
+                            {result.message || "This leaf could not be confidently matched with any known plant diseases in our specialized database."}
+                          </p>
+                          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', lineHeight: 1.5 }}>
+                            <strong>Note:</strong> We currently support specific crops like Apple, Cherry, Corn, Grape, Peach, Pepper, Potato, Squash, Orange, and Tomato. If this is a different species (like Mango), we won't be able to provide an accurate diagnosis right now. Or, the image might be too blurry or not show the leaf clearly.
+                          </p>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="result-header" style={{ padding: '2.5rem', background: 'var(--bg-main)', borderBottom: '1px solid var(--border-light)' }}>
+                        {/* Status pills help users quickly see if their plant is okay or not */}
+                        <div className={`status-pill ${result.is_healthy ? 'healthy' : 'infected'}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.4rem 0.8rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', marginBottom: '1.5rem', background: result.is_healthy ? 'var(--primary-subtle)' : '#fee2e2', color: result.is_healthy ? 'var(--primary)' : '#dc2626' }}>
+                          {result.is_healthy ? <CheckCircle size={16} /> : <AlertTriangle size={16} />}
+                          {result.is_healthy ? t("detection.healthyStatus") : t("detection.infectedStatus")}
+                        </div>
+                        <h2 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '2rem' }}>{result.disease_name}</h2>
+                        <div className="confidence-meter">
+                          <div className="meter-label" style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', fontWeight: 700, marginBottom: '0.5rem', opacity: 0.7 }}>
+                            <span>{t("detection.confidenceLabel")}</span>
+                            <span>{result.confidence.toFixed(1)}%</span>
+                          </div>
+                          <div className="meter-bar" style={{ height: '8px', background: 'var(--border-light)', borderRadius: '100px', overflow: 'hidden' }}>
+                            <div className="meter-fill" style={{ width: `${result.confidence}%`, height: '100%', background: 'var(--primary)', transition: 'width 1s cubic-bezier(0.4, 0, 0.2, 1)' }}></div>
+                          </div>
+                        </div>
+                      </div>
+
+
+                      <div className="result-details" style={{ padding: '2.5rem' }}>
+                        {!result.is_healthy && (
+                          <div className="severity-info" style={{ marginBottom: '2.5rem' }}>
+                            <span className="label" style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', display: 'block', marginBottom: '0.5rem' }}>{t("detection.severityLabel")}:</span>
+                            <span className={`value severity-${result.severity}`} style={{ fontSize: '1.25rem', fontWeight: 800, color: result.severity === 'critical' ? '#dc2626' : 'var(--secondary)' }}>
+                              {result.severity.toUpperCase()}
+                            </span>
+                          </div>
+                        )}
+
+                        <div className="action-steps">
+                          {result.is_healthy ? (
+                            <p className="healthy-tip" style={{ color: 'var(--text-muted)', lineHeight: 1.6 }}>{t("detection.healthyTip")}</p>
+                          ) : (
+                            <div className="next-steps-container">
+                              <h4 style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 800, textTransform: 'uppercase', fontSize: '0.85rem', color: 'var(--primary)', marginBottom: '1.5rem' }}><ArrowRight size={18} /> {t("detection.recommendedActions")}</h4>
+                              <div className="treatment-preview">
+                                {result.recommended_treatment ? (
+                                  <div className="treatment-cta" style={{ background: 'var(--bg-main)', padding: '1.5rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-light)' }}>
+                                    <p style={{ fontSize: '0.95rem', marginBottom: '1.5rem', lineHeight: 1.5 }}>Recommended treatment: <strong style={{ color: 'var(--secondary)' }}>{result.recommended_treatment.name}</strong></p>
+                                    <Link
+                                      to="/treatment"
+                                      state={{ initialDiseaseId: result.disease_id, initialDiseaseName: result.disease_name }}
+                                      className="btn-primary"
+                                      style={{ display: 'flex', justifyContent: 'center', padding: '0.8rem', fontSize: '0.9rem', width: '100%' }}
+                                    >
+                                      {t("detection.viewTreatmentGuide")}
+                                    </Link>
+                                  </div>
+                                ) : (
+                                  <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>{t("detection.noTreatmentFound")}</p>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
               ) : (
                 <div className="empty-result-state" style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '4rem', textAlign: 'center', background: 'var(--bg-main)', borderRadius: 'var(--radius-lg)', border: '2px dashed var(--border-light)' }}>
