@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { predictionService } from "../services/api";
-import { Upload, Camera, AlertTriangle, CheckCircle, ArrowRight, RefreshCw, X } from "lucide-react";
+import { Upload, Camera, AlertTriangle, CheckCircle, ArrowRight, RefreshCw, X, Activity } from "lucide-react";
 import { useLanguage } from "../context/LanguageContext";
 
 /**
@@ -11,6 +11,7 @@ import { useLanguage } from "../context/LanguageContext";
  */
 const DiseaseDetection = () => {
   const { t } = useLanguage();
+  const navigate = useNavigate();
   const [selectedFile, setSelectedFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [result, setResult] = useState(null);
@@ -137,6 +138,21 @@ const DiseaseDetection = () => {
     }
   };
 
+  const handleStartTreatment = async () => {
+    if (!result || !result.id) return;
+
+    try {
+      setLoading(true);
+      await predictionService.update(result.id, { treatment_status: 'in_progress' });
+      navigate('/treatment-history');
+    } catch (err) {
+      console.error("Error starting treatment:", err);
+      setError("Failed to start treatment tracking. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleReset = () => {
     setSelectedFile(null);
     setPreview(null);
@@ -246,37 +262,103 @@ const DiseaseDetection = () => {
                 <div className="result-card-v2 animate-slide-up" style={{ background: 'var(--bg-card)', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--glass-shadow)', overflow: 'hidden', border: '1px solid var(--border-light)' }}>
 
                   {result.is_recognized === false ? (
-                    <>
-                      <div className="result-header" style={{ padding: '2.5rem', background: 'var(--bg-main)', borderBottom: '1px solid var(--border-light)' }}>
-                        <div className="status-pill" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.4rem 0.8rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', marginBottom: '1.5rem', background: 'var(--border-light)', color: 'var(--text-muted)' }}>
-                          <AlertTriangle size={16} />
-                          Unrecognized Leaf
+                    <div style={{ padding: '0' }}>
+                      {/* Header Banner */}
+                      <div style={{
+                        padding: '2rem 2.5rem',
+                        background: 'linear-gradient(135deg, #fff7ed 0%, #fef3c7 100%)',
+                        borderBottom: '1px solid #fde68a',
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        gap: '1.25rem'
+                      }}>
+                        <div style={{
+                          width: '52px', height: '52px', borderRadius: '14px',
+                          background: '#f59e0b', display: 'flex', alignItems: 'center',
+                          justifyContent: 'center', flexShrink: 0
+                        }}>
+                          <AlertTriangle size={28} color="white" />
                         </div>
-                        <h2 style={{ fontSize: '1.8rem', fontWeight: 800, marginBottom: '2rem', color: 'var(--secondary)' }}>Outside Database Scope</h2>
-                        <div className="confidence-meter">
-                          <div className="meter-label" style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', fontWeight: 700, marginBottom: '0.5rem', opacity: 0.7 }}>
-                            <span>AI CONFIDENCE IN ANY KNOWN MATCH</span>
-                            <span>{result.confidence.toFixed(1)}%</span>
+                        <div>
+                          <div style={{ fontSize: '0.7rem', fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#92400e', marginBottom: '0.4rem' }}>
+                            Analysis Complete — Species Not Supported
                           </div>
-                          <div className="meter-bar" style={{ height: '8px', background: 'var(--border-light)', borderRadius: '100px', overflow: 'hidden' }}>
-                            <div className="meter-fill" style={{ width: `${result.confidence}%`, height: '100%', background: 'var(--text-muted)', transition: 'width 1s cubic-bezier(0.4, 0, 0.2, 1)' }}></div>
-                          </div>
+                          <h2 style={{ fontSize: '1.5rem', fontWeight: 900, color: '#78350f', margin: 0 }}>
+                            Leaf Not in Our Database
+                          </h2>
+                          <p style={{ margin: '0.5rem 0 0', color: '#92400e', fontSize: '0.9rem' }}>
+                            Confidence in any known match: <strong>{result.confidence.toFixed(1)}%</strong>
+                          </p>
                         </div>
                       </div>
-                      <div className="result-details" style={{ padding: '2.5rem' }}>
-                        <div className="action-steps">
-                          <h4 style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 800, textTransform: 'uppercase', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
-                            <ArrowRight size={18} /> EXPLANATION
+
+                      {/* Body */}
+                      <div style={{ padding: '2rem 2.5rem', display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
+
+                        {/* What this means */}
+                        <div>
+                          <h4 style={{ fontSize: '0.8rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)', marginBottom: '0.75rem' }}>
+                            What This Means
                           </h4>
-                          <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: '1rem', fontSize: '1rem' }}>
-                            {result.message || "This leaf could not be confidently matched with any known plant diseases in our specialized database."}
-                          </p>
-                          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', lineHeight: 1.5 }}>
-                            <strong>Note:</strong> We currently support specific crops like Apple, Cherry, Corn, Grape, Peach, Pepper, Potato, Squash, Orange, and Tomato. If this is a different species (like Mango), we won't be able to provide an accurate diagnosis right now. Or, the image might be too blurry or not show the leaf clearly.
+                          <p style={{ color: 'var(--text-secondary)', lineHeight: 1.7, fontSize: '0.95rem', margin: 0 }}>
+                            Our AI model is trained on a specific set of plant species. The uploaded image did not match any of the {result.confidence.toFixed(1) < 40 ? 'supported leaf patterns' : 'known disease patterns'} with enough confidence to provide a reliable diagnosis.
                           </p>
                         </div>
+
+                        {/* Supported Plants */}
+                        <div style={{ background: 'var(--bg-main)', borderRadius: '12px', padding: '1.25rem', border: '1px solid var(--border-light)' }}>
+                          <h4 style={{ fontSize: '0.8rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)', marginBottom: '1rem' }}>
+                            Currently Supported Crops
+                          </h4>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                            {['Apple', 'Cherry', 'Corn', 'Grape', 'Orange', 'Peach', 'Pepper', 'Potato', 'Raspberry', 'Soybean', 'Squash', 'Strawberry', 'Tomato', 'Blueberry'].map(plant => (
+                              <span key={plant} style={{
+                                padding: '0.3rem 0.75rem', borderRadius: '100px',
+                                background: 'var(--primary-subtle)', color: 'var(--primary)',
+                                fontSize: '0.78rem', fontWeight: 700
+                              }}>{plant}</span>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* What to do */}
+                        <div>
+                          <h4 style={{ fontSize: '0.8rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)', marginBottom: '0.75rem' }}>
+                            Recommended Actions
+                          </h4>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                            {[
+                              { icon: '📸', text: 'Re-upload a clear photo showing only the leaf.' },
+                              { icon: '🔍', text: 'Ensure the leaf belongs to one of the supported crops listed above.' },
+                              { icon: '✂️', text: 'Crop the image to focus on the leaf by removing background clutter.' },
+                              { icon: '📞', text: 'Consult a local agricultural expert for unsupported species.' }
+                            ].map((step, i) => (
+                              <div key={i} style={{
+                                display: 'flex', alignItems: 'flex-start', gap: '0.75rem',
+                                padding: '0.75rem', borderRadius: '8px', background: 'var(--bg-main)',
+                                border: '1px solid var(--border-light)'
+                              }}>
+                                <span style={{ fontSize: '1.1rem', flexShrink: 0 }}>{step.icon}</span>
+                                <span style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>{step.text}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* CTA */}
+                        <button
+                          onClick={() => { setResult(null); setPreview(null); }}
+                          style={{
+                            width: '100%', padding: '0.9rem', borderRadius: '10px',
+                            background: 'var(--primary)', color: 'white', border: 'none',
+                            fontWeight: 800, fontSize: '1rem', cursor: 'pointer',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem'
+                          }}
+                        >
+                          Try Another Image
+                        </button>
                       </div>
-                    </>
+                    </div>
                   ) : (
                     <>
                       <div className="result-header" style={{ padding: '2.5rem', background: 'var(--bg-main)', borderBottom: '1px solid var(--border-light)' }}>
@@ -318,14 +400,26 @@ const DiseaseDetection = () => {
                                 {result.recommended_treatment ? (
                                   <div className="treatment-cta" style={{ background: 'var(--bg-main)', padding: '1.5rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-light)' }}>
                                     <p style={{ fontSize: '0.95rem', marginBottom: '1.5rem', lineHeight: 1.5 }}>Recommended treatment: <strong style={{ color: 'var(--secondary)' }}>{result.recommended_treatment.name}</strong></p>
-                                    <Link
-                                      to="/treatment"
-                                      state={{ initialDiseaseId: result.disease_id, initialDiseaseName: result.disease_name }}
-                                      className="btn-primary"
-                                      style={{ display: 'flex', justifyContent: 'center', padding: '0.8rem', fontSize: '0.9rem', width: '100%' }}
-                                    >
-                                      {t("detection.viewTreatmentGuide")}
-                                    </Link>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                                      <button
+                                        onClick={handleStartTreatment}
+                                        className="btn-primary"
+                                        disabled={loading}
+                                        style={{ width: '100%', justifyContent: 'center', gap: '0.5rem', background: 'var(--secondary)' }}
+                                      >
+                                        {loading ? <RefreshCw size={18} className="animate-spin" /> : <Activity size={18} />}
+                                        Start Treatment Progress
+                                      </button>
+                                      
+                                      <Link
+                                        to="/treatment"
+                                        state={{ initialDiseaseId: result.disease_id, initialDiseaseName: result.disease_name }}
+                                        className="btn-secondary"
+                                        style={{ display: 'flex', justifyContent: 'center', padding: '0.8rem', fontSize: '0.9rem', width: '100%' }}
+                                      >
+                                        {t("detection.viewTreatmentGuide")}
+                                      </Link>
+                                    </div>
                                   </div>
                                 ) : (
                                   <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>{t("detection.noTreatmentFound")}</p>

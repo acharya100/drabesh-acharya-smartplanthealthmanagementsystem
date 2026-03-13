@@ -14,13 +14,10 @@ def format_price(price_str):
     # Remove existing NPR prefix if any to avoid duplication
     clean_str = price_str.replace('NPR', '').strip()
     
-    # If it's already in a good format, just return it with NPR
     if re.match(r'^\d+\s*-\s*\d+$', clean_str) or re.match(r'^\d+$', clean_str):
         return f"NPR {clean_str}"
     
-    # If it has a dollar sign, let's assume 1 USD = 130 NPR roughly for conversion if needed, 
-    # but the user wanted NPR specifically and we previously populated with NPR bits.
-    # Let's just ensure the NPR prefix is there.
+  
     if '$' in price_str:
         # Convert $ to NPR (rough estimate for placeholders)
         try:
