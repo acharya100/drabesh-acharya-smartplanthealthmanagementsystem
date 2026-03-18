@@ -7,7 +7,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { predictionService } from "../services/api";
-import { Calendar, AlertTriangle, CheckCircle, ArrowRight, Clock, Trash2, Search, Edit, X } from "lucide-react";
+import { Calendar, AlertTriangle, CheckCircle, ArrowRight, Clock, Trash2, Search, Edit, X, Activity } from "lucide-react";
 import { useLanguage } from "../context/LanguageContext";
 
 const History = () => {
@@ -198,17 +198,38 @@ const History = () => {
                                             <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                                                 {/* View Treatment link for ALL cases EXCEPT Unrecognized */}
                                                 {pred.disease_name !== 'Unrecognized' && pred.is_plant_image !== false && (
-                                                    <Link
-                                                        to="/treatment"
-                                                        state={{
-                                                            initialDiseaseId: pred.predicted_disease,
-                                                            initialDiseaseName: pred.disease_name
-                                                        }}
-                                                        className="btn-secondary"
-                                                        style={{ fontSize: '0.85rem', padding: '0.5rem 1rem' }}
-                                                    >
-                                                        {t("history.viewTreatment")}
-                                                    </Link>
+                                                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                                        <Link
+                                                            to="/treatment"
+                                                            state={{
+                                                                initialDiseaseId: pred.predicted_disease,
+                                                                initialDiseaseName: pred.disease_name
+                                                            }}
+                                                            className="btn-secondary"
+                                                            style={{ fontSize: '0.85rem', padding: '0.5rem 1rem' }}
+                                                        >
+                                                            {t("history.viewTreatment")}
+                                                        </Link>
+                                                        
+                                                        {pred.treatment_status === 'untreated' && !pred.is_healthy && (
+                                                            <button
+                                                                onClick={async () => {
+                                                                    try {
+                                                                        await predictionService.update(pred.id, { treatment_status: 'in_progress' });
+                                                                        loadHistory();
+                                                                    } catch (err) {
+                                                                        console.error(err);
+                                                                    }
+                                                                }}
+                                                                className="btn-primary"
+                                                                style={{ fontSize: '0.85rem', padding: '0.5rem 1rem', background: 'var(--secondary)' }}
+                                                                title="Move to Treatment History"
+                                                            >
+                                                                <Activity size={16} style={{ marginRight: '0.4rem' }} />
+                                                                Start Treatment
+                                                            </button>
+                                                        )}
+                                                    </div>
                                                 )}
                                                 <button
                                                     onClick={() => handleEdit(pred)}

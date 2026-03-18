@@ -252,6 +252,13 @@ class Treatment(models.Model):
     )
     
     # Metadata
+    related_products = models.ManyToManyField(
+        'ecommerce.Product',
+        blank=True,
+        related_name='treatments',
+        help_text="Products from the store that are recommended for this treatment"
+    )
+    
     created_at = models.DateTimeField(
         auto_now_add=True,
         help_text="Timestamp when the treatment was created"

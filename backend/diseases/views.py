@@ -41,10 +41,10 @@ class DiseaseViewSet(viewsets.ModelViewSet):
     ordering = ['name']
 
     def get_serializer_class(self):
-       
+        """Return the appropriate serializer based on action."""
         if self.action == 'list':
             return DiseaseListSerializer
-        elif self.action in ['create', 'update', 'partial_update']:
+        if self.action in ['create', 'update', 'partial_update']:
             return DiseaseCreateUpdateSerializer
         return DiseaseDetailSerializer
 
@@ -78,7 +78,7 @@ class TreatmentViewSet(viewsets.ModelViewSet):
     search_fields = ['name', 'description', 'instructions', 'products_needed']
 
     def get_serializer_class(self):
-      
+        """Return the appropriate serializer based on action."""
         if self.action in ['create', 'update', 'partial_update']:
             return TreatmentCreateUpdateSerializer
         if self.action == 'retrieve':

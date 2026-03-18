@@ -6,6 +6,7 @@ from rest_framework import serializers
 from .models import Disease, Treatment
 from plants.models import Plant
 from plants.serializers import PlantListSerializer
+from ecommerce.serializers import ProductSerializer
 
 
 class TreatmentListSerializer(serializers.ModelSerializer):
@@ -32,8 +33,9 @@ class TreatmentListSerializer(serializers.ModelSerializer):
             'is_highly_effective',
             'is_preventive',
             'cost_estimate',
+            'related_products',
         ]
-        read_only_fields = ['id']
+        read_only_fields = ['id', 'related_products']
 
 
 class TreatmentDetailSerializer(serializers.ModelSerializer):
@@ -53,6 +55,9 @@ class TreatmentDetailSerializer(serializers.ModelSerializer):
     
     # Disease name for context
     disease_name = serializers.CharField(source='disease.name', read_only=True)
+    
+    # Related products from the store
+    related_products = ProductSerializer(many=True, read_only=True)
     
     class Meta:
         model = Treatment
@@ -76,10 +81,11 @@ class TreatmentDetailSerializer(serializers.ModelSerializer):
             'precautions',
             'cost_estimate',
             'is_preventive',
+            'related_products',
             'created_at',
             'updated_at',
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'related_products', 'created_at', 'updated_at']
     
     def get_instruction_steps(self, obj):
 
@@ -103,6 +109,9 @@ class DiseaseListSerializer(serializers.ModelSerializer):
         read_only=True
     )
     
+    # Nested serializers for related data
+    treatments = TreatmentListSerializer(many=True, read_only=True)
+    
     # Computed properties
     affected_plant_count = serializers.ReadOnlyField()
     treatment_count = serializers.ReadOnlyField()
@@ -124,6 +133,7 @@ class DiseaseListSerializer(serializers.ModelSerializer):
             'spread_rate',
             'affected_plant_count',
             'treatment_count',
+            'treatments',
             'image',
             'created_at',
         ]

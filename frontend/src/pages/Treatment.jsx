@@ -501,9 +501,41 @@ const Treatment = () => {
                           <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                             <Package size={18} /> {t("treatment.requiredProducts")}
                           </h3>
-                          <p style={{ padding: '1rem', background: 'var(--bg-card)', border: '1px solid var(--border-light)', borderRadius: '6px' }}>
-                            {selectedTreatment.products_needed}
-                          </p>
+                          <div style={{ padding: '1rem', background: 'var(--bg-card)', border: '1px solid var(--border-light)', borderRadius: '6px' }}>
+                            {selectedTreatment.related_products && selectedTreatment.related_products.length > 0 ? (
+                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
+                                {selectedTreatment.related_products.map(product => (
+                                  <div 
+                                    key={product.id}
+                                    onClick={() => navigate('/ecommerce', { state: { productId: product.id } })}
+                                    className="product-link-badge"
+                                    style={{
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      gap: '0.5rem',
+                                      padding: '0.5rem 0.75rem',
+                                      background: 'white',
+                                      border: '1px solid var(--primary)',
+                                      borderRadius: '6px',
+                                      cursor: 'pointer',
+                                      fontSize: '0.85rem',
+                                      color: 'var(--primary)',
+                                      fontWeight: 600,
+                                      transition: 'all 0.2s'
+                                    }}
+                                  >
+                                    <Package size={14} />
+                                    <span>{product.name}</span>
+                                    <span style={{ fontSize: '0.75rem', opacity: 0.7 }}>NPR {product.price}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <p style={{ margin: 0, color: 'var(--text-secondary)' }}>
+                                {selectedTreatment.products_needed}
+                              </p>
+                            )}
+                          </div>
                         </div>
                         <div>
                           <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>

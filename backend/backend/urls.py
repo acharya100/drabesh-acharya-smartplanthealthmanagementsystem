@@ -40,6 +40,7 @@ def api_root(request):
             "plants": "/api/plants/",
             "diseases": "/api/diseases/",
             "predictions": "/api/predictions/",
+            "ecommerce": "/api/ecommerce/",
         }
     })
 
@@ -51,6 +52,7 @@ urlpatterns = [
     path('api/plants/', include('plants.urls')),
     path('api/diseases/', include('diseases.urls')),
     path('api/predictions/', include('predictions.urls')),
+    path('api/ecommerce/', include('ecommerce.urls')),
     path('', api_root),
 ]
 

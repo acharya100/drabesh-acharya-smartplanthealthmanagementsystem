@@ -139,6 +139,13 @@ body {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
+.product-link-badge:hover {
+  background: var(--primary) !important;
+  color: white !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(26, 77, 46, 0.2);
+}
+
 button,
 input,
 select,

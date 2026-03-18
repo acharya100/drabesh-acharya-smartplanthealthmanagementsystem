@@ -124,7 +124,10 @@ const DiseaseDetection = () => {
       const response = await predictionService.detect(formData);
 
       if (response.data.success) {
-        setResult(response.data.data);
+        setResult({
+          ...response.data.data,
+          id: response.data.prediction_id
+        });
       } else {
         setError(response.data.message || t("detection.detectionFailed") || "Detection failed");
       }

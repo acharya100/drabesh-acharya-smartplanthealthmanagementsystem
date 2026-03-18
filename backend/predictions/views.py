@@ -125,7 +125,17 @@ class PredictionViewSet(viewsets.ModelViewSet):
                     # Try to link to a database disease entry
                     disease_name = results['disease_name']
                     if not results['is_healthy']:
+                        # Try exact or icontains first
                         disease_obj = Disease.objects.filter(name__icontains=disease_name).first()
+                        
+                        
+                        # This handles "Tomato Spider Mites Two-Spotted Spider Mite" matching "Tomato Spider Mites"
+                        if not disease_obj:
+                            for d in Disease.objects.all():
+                                if d.name.lower() in disease_name.lower():
+                                    disease_obj = d
+                                    break
+                                    
                         if disease_obj:
                             prediction_obj.predicted_disease = disease_obj
                     
