@@ -124,13 +124,14 @@ const History = () => {
                                 {filteredPredictions.map(pred => (
                                     <div key={pred.id} className="history-card animate-slide-up" style={{
                                         display: 'flex',
-                                        background: 'var(--bg-card)',
+                                        background: 'var(--bg-surface-1)',
                                         borderRadius: 'var(--radius-md)',
                                         border: '1px solid var(--border-light)',
                                         overflow: 'hidden',
                                         padding: '1.5rem',
                                         alignItems: 'center',
-                                        gap: '2rem'
+                                        gap: '2rem',
+                                        boxShadow: 'var(--shadow-sm)'
                                     }}>
                                         {/* Image Thumbnail */}
                                         <div style={{ width: '100px', height: '100px', borderRadius: '8px', overflow: 'hidden', flexShrink: 0 }}>
@@ -166,8 +167,8 @@ const History = () => {
                                                     display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
                                                     padding: '0.3rem 1rem', borderRadius: '100px',
                                                     fontSize: '0.75rem', fontWeight: 800,
-                                                    background: pred.is_plant_image === false ? '#f3f4f6' : (pred.is_healthy ? 'var(--primary-subtle)' : '#fee2e2'),
-                                                    color: pred.is_plant_image === false ? '#6b7280' : (pred.is_healthy ? 'var(--primary)' : '#dc2626')
+                                                    background: pred.is_plant_image === false ? 'var(--bg-surface-2)' : (pred.is_healthy ? 'var(--primary-subtle)' : 'var(--danger-subtle)'),
+                                                    color: pred.is_plant_image === false ? 'var(--text-muted)' : (pred.is_healthy ? 'var(--primary)' : 'var(--danger)')
                                                 }}>
                                                     {pred.is_plant_image === false ? <X size={14} /> : (pred.is_healthy ? <CheckCircle size={14} /> : <AlertTriangle size={14} />)}
                                                     {pred.is_plant_image === false ? t("history.badgeNonPlant") : (pred.is_healthy ? t("history.optionHealthy") : t("history.badgeDiseased"))}
@@ -179,7 +180,7 @@ const History = () => {
 
                                                 {pred.severity && !pred.is_healthy && pred.is_plant_image !== false && (
                                                     <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                                                        {t("history.severity")}: <strong style={{ textTransform: 'uppercase', color: pred.severity === 'critical' ? 'red' : 'inherit' }}>{pred.severity}</strong>
+                                                        {t("history.severity")}: <strong style={{ textTransform: 'uppercase', color: pred.severity === 'critical' ? 'var(--danger)' : 'inherit' }}>{pred.severity}</strong>
                                                     </span>
                                                 )}
 
@@ -203,14 +204,15 @@ const History = () => {
                                                             to="/treatment"
                                                             state={{
                                                                 initialDiseaseId: pred.predicted_disease,
-                                                                initialDiseaseName: pred.disease_name
+                                                                initialDiseaseName: pred.disease_name,
+                                                                fromHistory: true
                                                             }}
                                                             className="btn-secondary"
                                                             style={{ fontSize: '0.85rem', padding: '0.5rem 1rem' }}
                                                         >
                                                             {t("history.viewTreatment")}
                                                         </Link>
-                                                        
+
                                                         {pred.treatment_status === 'untreated' && !pred.is_healthy && (
                                                             <button
                                                                 onClick={async () => {
@@ -222,11 +224,11 @@ const History = () => {
                                                                     }
                                                                 }}
                                                                 className="btn-primary"
-                                                                style={{ fontSize: '0.85rem', padding: '0.5rem 1rem', background: 'var(--secondary)' }}
+                                                                style={{ fontSize: '0.85rem', padding: '0.5rem 1rem' }}
                                                                 title="Move to Treatment History"
                                                             >
                                                                 <Activity size={16} style={{ marginRight: '0.4rem' }} />
-                                                                Start Treatment
+                                                                {t("dashboard.actionTreatments") || "Start Treatment"}
                                                             </button>
                                                         )}
                                                     </div>

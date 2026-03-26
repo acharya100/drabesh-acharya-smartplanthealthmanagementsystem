@@ -1,94 +1,97 @@
 import os
+import sys
 import django
-import random
 
+# Setup Django environment
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings')
 django.setup()
 
 from ecommerce.models import Category, Product
+from django.utils.text import slugify
 
-def run():
-    print("Seeding Ecommerce Categories and Products...")
-    
-    # 1. Categories
+def seed_ecommerce():
+    print("Seeding ecommerce data...")
+
+    # Categories
     categories_data = [
-        {'name': 'Organic Fertilizers', 'slug': 'organic-fertilizers', 'description': 'Natural solutions for soil health'},
-        {'name': 'Bio-Pesticides', 'slug': 'bio-pesticides', 'description': 'Safe pest control for your plants'},
-        {'name': 'Fungicides', 'slug': 'fungicides', 'description': 'Treatment for fungal diseases'},
-        {'name': 'Gardening Tools', 'slug': 'gardening-tools', 'description': 'Essential tools for every gardener'}
+        {"name": "Fertilizers & Nutrients", "description": "High-quality fertilizers to boost plant growth."},
+        {"name": "Pesticides & Fungicides", "description": "Protect your plants from diseases and pests."},
+        {"name": "Tools & Equipment", "description": "Professional gardening tools."},
+        {"name": "Seeds & Bulbs", "description": "Premium seeds for your garden."},
     ]
-    
+
     categories = {}
     for cat_data in categories_data:
         cat, created = Category.objects.get_or_create(
-            slug=cat_data['slug'],
-            defaults={'name': cat_data['name'], 'description': cat_data['description']}
+            name=cat_data["name"],
+            defaults={"description": cat_data["description"]}
         )
-        categories[cat_data['slug']] = cat
         if created:
-            print(f"Created category: {cat.name}")
+            cat.slug = slugify(cat.name)
+            cat.save()
+        categories[cat.name] = cat
+        print(f"Created category: {cat.name}")
 
-    # 2. Products
+    # Products
     products_data = [
         {
-            'category': 'organic-fertilizers',
-            'name': 'Compressed Neem Cake',
-            'description': 'Excellent organic fertilizer and natural pesticide for soil application.',
-            'price': 450.00,
-            'stock': 50
+            "category": categories["Fertilizers & Nutrients"],
+            "name": "Premium NPK 19-19-19 Fertilizer",
+            "description": "A balanced, water-soluble fertilizer ideal for all stages of plant growth. Enhances root development, flowering, and fruiting.",
+            "price": 850.00,
+            "stock": 150,
         },
         {
-            'category': 'bio-pesticides',
-            'name': 'Cold Pressed Neem Oil',
-            'description': 'Pure organic neem oil for controlling aphids, whiteflies, and mites.',
-            'price': 650.00,
-            'stock': 100
+            "category": categories["Fertilizers & Nutrients"],
+            "name": "Organic Neem Cake",
+            "description": "100% organic manure that acts as an excellent soil conditioner and natural pesticide. Safe for organic farming.",
+            "price": 450.00,
+            "stock": 200,
         },
         {
-            'category': 'fungicides',
-            'name': 'Copper Fungicide Spray',
-            'description': 'Effective against blight, leaf spot, and downy mildew.',
-            'price': 850.00,
-            'stock': 40
+            "category": categories["Pesticides & Fungicides"],
+            "name": "Copper Oxychloride 50% WP Fungicide",
+            "description": "Broad-spectrum fungicide effective against Early Blight, Late Blight, and Leaf Spot diseases.",
+            "price": 750.00,
+            "stock": 100,
         },
         {
-            'category': 'gardening-tools',
-            'name': 'Professional Pruning Shears',
-            'description': 'Sharp and durable shears for clean cuts to prevent disease spread.',
-            'price': 1200.00,
-            'stock': 25
+            "category": categories["Tools & Equipment"],
+            "name": "Professional Pruning Shears",
+            "description": "Ergonomic, rust-resistant pruning shears for precise cutting. Features a safety lock and comfortable grip.",
+            "price": 1200.00,
+            "stock": 50,
         },
         {
-            'category': 'bio-pesticides',
-            'name': 'Liquid Seaweed Extract',
-            'description': 'Boosts plant immunity and resistance to stress and diseases.',
-            'price': 550.00,
-            'stock': 75
+            "category": categories["Tools & Equipment"],
+            "name": "Smart Soil Moisture Meter",
+            "description": "Accurately measures soil moisture, pH, and sunlight levels. Essential tool for preventing overwatering.",
+            "price": 1500.00,
+            "stock": 75,
+        },
+        {
+            "category": categories["Seeds & Bulbs"],
+            "name": "Hybrid Tomato Seeds (F1)",
+            "description": "High-yielding, disease-resistant tomato seeds suitable for both greenhouse and open-field cultivation.",
+            "price": 300.00,
+            "stock": 500,
         }
     ]
 
     for prod_data in products_data:
-        cat = categories.get(prod_data['category'])
-        if cat:
-            prod, created = Product.objects.get_or_create(
-                name=prod_data['name'],
-                defaults={
-                    'category': cat,
-                    'description': prod_data['description'],
-                    'price': prod_data['price'],
-                    'stock': prod_data['stock']
-                }
-            )
-            if created:
-                print(f"Created product: {prod.name}")
-            else:
-                # Update existing
-                prod.price = prod_data['price']
-                prod.stock = prod_data['stock']
-                prod.save()
-                print(f"Updated product: {prod.name}")
+        prod, created = Product.objects.get_or_create(
+            name=prod_data["name"],
+            defaults={
+                "category": prod_data["category"],
+                "description": prod_data["description"],
+                "price": prod_data["price"],
+                "stock": prod_data["stock"]
+            }
+        )
+        print(f"{'Created' if created else 'Skipped'} product: {prod.name}")
 
-    print("\n✅ Ecommerce seeding finished successfully!")
+    print("Seed complete!")
 
 if __name__ == '__main__':
-    run()
+    seed_ecommerce()

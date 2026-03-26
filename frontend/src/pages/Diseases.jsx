@@ -286,7 +286,7 @@ const Diseases = () => {
                                         </select>
                                     </div>
 
-                                    <div className="form-checkbox-group" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', border: '1px solid var(--border-light)', padding: '1.5rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-main)' }}>
+                                    <div className="form-checkbox-group" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', border: '1px solid var(--border-light)', padding: '1.5rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-surface-inner)' }}>
                                         <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 'bold' }}>
                                             <input
                                                 type="checkbox"
@@ -352,7 +352,7 @@ const Diseases = () => {
                                                     onClick={() => handlePlantToggle(plant.id)}
                                                     style={{
                                                         padding: '0.5rem', border: '1px solid var(--border-light)', borderRadius: '4px', cursor: 'pointer', textAlign: 'center', fontSize: '0.8rem', fontWeight: 600,
-                                                        background: newDisease.affected_plant_ids?.includes(plant.id) ? 'var(--primary-subtle)' : 'var(--bg-card)',
+                                                        background: newDisease.affected_plant_ids?.includes(plant.id) ? 'var(--primary-subtle)' : 'var(--bg-surface-2)',
                                                         color: newDisease.affected_plant_ids?.includes(plant.id) ? 'var(--primary)' : 'inherit',
                                                         borderColor: newDisease.affected_plant_ids?.includes(plant.id) ? 'var(--primary)' : 'var(--border-light)'
                                                     }}
@@ -385,12 +385,12 @@ const Diseases = () => {
                         <div className="add-plant-form">
                             <div className="form-grid">
                                 <div className="form-left">
-                                    <div style={{ background: 'var(--bg-main)', padding: '2rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-light)' }}>
+                                    <div style={{ background: 'var(--bg-surface-inner)', padding: '2rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-light)' }}>
                                         <h4 style={{ marginBottom: '1.5rem', color: 'var(--primary)', textTransform: 'uppercase', fontSize: '0.8rem', letterSpacing: '0.1em' }}>Profile Summary</h4>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                                             <div>
                                                 <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700 }}>SEVERITY</span>
-                                                <span style={{ fontSize: '1rem', fontWeight: 800, color: selectedDiseaseDetail.severity_level === 'critical' ? '#dc2626' : 'var(--secondary)' }}>{selectedDiseaseDetail.severity_level.toUpperCase()}</span>
+                                                <span style={{ fontSize: '1rem', fontWeight: 800, color: selectedDiseaseDetail.severity_level === 'critical' ? 'var(--danger)' : 'var(--text-main)' }}>{selectedDiseaseDetail.severity_level.toUpperCase()}</span>
                                             </div>
                                             <div>
                                                 <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700 }}>TYPE</span>
@@ -412,7 +412,7 @@ const Diseases = () => {
                                     <div style={{ marginBottom: '2rem' }}>
                                         <h4 style={{ color: 'var(--primary)', marginBottom: '0.75rem', textTransform: 'uppercase', fontSize: '0.8rem', fontWeight: 800 }}>Symptoms</h4>
                                         {/* This bubble provides a nice focus for reading symptoms */}
-                                        <p style={{ lineHeight: 1.8, background: 'var(--bg-main)', padding: '1.5rem', borderRadius: '8px', borderLeft: '4px solid var(--primary)' }}>{selectedDiseaseDetail.symptoms || "Detailed symptoms not recorded."}</p>
+                                        <p style={{ lineHeight: 1.8, background: 'var(--bg-surface-inner)', padding: '1.5rem', borderRadius: '8px', borderLeft: '4px solid var(--primary)' }}>{selectedDiseaseDetail.symptoms || "Detailed symptoms not recorded."}</p>
                                     </div>
 
                                     <div style={{ marginBottom: '2rem' }}>
@@ -424,7 +424,7 @@ const Diseases = () => {
                                         <h4 style={{ color: 'var(--primary)', marginBottom: '1rem', textTransform: 'uppercase', fontSize: '0.8rem', fontWeight: 800 }}>Commonly Affected Plants</h4>
                                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
                                             {selectedDiseaseDetail.affected_plants?.map((plant, i) => (
-                                                <span key={i} style={{ padding: '0.4rem 0.8rem', background: 'var(--bg-main)', border: '1px solid var(--border-light)', borderRadius: '4px', fontSize: '0.85rem' }}>{plant.name}</span>
+                                                <span key={i} style={{ padding: '0.4rem 0.8rem', background: 'var(--bg-surface-inner)', border: '1px solid var(--border-light)', borderRadius: '4px', fontSize: '0.85rem' }}>{plant.name}</span>
                                             ))}
                                         </div>
                                     </div>

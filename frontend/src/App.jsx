@@ -13,6 +13,11 @@ import Settings from "./pages/Settings";
 import History from "./pages/History";
 import TreatmentHistory from "./pages/TreatmentHistory";
 import AdminPanel from "./pages/AdminPanel";
+import Ecommerce from "./pages/Ecommerce";
+import Cart from "./pages/Cart";
+import OrderHistory from "./pages/OrderHistory";
+import { CartProvider } from "./context/CartContext";
+import { ThemeProvider } from "./context/ThemeContext";
 import { useEffect } from "react";
 import "./App.css";
 
@@ -35,13 +40,10 @@ const AdminRoute = ({ children }) => {
 };
 
 const App = () => {
-  useEffect(() => {
-    const theme = localStorage.getItem("theme") || "light";
-    document.documentElement.setAttribute("data-theme", theme);
-  }, []);
-
   return (
-    <BrowserRouter>
+    <ThemeProvider>
+      <CartProvider>
+      <BrowserRouter>
       <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/signup" element={<SignUp />} />
@@ -108,6 +110,15 @@ const App = () => {
             </ProtectedRoute>
           }
         />
+        {/* Alias for underscore version */}
+        <Route
+          path="/treatment_history"
+          element={
+            <ProtectedRoute>
+              <TreatmentHistory />
+            </ProtectedRoute>
+          }
+        />
 
         <Route
           path="/settings"
@@ -126,8 +137,34 @@ const App = () => {
             </AdminRoute>
           }
         />
+        <Route
+          path="/store"
+          element={
+            <ProtectedRoute>
+              <Ecommerce />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/cart"
+          element={
+            <ProtectedRoute>
+              <Cart />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/orders"
+          element={
+            <ProtectedRoute>
+              <OrderHistory />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
     </BrowserRouter>
+      </CartProvider>
+    </ThemeProvider>
   );
 };
 

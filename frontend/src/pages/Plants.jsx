@@ -416,7 +416,7 @@ const Plants = () => {
                     </div>
                   </div>
 
-                  <div className="form-checkbox-group" style={{ display: 'flex', gap: '2rem', border: '1px solid var(--border-light)', padding: '1.5rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-main)' }}>
+                  <div className="form-checkbox-group" style={{ display: 'flex', gap: '2rem', border: '1px solid var(--border-light)', padding: '1.5rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-surface-inner)' }}>
                     <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 'bold' }}>
                       <input type="checkbox" checked={newPlant.is_edible} onChange={(e) => setNewPlant({ ...newPlant, is_edible: e.target.checked })} style={{ width: '20px', height: '20px' }} />
                       {t("plants.edibleLabel")}
@@ -452,7 +452,7 @@ const Plants = () => {
                   <div className="preview-image-wrapper">
                     <img src={selectedPlant.image || "https://images.unsplash.com/photo-1545239351-ef35f43d514b?q=80&w=500&h=400&auto=format&fit=crop"} alt={selectedPlant.name} />
                   </div>
-                  <div style={{ background: 'var(--bg-main)', padding: '1.5rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-light)' }}>
+                  <div style={{ background: 'var(--bg-surface-inner)', padding: '1.5rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-light)' }}>
                     <h4 style={{ marginBottom: '1rem', color: 'var(--primary)' }}>{t("plants.quickStats")}</h4>
                     <div style={{ fontSize: '0.9rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -484,7 +484,7 @@ const Plants = () => {
                   <div style={{ display: 'flex', gap: '1rem' }}>
                     {selectedPlant.is_edible && <span className="badge badge-edible" style={{ padding: '0.6rem 1.2rem' }}>{t("plants.edibleSpecies")}</span>}
                     {selectedPlant.is_toxic && <span className="badge badge-toxic" style={{ padding: '0.6rem 1.2rem' }}>{t("plants.toxicSpecies")}</span>}
-                    {selectedPlant.is_medicinal && <span className="badge" style={{ padding: '0.6rem 1.2rem', background: '#e0f2fe', color: '#0369a1' }}>{t("plants.medicinalUse")}</span>}
+                    {selectedPlant.is_medicinal && <span className="badge" style={{ padding: '0.6rem 1.2rem', background: 'var(--info-subtle)', color: 'var(--info)', border: '1px solid var(--info)' }}>{t("plants.medicinalUse")}</span>}
                   </div>
                 </div>
               </div>

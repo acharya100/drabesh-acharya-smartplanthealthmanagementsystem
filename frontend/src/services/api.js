@@ -134,4 +134,24 @@ export const adminService = {
     toggleStaff: (userId) => api.post(`/auth/admin/users/${userId}/toggle-staff/`),
 };
 
+// --- Ecommerce Services ---
+export const eCommerceService = {
+    getCategories: () => api.get('/ecommerce/categories/'),
+    getProducts: (params) => api.get('/ecommerce/products/', { params }),
+    getOrders: () => api.get('/ecommerce/orders/'),
+    placeOrder: (orderData) => api.post('/ecommerce/orders/', orderData),
+    // Reviews
+    getReviews: (productId) => api.get('/ecommerce/reviews/', { params: { product: productId } }),
+    submitReview: (reviewData) => api.post('/ecommerce/reviews/', reviewData),
+    updateReview: (id, data) => api.patch(`/ecommerce/reviews/${id}/`, data),
+    deleteReview: (id) => api.delete(`/ecommerce/reviews/${id}/`),
+    // Saved Addresses
+    getAddresses: () => api.get('/ecommerce/addresses/'),
+    saveAddress: (data) => api.post('/ecommerce/addresses/', data),
+    deleteAddress: (id) => api.delete(`/ecommerce/addresses/${id}/`),
+    setDefaultAddress: (id) => api.post(`/ecommerce/addresses/${id}/set_default/`),
+    // Disease Recommendations
+    getRecommendations: (diseaseName) => api.get('/ecommerce/disease-mappings/recommendations/', { params: { disease_name: diseaseName } }),
+};
+
 export default api;

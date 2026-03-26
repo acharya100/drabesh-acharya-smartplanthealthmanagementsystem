@@ -305,7 +305,7 @@ const TreatmentFormModal = ({ isOpen, onClose, onSubmit, initialData = null, dis
                             disabled={loading}
                             style={{
                                 padding: '0.75rem 1.5rem', border: '1px solid #ddd', borderRadius: '8px',
-                                background: 'white', cursor: 'pointer', fontWeight: 600
+                                background: 'var(--bg-card)', cursor: 'pointer', fontWeight: 600
                             }}
                         >
                             Cancel

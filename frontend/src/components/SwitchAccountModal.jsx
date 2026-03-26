@@ -173,16 +173,16 @@ const SwitchAccountModal = ({ isOpen, onClose }) => {
                     )}
 
                     {error && (
-                        <div style={{ margin: '1rem', color: '#991b1b', fontSize: '0.85rem', textAlign: 'center', background: '#fee2e2', padding: '0.75rem', borderRadius: 'var(--radius-sm)' }}>
+                        <div style={{ margin: '1rem', color: 'var(--danger)', fontSize: '0.85rem', textAlign: 'center', background: 'var(--danger-subtle)', padding: '0.75rem', borderRadius: 'var(--radius-sm)' }}>
                             {error}
                         </div>
                     )}
                 </div>
 
-                <div className="modal-footer" style={{ borderTop: '1px solid var(--border-light)', padding: '1rem', background: 'var(--bg-main)' }}>
+                <div className="modal-footer" style={{ borderTop: '1px solid var(--border-light)', padding: '1rem', background: 'var(--bg-surface-inner)' }}>
                     <button
                         onClick={onClose}
-                        style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border-light)', background: 'var(--bg-card)', borderRadius: 'var(--radius-sm)', cursor: 'pointer', color: 'var(--text-muted)', fontWeight: 600 }}
+                        style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border-light)', background: 'var(--bg-surface-1)', borderRadius: 'var(--radius-sm)', cursor: 'pointer', color: 'var(--text-muted)', fontWeight: 600 }}
                     >
                         Cancel
                     </button>

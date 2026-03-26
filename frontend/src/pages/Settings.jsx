@@ -4,15 +4,16 @@ import Navbar from "../components/Navbar";
 import { authService } from "../services/api";
 import { User, Mail, Lock, Trash2, Moon, Sun, ShieldCheck, AlertTriangle } from "lucide-react";
 import { useLanguage } from "../context/LanguageContext";
+import { useTheme } from "../context/ThemeContext";
 
 /**
  * User Settings & Preferences
  */
 const Settings = () => {
     const { t } = useLanguage();
+    const { theme, toggleTheme } = useTheme();
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
-    const [theme, setTheme] = useState(localStorage.getItem("theme") || "light");
     const [profile, setProfile] = useState({
         username: "",
         email: ""
@@ -27,8 +28,7 @@ const Settings = () => {
 
     useEffect(() => {
         loadProfile();
-        document.documentElement.setAttribute("data-theme", theme);
-    }, [theme]);
+    }, []);
 
     const loadProfile = async () => {
         try {
@@ -43,11 +43,6 @@ const Settings = () => {
         }
     };
 
-    const toggleTheme = () => {
-        const newTheme = theme === "light" ? "dark" : "light";
-        setTheme(newTheme);
-        localStorage.setItem("theme", newTheme);
-    };
 
     const handleProfileUpdate = async (e) => {
         e.preventDefault();

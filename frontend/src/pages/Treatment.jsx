@@ -33,6 +33,7 @@ const Treatment = () => {
   const [selectedTreatment, setSelectedTreatment] = useState(null);
   const [editingTreatment, setEditingTreatment] = useState(null); // For edit mode
   const [modalLoading, setModalLoading] = useState(false);
+  const [isFromHistory, setIsFromHistory] = useState(false);
 
   useEffect(() => {
     loadPlants();
@@ -40,6 +41,9 @@ const Treatment = () => {
 
     // Check if we came from another page with a specific disease to view
     if (location.state?.initialDiseaseId) {
+      if (location.state.fromHistory) {
+        setIsFromHistory(true);
+      }
       handleViewTreatment({
         id: location.state.initialDiseaseId,
         name: location.state.initialDiseaseName || "Detected Disease"
@@ -136,6 +140,13 @@ const Treatment = () => {
       setSelectedTreatment({ error: "Failed to load treatment properties." });
     } finally {
       setModalLoading(false);
+    }
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+    if (isFromHistory) {
+      navigate(-1);
     }
   };
 
@@ -378,7 +389,7 @@ const Treatment = () => {
           <div className="modal-content-large animate-slide-up" style={{ maxWidth: '800px' }}>
             <div className="modal-header">
               <h2>{t("treatment.title")}</h2>
-              <button className="close-btn" onClick={() => setShowModal(false)}>&times;</button>
+              <button className="close-btn" onClick={handleCloseModal}>&times;</button>
             </div>
 
             <div style={{ padding: '0', maxHeight: '70vh', overflowY: 'auto' }}>
@@ -402,8 +413,10 @@ const Treatment = () => {
                           <button
                             onClick={openEditModal}
                             style={{
-                              background: 'white', border: '1px solid var(--border-light)',
-                              padding: '0.5rem', borderRadius: '8px', cursor: 'pointer',
+                              height: '42px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              background: 'var(--bg-card)', border: '1px solid var(--border-light)',
+                              boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+                              padding: '0.5rem', cursor: 'pointer',
                               color: 'var(--text-secondary)'
                             }}
                             title="Edit Treatment"
@@ -413,8 +426,10 @@ const Treatment = () => {
                           <button
                             onClick={handleDeleteTreatment}
                             style={{
-                              background: 'white', border: '1px solid #fee2e2',
-                              padding: '0.5rem', borderRadius: '8px', cursor: 'pointer',
+                              height: '42px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              background: 'var(--bg-card)', border: '1px solid #fee2e2',
+                              boxShadow: '0 2px 4px rgba(239,68,68,0.1)',
+                              padding: '0.5rem', cursor: 'pointer',
                               color: '#dc2626'
                             }}
                             title="Delete Treatment"
@@ -514,14 +529,15 @@ const Treatment = () => {
                                       alignItems: 'center',
                                       gap: '0.5rem',
                                       padding: '0.5rem 0.75rem',
-                                      background: 'white',
+                                      background: 'var(--bg-card)',
                                       border: '1px solid var(--primary)',
                                       borderRadius: '6px',
                                       cursor: 'pointer',
                                       fontSize: '0.85rem',
                                       color: 'var(--primary)',
                                       fontWeight: 600,
-                                      transition: 'all 0.2s'
+                                      transition: 'all 0.2s',
+                                      boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
                                     }}
                                   >
                                     <Package size={14} />
@@ -553,7 +569,7 @@ const Treatment = () => {
             </div>
 
             <div className="modal-footer" style={{ padding: '1.5rem 2.5rem', borderTop: '1px solid var(--border-light)', display: 'flex', justifyContent: 'flex-end' }}>
-              <button className="btn-secondary" onClick={() => setShowModal(false)}>{t("treatment.closeProtocol")}</button>
+              <button className="btn-secondary" onClick={handleCloseModal}>{t("treatment.closeProtocol")}</button>
             </div>
           </div>
         </div>

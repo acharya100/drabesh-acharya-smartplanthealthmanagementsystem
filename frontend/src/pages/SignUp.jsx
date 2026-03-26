@@ -74,8 +74,8 @@ const SignUp = () => {
 
     return (
         <div className="login-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', padding: '2rem', background: 'var(--bg-main)' }}>
-            <div className="login-card animate-slide-up" style={{ maxWidth: '500px', width: '100%', padding: '3rem', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.15)', borderRadius: 'var(--radius-lg)', background: 'white' }}>
-                <div className="auth-header" style={{ textAlign: 'center', marginBottom: '3rem' }}>
+            <div className="login-card animate-slide-up" style={{ maxWidth: '500px', width: '100%', padding: '3rem', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.15)', borderRadius: 'var(--radius-lg)', background: 'var(--bg-card)' }}>
+                <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
                     <div className="auth-logo" style={{ fontSize: '4rem', marginBottom: '1.5rem' }}>🌿</div>
                     <h1 style={{ fontSize: '2.25rem', fontWeight: 800, color: 'var(--primary)', marginBottom: '0.75rem', letterSpacing: '-0.02em' }}>{t("signup.title")}</h1>
                     <p className="subtitle" style={{ fontSize: '1.1rem', color: 'var(--text-muted)', lineHeight: 1.6 }}>{t("signup.subtitle")}</p>

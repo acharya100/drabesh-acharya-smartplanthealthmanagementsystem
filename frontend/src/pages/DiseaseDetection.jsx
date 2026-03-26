@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
+import DiseaseRecommendations from "../components/DiseaseRecommendations";
 import { predictionService } from "../services/api";
 import { Upload, Camera, AlertTriangle, CheckCircle, ArrowRight, RefreshCw, X, Activity } from "lucide-react";
 import { useLanguage } from "../context/LanguageContext";
@@ -397,38 +398,43 @@ const DiseaseDetection = () => {
                           {result.is_healthy ? (
                             <p className="healthy-tip" style={{ color: 'var(--text-muted)', lineHeight: 1.6 }}>{t("detection.healthyTip")}</p>
                           ) : (
-                            <div className="next-steps-container">
-                              <h4 style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 800, textTransform: 'uppercase', fontSize: '0.85rem', color: 'var(--primary)', marginBottom: '1.5rem' }}><ArrowRight size={18} /> {t("detection.recommendedActions")}</h4>
-                              <div className="treatment-preview">
-                                {result.recommended_treatment ? (
-                                  <div className="treatment-cta" style={{ background: 'var(--bg-main)', padding: '1.5rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-light)' }}>
-                                    <p style={{ fontSize: '0.95rem', marginBottom: '1.5rem', lineHeight: 1.5 }}>Recommended treatment: <strong style={{ color: 'var(--secondary)' }}>{result.recommended_treatment.name}</strong></p>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
-                                      <button
-                                        onClick={handleStartTreatment}
-                                        className="btn-primary"
-                                        disabled={loading}
-                                        style={{ width: '100%', justifyContent: 'center', gap: '0.5rem', background: 'var(--secondary)' }}
-                                      >
-                                        {loading ? <RefreshCw size={18} className="animate-spin" /> : <Activity size={18} />}
-                                        Start Treatment Progress
-                                      </button>
-                                      
-                                      <Link
-                                        to="/treatment"
-                                        state={{ initialDiseaseId: result.disease_id, initialDiseaseName: result.disease_name }}
-                                        className="btn-secondary"
-                                        style={{ display: 'flex', justifyContent: 'center', padding: '0.8rem', fontSize: '0.9rem', width: '100%' }}
-                                      >
-                                        {t("detection.viewTreatmentGuide")}
-                                      </Link>
-                                    </div>
+                            <>
+                                <div className="next-steps-container">
+                                  <h4 style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 800, textTransform: 'uppercase', fontSize: '0.85rem', color: 'var(--primary)', marginBottom: '1.5rem' }}><ArrowRight size={18} /> {t("detection.recommendedActions")}</h4>
+                                  <div className="treatment-preview">
+                                    {result.recommended_treatment ? (
+                                      <div className="treatment-cta" style={{ background: 'var(--bg-main)', padding: '1.5rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-light)' }}>
+                                        <p style={{ fontSize: '0.95rem', marginBottom: '1.5rem', lineHeight: 1.5 }}>Recommended treatment: <strong style={{ color: 'var(--secondary)' }}>{result.recommended_treatment.name}</strong></p>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                                          <button
+                                            onClick={handleStartTreatment}
+                                            className="btn-primary"
+                                            disabled={loading}
+                                            style={{ width: '100%', justifyContent: 'center', gap: '0.5rem', background: 'var(--secondary)' }}
+                                          >
+                                            {loading ? <RefreshCw size={18} className="animate-spin" /> : <Activity size={18} />}
+                                            Start Treatment Progress
+                                          </button>
+                                          
+                                          <Link
+                                            to="/treatment"
+                                            state={{ initialDiseaseId: result.disease_id, initialDiseaseName: result.disease_name }}
+                                            className="btn-secondary"
+                                            style={{ display: 'flex', justifyContent: 'center', padding: '0.8rem', fontSize: '0.9rem', width: '100%' }}
+                                          >
+                                            {t("detection.viewTreatmentGuide")}
+                                          </Link>
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>{t("detection.noTreatmentFound")}</p>
+                                    )}
                                   </div>
-                                ) : (
-                                  <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>{t("detection.noTreatmentFound")}</p>
-                                )}
-                              </div>
-                            </div>
+                                </div>
+                                
+                                {/* Disease Product Recommendations */}
+                                <DiseaseRecommendations diseaseName={result.disease_name} />
+                            </>
                           )}
                         </div>
                       </div>
