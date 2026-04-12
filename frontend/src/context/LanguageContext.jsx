@@ -22,14 +22,22 @@ export const LanguageProvider = ({ children }) => {
 
     /**
      * Translate a dot-notation key, e.g. t("nav.dashboard")
+     * Supports interpolation using {{varName}}
      */
-    const t = (key) => {
+    const t = (key, options = {}) => {
         const parts = key.split(".");
         let value = locales[language];
         for (const part of parts) {
             value = value?.[part];
         }
-        return value ?? key;
+
+        if (typeof value !== "string") return value ?? key;
+
+        // Simple interpolation: replace {{key}} with options[key]
+        return value.replace(/\{\{(.*?)\}\}/g, (match, p1) => {
+            const varName = p1.trim();
+            return options[varName] !== undefined ? options[varName] : match;
+        });
     };
 
     return (

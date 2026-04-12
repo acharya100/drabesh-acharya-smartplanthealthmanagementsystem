@@ -7,16 +7,25 @@ User = get_user_model()
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
+    email = serializers.EmailField(required=True)
 
     class Meta:
         model = User
         fields = ['email', 'username', 'password']
 
+    def validate(self, attrs):
+        email = attrs.get('email', '').strip()
+        if not email:
+            raise serializers.ValidationError("An email address must be provided.")
+        return attrs
+
     def create(self, validated_data):
+        email = validated_data.get('email', '').strip()
+        
         user = User.objects.create_user(
-            email=validated_data['email'],
             username=validated_data['username'],
-            password=validated_data['password']
+            password=validated_data['password'],
+            email=email
         )
         return user
 

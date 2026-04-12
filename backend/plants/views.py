@@ -34,9 +34,7 @@ class PlantViewSet(viewsets.ModelViewSet):
         'sunlight_requirement': ['exact'],
         'water_frequency': ['exact'],
         'difficulty_level': ['exact'],
-        'is_edible': ['exact'],
-        'is_medicinal': ['exact'],
-        'is_toxic': ['exact'],
+        'health_status': ['exact'],
         'family': ['exact', 'icontains'],
     }
     
@@ -120,51 +118,30 @@ class PlantViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'])
     def statistics(self, request):
-        
         user = self.request.user
-        total_plants = self.get_queryset().count()
+        queryset = self.get_queryset()
         
+        total_plants = queryset.count()
+        
+        # Exact classification counts directly from the Plant database
+        healthy_count = queryset.filter(health_status='healthy').count()
+        unhealthy_count = queryset.filter(health_status='unhealthy').count()
+        non_plant_count = queryset.filter(health_status='non_leaf').count()
+        out_of_scope_count = queryset.filter(health_status='out_of_scope').count()
+
         # Import dynamically to avoid circular dependencies
-        from predictions.models import Prediction
         from diseases.models import Treatment
-        
-        # Count distinct plants diagnosed with disease vs healthy by looking at Predictions
-        diseases_detected = Prediction.objects.filter(user=user, is_healthy=False).count()
-        
-        # Determine healthy plants (total - plants that have diseases)
-        diseased_plants_count = Prediction.objects.filter(user=user, is_healthy=False).values('predicted_plant').distinct().count()
-        healthy_plants = max(0, total_plants - diseased_plants_count)
         
         # Treatments available globally
         treatments_available = Treatment.objects.count()
         
-        # Count by difficulty level
-        difficulty_stats = {}
-        for level, _ in Plant.DIFFICULTY_CHOICES:
-            count = self.get_queryset().filter(difficulty_level=level).count()
-            difficulty_stats[level] = count
-        
-        # Count by sunlight requirement
-        sunlight_stats = {}
-        for requirement, _ in Plant.SUNLIGHT_CHOICES:
-            count = self.get_queryset().filter(sunlight_requirement=requirement).count()
-            sunlight_stats[requirement] = count
-        
-        # Special properties counts
-        edible_count = self.get_queryset().filter(is_edible=True).count()
-        medicinal_count = self.get_queryset().filter(is_medicinal=True).count()
-        toxic_count = self.get_queryset().filter(is_toxic=True).count()
-        
         return Response({
             'total_plants': total_plants,
-            'healthy_plants': healthy_plants,
-            'diseases_detected': diseases_detected,
+            'healthy_plants': healthy_count,
+            'unhealthy_plants': unhealthy_count,
+            'non_plant_images': non_plant_count,
+            'out_of_scope': out_of_scope_count,
             'treatments_available': treatments_available,
-            'by_difficulty': difficulty_stats,
-            'by_sunlight': sunlight_stats,
-            'edible_plants': edible_count,
-            'medicinal_plants': medicinal_count,
-            'toxic_plants': toxic_count,
         })
     
     @action(detail=True, methods=['get'])

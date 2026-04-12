@@ -5,6 +5,7 @@
 import { useState, useEffect } from "react";
 import ReactDOM from "react-dom";
 import { X, Save, AlertTriangle } from "lucide-react";
+import { eCommerceService } from "../services/api";
 
 const TreatmentFormModal = ({ isOpen, onClose, onSubmit, initialData = null, diseases = [], selectedDiseaseId = null }) => {
     const [formData, setFormData] = useState({
@@ -31,6 +32,7 @@ const TreatmentFormModal = ({ isOpen, onClose, onSubmit, initialData = null, dis
                 setFormData({
                     ...initialData,
                     disease: initialData.disease || initialData.disease_id || "",
+                    related_product_ids: initialData.related_products ? initialData.related_products.map(p => p.id) : []
                 });
             } else {
                 // Reset for new entry
@@ -45,11 +47,40 @@ const TreatmentFormModal = ({ isOpen, onClose, onSubmit, initialData = null, dis
                     cost_estimate: "",
                     expected_duration: "1-2 weeks",
                     disease: selectedDiseaseId || (diseases.length > 0 ? diseases[0].id : ""),
+                    related_product_ids: []
                 });
             }
             setError("");
         }
     }, [isOpen, initialData, selectedDiseaseId, diseases]);
+
+    const [products, setProducts] = useState([]);
+    
+    useEffect(() => {
+        if (isOpen) {
+            loadProducts();
+        }
+    }, [isOpen]);
+
+    const loadProducts = async () => {
+        try {
+            const { data } = await eCommerceService.getProducts();
+            setProducts(data.results || data);
+        } catch (err) {
+            console.error("Failed to load products for treatment modal", err);
+        }
+    };
+
+    const handleProductToggle = (productId) => {
+        setFormData(prev => {
+            const current = [...(prev.related_product_ids || [])];
+            if (current.includes(productId)) {
+                return { ...prev, related_product_ids: current.filter(id => id !== productId) };
+            } else {
+                return { ...prev, related_product_ids: [...current, productId] };
+            }
+        });
+    };
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -279,6 +310,34 @@ const TreatmentFormModal = ({ isOpen, onClose, onSubmit, initialData = null, dis
                             placeholder="e.g. Neem oil, Spray bottle, Water"
                             style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #ddd' }}
                         />
+                    </div>
+
+                    <div style={{ marginBottom: '1.5rem' }}>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Link Marketplace Products (Optional)</label>
+                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.75rem' }}>Select products users can directly purchase for this treatment.</p>
+                        <div className="product-selection-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '0.75rem', maxHeight: '180px', overflowY: 'auto', padding: '1rem', border: '1px solid var(--border-light)', borderRadius: 'var(--radius-sm)', background: 'var(--bg-surface-inner)' }}>
+                            {products.map(product => (
+                                <div
+                                    key={product.id}
+                                    onClick={() => handleProductToggle(product.id)}
+                                    style={{
+                                        padding: '0.6rem', border: '1px solid var(--border-light)', borderRadius: '6px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600,
+                                        background: formData.related_product_ids?.includes(product.id) ? 'var(--primary-subtle)' : 'var(--bg-card)',
+                                        color: formData.related_product_ids?.includes(product.id) ? 'var(--primary)' : 'inherit',
+                                        borderColor: formData.related_product_ids?.includes(product.id) ? 'var(--primary)' : 'var(--border-light)',
+                                        display: 'flex', flexDirection: 'column', gap: '0.25rem'
+                                    }}
+                                >
+                                    <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{product.name}</span>
+                                    <span style={{ fontSize: '0.7rem', color: formData.related_product_ids?.includes(product.id) ? 'var(--primary)' : 'var(--text-muted)' }}>NPR {product.price}</span>
+                                </div>
+                            ))}
+                            {products.length === 0 && (
+                                <div style={{ gridColumn: '1 / -1', textAlign: 'center', color: 'var(--text-muted)', padding: '1rem', fontSize: '0.85rem' }}>
+                                    No marketplace products available.
+                                </div>
+                            )}
+                        </div>
                     </div>
 
                     <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '1.5rem' }}>

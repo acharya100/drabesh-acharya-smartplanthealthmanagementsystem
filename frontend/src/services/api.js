@@ -60,10 +60,14 @@ api.interceptors.response.use(
     }
 );
 
-// --- Auth Services ---
 export const authService = {
     login: (credentials) => api.post('/auth/login/', credentials),
     register: (userData) => api.post('/auth/register/', userData),
+    forgotPassword: (email) => api.post('/auth/forgot-password/', { email }),
+    verifyOtp: (email, code) => api.post('/auth/verify-otp/', { email, code }),
+    resetPassword: (email, code, newPassword) => api.post('/auth/reset-password/', { email, code, new_password: newPassword }),
+    sendPhoneOtp: (phone_number) => api.post('/auth/send-phone-otp/', { phone_number }),
+    verifyPhoneOtp: (phone_number, code) => api.post('/auth/verify-phone-otp/', { phone_number, code }),
     getProfile: () => api.get('/auth/update-profile/'),
     updateProfile: (data) => api.post('/auth/update-profile/', data),
     changePassword: (data) => api.post('/auth/change-password/', data),
@@ -126,23 +130,54 @@ export const predictionService = {
 
 // --- Admin Services ---
 export const adminService = {
+    // User management
     getDashboard: () => api.get('/auth/admin/dashboard/'),
     getUsers: () => api.get('/auth/admin/users/'),
     getUserDetail: (userId) => api.get(`/auth/admin/users/${userId}/`),
     deleteUser: (userId) => api.delete(`/auth/admin/users/${userId}/`),
     getAllPredictions: () => api.get('/auth/admin/predictions/'),
     toggleStaff: (userId) => api.post(`/auth/admin/users/${userId}/toggle-staff/`),
+    // E-Commerce management
+    getEcommerceOverview: () => api.get('/auth/admin/ecommerce/overview/'),
+    adminGetAllOrders: () => api.get('/ecommerce/orders/'),
+    updateOrderStatus: (orderId, data) => api.patch(`/auth/admin/orders/${orderId}/update-status/`, data),
+    // Admin product CRUD (uses ecommerce endpoints with admin token)
+    adminGetAllProducts: (params) => api.get('/ecommerce/products/', { params: { ...params, page_size: 200 } }),
+    adminCreateProduct: (formData) => api.post('/ecommerce/products/', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+    adminUpdateProduct: (id, formData) => api.patch(`/ecommerce/products/${id}/`, formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+    adminDeleteProduct: (id) => api.delete(`/ecommerce/products/${id}/`),
+    adminDeleteOrder: (id) => api.delete(`/ecommerce/orders/${id}/`),
+    // Admin coupons
+    adminGetCoupons: () => api.get('/ecommerce/coupons/'),
+    adminCreateCoupon: (data) => api.post('/ecommerce/coupons/', data),
+    adminUpdateCoupon: (id, data) => api.patch(`/ecommerce/coupons/${id}/`, data),
+    adminDeleteCoupon: (id) => api.delete(`/ecommerce/coupons/${id}/`),
+    // Admin reviews
+    adminGetAllReviews: (params) => api.get('/ecommerce/reviews/', { params }),
+    adminDeleteReview: (id) => api.delete(`/ecommerce/reviews/${id}/`),
+    // Admin categories
+    adminGetCategories: () => api.get('/ecommerce/categories/'),
 };
 
 // --- Ecommerce Services ---
 export const eCommerceService = {
+    // Products
     getCategories: () => api.get('/ecommerce/categories/'),
     getProducts: (params) => api.get('/ecommerce/products/', { params }),
+    getProductById: (id) => api.get(`/ecommerce/products/${id}/`),
+    getFeaturedProducts: () => api.get('/ecommerce/products/featured/'),
+    getRelatedProducts: (id) => api.get(`/ecommerce/products/${id}/related/`),
+    getLowStockProducts: () => api.get('/ecommerce/products/low_stock/'),
+    // Orders
     getOrders: () => api.get('/ecommerce/orders/'),
+    getOrderById: (id) => api.get(`/ecommerce/orders/${id}/`),
     placeOrder: (orderData) => api.post('/ecommerce/orders/', orderData),
+    cancelOrder: (id) => api.post(`/ecommerce/orders/${id}/cancel/`),
+    getAnalytics: () => api.get('/ecommerce/orders/analytics/'),
     // Reviews
     getReviews: (productId) => api.get('/ecommerce/reviews/', { params: { product: productId } }),
     submitReview: (reviewData) => api.post('/ecommerce/reviews/', reviewData),
+    getMyReview: (productId) => api.get('/ecommerce/reviews/my_review/', { params: { product: productId } }),
     updateReview: (id, data) => api.patch(`/ecommerce/reviews/${id}/`, data),
     deleteReview: (id) => api.delete(`/ecommerce/reviews/${id}/`),
     // Saved Addresses
@@ -150,8 +185,39 @@ export const eCommerceService = {
     saveAddress: (data) => api.post('/ecommerce/addresses/', data),
     deleteAddress: (id) => api.delete(`/ecommerce/addresses/${id}/`),
     setDefaultAddress: (id) => api.post(`/ecommerce/addresses/${id}/set_default/`),
-    // Disease Recommendations
-    getRecommendations: (diseaseName) => api.get('/ecommerce/disease-mappings/recommendations/', { params: { disease_name: diseaseName } }),
+    // Wishlist
+    getWishlist: () => api.get('/ecommerce/wishlist/'),
+    getWishlistIds: () => api.get('/ecommerce/wishlist/ids/'),
+    toggleWishlist: (productId) => api.post('/ecommerce/wishlist/toggle/', { product_id: productId }),
+    // Coupons
+    validateCoupon: (code, orderTotal) => api.post('/ecommerce/coupons/validate/', { code, order_total: orderTotal }),
+    getCoupons: () => api.get('/ecommerce/coupons/'),
+    createCoupon: (data) => api.post('/ecommerce/coupons/', data),
+    updateCoupon: (id, data) => api.patch(`/ecommerce/coupons/${id}/`, data),
+    deleteCoupon: (id) => api.delete(`/ecommerce/coupons/${id}/`),
+    // Notifications
+    getNotifications: () => api.get('/ecommerce/notifications/'),
+    getUnreadCount: () => api.get('/ecommerce/notifications/unread_count/'),
+    markNotificationRead: (id) => api.post(`/ecommerce/notifications/${id}/mark_read/`),
+    markAllRead: () => api.post('/ecommerce/notifications/mark_all_read/'),
+};
+
+// --- Chat Services ---
+export const chatService = {
+    getRooms: () => api.get('/chat/rooms/'),
+    getRoom: (id) => api.get(`/chat/rooms/${id}/`),
+    createRoom: (data) => api.post('/chat/rooms/', data),
+    getRoomMessages: (id) => api.get(`/chat/rooms/${id}/messages/`),
+    sendMessage: (id, content) => api.post(`/chat/rooms/${id}/send/`, { content }),
+    getPendingRooms: () => api.get('/chat/rooms/pending/'),
+};
+
+// --- Soil Analysis Services ---
+export const soilService = {
+    analyze: (data) => api.post('/soil/analyze/', data),
+    quickAnalyze: (data) => api.post('/soil/quick_analyze/', data),
+    getHistory: () => api.get('/soil/'),
+    getAnalysis: (id) => api.get(`/soil/${id}/`),
 };
 
 export default api;

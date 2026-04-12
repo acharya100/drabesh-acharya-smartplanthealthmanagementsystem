@@ -8,9 +8,6 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         self.stdout.write('Seeding PlantVillage data...')
 
-        # 1. Parse Classes
-        # Structure: Plant___Disease or Plant___healthy
-        # Example: Apple___Apple_scab
         
         data = {} # Plant -> [Diseases]
         

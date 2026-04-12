@@ -7,6 +7,7 @@ from .models import Disease, Treatment
 from plants.models import Plant
 from plants.serializers import PlantListSerializer
 from ecommerce.serializers import ProductSerializer
+from ecommerce.models import Product
 
 
 class TreatmentListSerializer(serializers.ModelSerializer):
@@ -111,6 +112,7 @@ class DiseaseListSerializer(serializers.ModelSerializer):
     
     # Nested serializers for related data
     treatments = TreatmentListSerializer(many=True, read_only=True)
+    affected_plants = PlantListSerializer(many=True, read_only=True)
     
     # Computed properties
     affected_plant_count = serializers.ReadOnlyField()
@@ -129,8 +131,10 @@ class DiseaseListSerializer(serializers.ModelSerializer):
             'severity_display',
             'severity_color',
             'symptoms',
+            'causes',
             'is_contagious',
             'spread_rate',
+            'affected_plants',
             'affected_plant_count',
             'treatment_count',
             'treatments',
@@ -263,6 +267,14 @@ class TreatmentCreateUpdateSerializer(serializers.ModelSerializer):
         allow_null=True
     )
     custom_disease_name = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    
+    related_product_ids = serializers.PrimaryKeyRelatedField(
+        many=True,
+        source='related_products',
+        queryset=Product.objects.all(),
+        write_only=True,
+        required=False
+    )
    
     
     class Meta:
@@ -282,6 +294,7 @@ class TreatmentCreateUpdateSerializer(serializers.ModelSerializer):
             'precautions',
             'cost_estimate',
             'is_preventive',
+            'related_product_ids',
         ]
     
     def validate_effectiveness_rate(self, value):

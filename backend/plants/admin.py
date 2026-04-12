@@ -17,7 +17,7 @@ class PlantAdmin(admin.ModelAdmin):
         'sunlight_requirement',
         'water_frequency',
         'difficulty_level',
-        'is_edible',
+        'health_status',
         'created_at'
     )
     
@@ -26,9 +26,7 @@ class PlantAdmin(admin.ModelAdmin):
         'sunlight_requirement',
         'water_frequency',
         'difficulty_level',
-        'is_edible',
-        'is_medicinal',
-        'is_toxic',
+        'health_status',
         'created_at'
     )
     
@@ -62,8 +60,8 @@ class PlantAdmin(admin.ModelAdmin):
             'fields': ('growth_rate', 'mature_height')
         }),
         ('Plant Properties', {
-            'fields': ('is_edible', 'is_medicinal', 'is_toxic'),
-            'description': 'Special characteristics and warnings'
+            'fields': ('health_status',),
+            'description': 'Health characteristics'
         }),
         ('Media', {
             'fields': ('image', 'icon'),

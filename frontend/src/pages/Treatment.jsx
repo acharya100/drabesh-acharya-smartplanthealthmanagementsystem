@@ -28,7 +28,6 @@ const Treatment = () => {
   const [loadingCustom, setLoadingCustom] = useState(false);
 
   // Modal State
-  const [showModal, setShowModal] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false); // Controls TreatmentFormModal
   const [selectedTreatment, setSelectedTreatment] = useState(null);
   const [editingTreatment, setEditingTreatment] = useState(null); // For edit mode
@@ -56,8 +55,22 @@ const Treatment = () => {
   useEffect(() => {
     if (selectedPlant) {
       loadDiseases(selectedPlant.id);
+    } else {
+      loadAllDiseases();
     }
   }, [selectedPlant]);
+
+  const loadAllDiseases = async () => {
+    try {
+      setLoading(true);
+      const { data } = await diseaseService.getAll();
+      setDiseases(data.results || data);
+      setLoading(false);
+    } catch (error) {
+      console.error("Error loading diseases:", error);
+      setLoading(false);
+    }
+  };
 
   const loadPlants = async () => {
     try {
@@ -109,7 +122,6 @@ const Treatment = () => {
 
   const handleViewTreatment = async (disease) => {
     setModalLoading(true);
-    setShowModal(true);
     setSelectedTreatment(null); // Clear previous
 
     try {
@@ -144,7 +156,7 @@ const Treatment = () => {
   };
 
   const handleCloseModal = () => {
-    setShowModal(false);
+    setSelectedTreatment(null);
     if (isFromHistory) {
       navigate(-1);
     }
@@ -168,7 +180,7 @@ const Treatment = () => {
     if (!window.confirm(t("treatment.deleteConfirm") || "Are you sure you want to delete this treatment protocol?")) return;
     try {
       await treatmentService.delete(selectedTreatment.id);
-      setShowModal(false);
+      setSelectedTreatment(null);
       if (selectedPlant) loadDiseases(selectedPlant.id);
     } catch (error) {
       alert(t("treatment.deleteFailed") || "Failed to delete treatment.");
@@ -218,7 +230,7 @@ const Treatment = () => {
                 {plants.map(plant => (
                   <button
                     key={plant.id}
-                    onClick={() => setSelectedPlant(plant)}
+                    onClick={() => { setSelectedPlant(plant); setSelectedTreatment(null); }}
                     style={{
                       display: 'flex',
                       alignItems: 'center',
@@ -291,13 +303,213 @@ const Treatment = () => {
           )}
         </div>
 
-        {/* MAIN CONTENT: DISEASES GRID */}
+        {/* MAIN CONTENT: DISEASES GRID OR PROTOCOL */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '2rem', background: 'var(--bg-main)' }}>
-          {selectedPlant ? (
+          {selectedTreatment ? (
+            <div className="treatment-detail-view animate-slide-up" style={{ background: 'var(--bg-card)', borderRadius: '12px', border: '1px solid var(--border-light)', overflow: 'hidden' }}>
+              <div style={{ padding: '1.5rem 2.5rem', borderBottom: '1px solid var(--border-light)', display: 'flex', alignItems: 'center', gap: '1rem', background: 'var(--bg-surface-inner)' }}>
+                <button className="btn-secondary" onClick={handleCloseModal} style={{ padding: '0.5rem 1rem' }}>
+                  ← Back to Directory
+                </button>
+                <h2 style={{ margin: 0, fontSize: '1.25rem' }}>{t("treatment.title")}</h2>
+              </div>
+              <div style={{ padding: '0' }}>
+                {modalLoading ? (
+                  <div style={{ padding: '4rem', textAlign: 'center' }}>
+                    <div className="spinner"></div>
+                    <p>{t("treatment.fetchingProtocol")}</p>
+                  </div>
+                ) : selectedTreatment?.error ? (
+                  <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                    <AlertTriangle size={48} style={{ margin: '0 auto 1rem', display: 'block' }} />
+                    <p>{selectedTreatment.error}</p>
+                    <div style={{ marginTop: '2rem' }}>
+                      <button className="btn-primary" onClick={openAddModal}>
+                        <Plus size={16} /> {t("treatment.createProtocol")}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    {/* HEADER SECTION */}
+                    <div style={{ padding: '2.5rem', background: 'var(--bg-main)', borderBottom: '1px solid var(--border-light)', position: 'relative' }}>
+                      <div style={{ position: 'absolute', top: '2rem', right: '2rem', display: 'flex', gap: '0.5rem' }}>
+                        {selectedTreatment.id && (
+                          <>
+                            <button
+                              onClick={openEditModal}
+                              style={{
+                                height: '42px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                background: 'var(--bg-card)', border: '1px solid var(--border-light)',
+                                boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+                                padding: '0.5rem', cursor: 'pointer',
+                                color: 'var(--text-secondary)'
+                              }}
+                              title="Edit Treatment"
+                            >
+                              <Edit2 size={18} />
+                            </button>
+                            <button
+                              onClick={handleDeleteTreatment}
+                              style={{
+                                height: '42px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                background: 'var(--bg-card)', border: '1px solid #fee2e2',
+                                boxShadow: '0 2px 4px rgba(239,68,68,0.1)',
+                                padding: '0.5rem', cursor: 'pointer',
+                                color: '#dc2626'
+                              }}
+                              title="Delete Treatment"
+                            >
+                              <Trash2 size={18} />
+                            </button>
+                          </>
+                        )}
+                      </div>
+                      <div style={{ color: 'var(--primary)', fontWeight: 800, fontSize: '0.8rem', textTransform: 'uppercase', marginBottom: '0.5rem' }}>
+                        {t("treatment.treatingLabel")} {selectedTreatment.disease_name}
+                      </div>
+                      <h1 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '1rem' }}>{selectedTreatment.name}</h1>
+                      <p style={{ fontSize: '1.1rem', lineHeight: 1.6, color: 'var(--text-secondary)' }}>
+                        {selectedTreatment.description}
+                      </p>
+
+                      <div style={{ display: 'flex', gap: '2rem', marginTop: '2rem' }}>
+                        <div>
+                          <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: '0.25rem' }}>{t("treatment.effectiveness")}</span>
+                          <span style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--success)' }}>
+                            {selectedTreatment.effectiveness_rate != null ? `${selectedTreatment.effectiveness_rate}%` : 'N/A'}
+                          </span>
+                        </div>
+                        <div>
+                          <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: '0.25rem' }}>{t("treatment.cost")}</span>
+                          <span style={{ fontSize: '1.25rem', fontWeight: 800 }}>{selectedTreatment.cost_estimate || 'N/A'}</span>
+                        </div>
+                        <div>
+                          <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: '0.25rem' }}>{t("treatment.type")}</span>
+                          <span style={{ fontSize: '1.25rem', fontWeight: 800 }}>{selectedTreatment.treatment_type?.toUpperCase() || 'N/A'}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* DETAILED STEPS */}
+                    <div style={{ padding: '2.5rem' }}>
+
+                      {/* SYMPTOMS */}
+                      {selectedTreatment.symptoms && (
+                        <div style={{ marginBottom: '2.5rem' }}>
+                          <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <AlertTriangle size={20} style={{ color: 'var(--warning)' }} />
+                            {t("diseases.symptoms") || "Symptoms"}
+                          </h3>
+                          <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6 }}>{selectedTreatment.symptoms}</p>
+                        </div>
+                      )}
+
+                      {/* PREVENTION */}
+                      {selectedTreatment.prevention_measures && (
+                        <div style={{ marginBottom: '2.5rem' }}>
+                          <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <ShieldCheck size={20} className="text-primary" />
+                            {t("treatment.preventive") || "Prevention Measures"}
+                          </h3>
+                          <div style={{ background: 'var(--primary-subtle)', padding: '1.5rem', borderRadius: '8px', color: 'var(--text-secondary)', whiteSpace: 'pre-line', lineHeight: 1.8 }}>
+                            {selectedTreatment.prevention_measures}
+                          </div>
+                        </div>
+                      )}
+
+                      {selectedTreatment.instructions && (
+                        <div style={{ marginBottom: '2.5rem' }}>
+                          <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <CheckCircle size={20} className="text-secondary" />
+                            {t("treatment.stepByStep")}
+                          </h3>
+                          <div style={{ background: 'var(--bg-card)', padding: '1.5rem', borderRadius: '8px', borderLeft: '4px solid var(--secondary)', whiteSpace: 'pre-line', lineHeight: 1.8 }}>
+                            {selectedTreatment.instructions}
+                          </div>
+                        </div>
+                      )}
+
+                      {selectedTreatment.id && (
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+                          <div>
+                            {/* NEW SEPARATED FIRST AID SECTION */}
+                            <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#b45309' }}>
+                              <AlertTriangle size={18} /> Quick treatment / First aid
+                            </h3>
+                            <div style={{ padding: '1rem', background: 'var(--bg-card)', border: '1px solid var(--border-light)', borderRadius: '6px', marginBottom: '1.5rem', color: 'var(--text-secondary)' }}>
+                              {selectedTreatment.products_needed || 'No immediate first aid materials specified.'}
+                            </div>
+
+                            {/* MARKETPLACE PRODUCTS */}
+                            <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--primary)' }}>
+                              <Package size={18} /> Required Marketplace Products
+                            </h3>
+                            <div style={{ padding: '1.25rem', background: 'var(--bg-surface-inner)', border: '1px solid var(--border-light)', borderRadius: '8px' }}>
+                              {selectedTreatment.related_products && selectedTreatment.related_products.length > 0 ? (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                  {selectedTreatment.related_products.map(product => (
+                                    <div
+                                      key={product.id}
+                                      style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'space-between',
+                                        padding: '0.75rem 1rem',
+                                        background: 'var(--bg-card)',
+                                        border: '1px solid var(--border-light)',
+                                        borderRadius: '8px',
+                                        boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
+                                      }}
+                                    >
+                                      <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                        <span style={{ fontWeight: 800, color: 'var(--text-primary)', fontSize: '0.9rem' }}>{product.name}</span>
+                                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>NPR {parseFloat(product.price).toLocaleString()}</span>
+                                      </div>
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          navigate('/checkout', { state: { directBuyProduct: product } });
+                                        }}
+                                        className="btn-primary"
+                                        style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', padding: '0.4rem 0.8rem', fontSize: '0.75rem', borderRadius: '6px' }}
+                                      >
+                                        Buy Now <ChevronRight size={14} />
+                                      </button>
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : (
+                                <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.85rem', fontStyle: 'italic' }}>
+                                  No specific treatment products are linked for this disease. Please check our marketplace for general plant care products.
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                          <div>
+                            <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                              <ShieldCheck size={18} /> {t("treatment.preventive")}
+                            </h3>
+                            <p style={{ padding: '1rem', background: 'var(--bg-card)', border: '1px solid var(--border-light)', borderRadius: '6px' }}>
+                              {selectedTreatment.is_preventive ? t("treatment.preventiveYes") : t("treatment.preventiveNo")}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : (
             <div>
               <div style={{ marginBottom: '2rem' }}>
-                <h1 style={{ fontSize: '2rem', fontWeight: 800 }}>{selectedPlant.name} Diseases</h1>
-                <p style={{ color: 'var(--text-secondary)' }}>Known pathologies affecting {selectedPlant.scientific_name}</p>
+                <h1 style={{ fontSize: '2rem', fontWeight: 800 }}>
+                  {selectedPlant ? `${selectedPlant.name} Diseases` : "Disease & Treatment Directory"}
+                </h1>
+                <p style={{ color: 'var(--text-secondary)' }}>
+                  {selectedPlant ? `Known pathologies affecting ${selectedPlant.scientific_name}` : "Comprehensive directory of plant diseases and their treatment protocols"}
+                </p>
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
@@ -318,23 +530,25 @@ const Treatment = () => {
                 </div>
               ) : diseases.length > 0 ? (
                 <div className="diseases-grid">
-                  {/* HEALTHY CARD */}
-                  <div className="disease-card-v2" style={{ borderLeft: '4px solid var(--success)' }}>
-                    <div className="disease-header-info" style={{ padding: '2rem' }}>
-                      <div className="disease-title-row">
-                        <h3>{t("treatment.healthyPlantTitle")} {selectedPlant.name}</h3>
-                        <div className="badge badge-edible">{t("treatment.stable")}</div>
+                  {/* HEALTHY CARD (Only if plant selected) */}
+                  {selectedPlant && (
+                    <div className="disease-card-v2" style={{ borderLeft: '4px solid var(--success)' }}>
+                      <div className="disease-header-info" style={{ padding: '2rem' }}>
+                        <div className="disease-title-row">
+                          <h3>{t("treatment.healthyPlantTitle")} {selectedPlant.name}</h3>
+                          <div className="badge badge-edible">{t("treatment.stable")}</div>
+                        </div>
+                        <p style={{ marginTop: '1rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+                          {t("treatment.noSigns")}
+                        </p>
                       </div>
-                      <p style={{ marginTop: '1rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
-                        {t("treatment.noSigns")}
-                      </p>
+                      <div className="disease-card-footer" style={{ padding: '1.5rem', background: 'var(--bg-card)', borderTop: '1px solid var(--border-light)' }}>
+                        <span style={{ fontSize: '0.85rem', color: 'var(--success)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <CheckCircle size={16} /> {t("treatment.optimalCondition")}
+                        </span>
+                      </div>
                     </div>
-                    <div className="disease-card-footer" style={{ padding: '1.5rem', background: 'var(--bg-card)', borderTop: '1px solid var(--border-light)' }}>
-                      <span style={{ fontSize: '0.85rem', color: 'var(--success)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <CheckCircle size={16} /> {t("treatment.optimalCondition")}
-                      </span>
-                    </div>
-                  </div>
+                  )}
 
                   {/* DISEASE CARDS */}
                   {diseases.map(disease => (
@@ -373,207 +587,9 @@ const Treatment = () => {
                 </div>
               )}
             </div>
-          ) : (
-            <div className="empty-state-container" style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-              <Sprout size={64} className="text-primary" style={{ opacity: 0.3 }} />
-              <h3>{t("treatment.selectPlantTitle")}</h3>
-              <p>{t("treatment.selectPlantDesc")}</p>
-            </div>
           )}
         </div>
       </div>
-
-      {/* TREATMENT MODAL */}
-      {showModal && (
-        <div className="modal-overlay">
-          <div className="modal-content-large animate-slide-up" style={{ maxWidth: '800px' }}>
-            <div className="modal-header">
-              <h2>{t("treatment.title")}</h2>
-              <button className="close-btn" onClick={handleCloseModal}>&times;</button>
-            </div>
-
-            <div style={{ padding: '0', maxHeight: '70vh', overflowY: 'auto' }}>
-              {modalLoading ? (
-                <div style={{ padding: '4rem', textAlign: 'center' }}>
-                  <div className="spinner"></div>
-                  <p>{t("treatment.fetchingProtocol")}</p>
-                </div>
-              ) : selectedTreatment?.error ? (
-                <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-                  <AlertTriangle size={48} style={{ margin: '0 auto 1rem', display: 'block' }} />
-                  <p>{selectedTreatment.error}</p>
-                </div>
-              ) : selectedTreatment ? (
-                <div>
-                  {/* HEADER SECTION */}
-                  <div style={{ padding: '2.5rem', background: 'var(--bg-main)', borderBottom: '1px solid var(--border-light)', position: 'relative' }}>
-                    <div style={{ position: 'absolute', top: '2rem', right: '2rem', display: 'flex', gap: '0.5rem' }}>
-                      {selectedTreatment.id && (
-                        <>
-                          <button
-                            onClick={openEditModal}
-                            style={{
-                              height: '42px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                              background: 'var(--bg-card)', border: '1px solid var(--border-light)',
-                              boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
-                              padding: '0.5rem', cursor: 'pointer',
-                              color: 'var(--text-secondary)'
-                            }}
-                            title="Edit Treatment"
-                          >
-                            <Edit2 size={18} />
-                          </button>
-                          <button
-                            onClick={handleDeleteTreatment}
-                            style={{
-                              height: '42px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                              background: 'var(--bg-card)', border: '1px solid #fee2e2',
-                              boxShadow: '0 2px 4px rgba(239,68,68,0.1)',
-                              padding: '0.5rem', cursor: 'pointer',
-                              color: '#dc2626'
-                            }}
-                            title="Delete Treatment"
-                          >
-                            <Trash2 size={18} />
-                          </button>
-                        </>
-                      )}
-                    </div>
-                    <div style={{ color: 'var(--primary)', fontWeight: 800, fontSize: '0.8rem', textTransform: 'uppercase', marginBottom: '0.5rem' }}>
-                      {t("treatment.treatingLabel")} {selectedTreatment.disease_name}
-                    </div>
-                    <h1 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '1rem' }}>{selectedTreatment.name}</h1>
-                    <p style={{ fontSize: '1.1rem', lineHeight: 1.6, color: 'var(--text-secondary)' }}>
-                      {selectedTreatment.description}
-                    </p>
-
-                    <div style={{ display: 'flex', gap: '2rem', marginTop: '2rem' }}>
-                      <div>
-                        <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: '0.25rem' }}>{t("treatment.effectiveness")}</span>
-                        <span style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--success)' }}>
-                          {selectedTreatment.effectiveness_rate != null ? `${selectedTreatment.effectiveness_rate}%` : 'N/A'}
-                        </span>
-                      </div>
-                      <div>
-                        <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: '0.25rem' }}>{t("treatment.cost")}</span>
-                        <span style={{ fontSize: '1.25rem', fontWeight: 800 }}>{selectedTreatment.cost_estimate || 'N/A'}</span>
-                      </div>
-                      <div>
-                        <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: '0.25rem' }}>{t("treatment.type")}</span>
-                        <span style={{ fontSize: '1.25rem', fontWeight: 800 }}>{selectedTreatment.treatment_type?.toUpperCase() || 'N/A'}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* DETAILED STEPS */}
-                  <div style={{ padding: '2.5rem' }}>
-
-                    {/* SYMPTOMS */}
-                    {selectedTreatment.symptoms && (
-                      <div style={{ marginBottom: '2.5rem' }}>
-                        <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <AlertTriangle size={20} style={{ color: 'var(--warning)' }} />
-                          {t("diseases.symptoms") || "Symptoms"}
-                        </h3>
-                        <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6 }}>{selectedTreatment.symptoms}</p>
-                      </div>
-                    )}
-
-                    {/* PREVENTION */}
-                    {selectedTreatment.prevention_measures && (
-                      <div style={{ marginBottom: '2.5rem' }}>
-                        <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <ShieldCheck size={20} className="text-primary" />
-                          {t("treatment.preventive") || "Prevention Measures"}
-                        </h3>
-                        <div style={{ background: 'var(--primary-subtle)', padding: '1.5rem', borderRadius: '8px', color: 'var(--text-secondary)', whiteSpace: 'pre-line', lineHeight: 1.8 }}>
-                          {selectedTreatment.prevention_measures}
-                        </div>
-                      </div>
-                    )}
-                    <div style={{ marginBottom: '2.5rem' }}>
-                      <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <CheckCircle size={20} className="text-secondary" />
-                        {t("treatment.stepByStep")}
-                      </h3>
-                      <div style={{ background: 'var(--bg-card)', padding: '1.5rem', borderRadius: '8px', borderLeft: '4px solid var(--secondary)', whiteSpace: 'pre-line', lineHeight: 1.8 }}>
-                        {selectedTreatment.instructions}
-                      </div>
-                    </div>
-
-                    {/* Empty fallback for no instructions */}
-                    {!selectedTreatment.id && selectedTreatment.error && (
-                      <div style={{ textAlign: 'center', padding: '2rem' }}>
-                        <button className="btn-primary" onClick={openAddModal}>
-                          <Plus size={16} /> {t("treatment.createProtocol")}
-                        </button>
-                      </div>
-                    )}
-
-                    {selectedTreatment.id && (
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
-                        <div>
-                          <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <Package size={18} /> {t("treatment.requiredProducts")}
-                          </h3>
-                          <div style={{ padding: '1rem', background: 'var(--bg-card)', border: '1px solid var(--border-light)', borderRadius: '6px' }}>
-                            {selectedTreatment.related_products && selectedTreatment.related_products.length > 0 ? (
-                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
-                                {selectedTreatment.related_products.map(product => (
-                                  <div 
-                                    key={product.id}
-                                    onClick={() => navigate('/ecommerce', { state: { productId: product.id } })}
-                                    className="product-link-badge"
-                                    style={{
-                                      display: 'flex',
-                                      alignItems: 'center',
-                                      gap: '0.5rem',
-                                      padding: '0.5rem 0.75rem',
-                                      background: 'var(--bg-card)',
-                                      border: '1px solid var(--primary)',
-                                      borderRadius: '6px',
-                                      cursor: 'pointer',
-                                      fontSize: '0.85rem',
-                                      color: 'var(--primary)',
-                                      fontWeight: 600,
-                                      transition: 'all 0.2s',
-                                      boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
-                                    }}
-                                  >
-                                    <Package size={14} />
-                                    <span>{product.name}</span>
-                                    <span style={{ fontSize: '0.75rem', opacity: 0.7 }}>NPR {product.price}</span>
-                                  </div>
-                                ))}
-                              </div>
-                            ) : (
-                              <p style={{ margin: 0, color: 'var(--text-secondary)' }}>
-                                {selectedTreatment.products_needed}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                        <div>
-                          <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <ShieldCheck size={18} /> {t("treatment.preventive")}
-                          </h3>
-                          <p style={{ padding: '1rem', background: 'var(--bg-card)', border: '1px solid var(--border-light)', borderRadius: '6px' }}>
-                            {selectedTreatment.is_preventive ? t("treatment.preventiveYes") : t("treatment.preventiveNo")}
-                          </p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ) : null}
-            </div>
-
-            <div className="modal-footer" style={{ padding: '1.5rem 2.5rem', borderTop: '1px solid var(--border-light)', display: 'flex', justifyContent: 'flex-end' }}>
-              <button className="btn-secondary" onClick={handleCloseModal}>{t("treatment.closeProtocol")}</button>
-            </div>
-          </div>
-        </div>
-      )}
 
       <TreatmentFormModal
         isOpen={showAddModal}

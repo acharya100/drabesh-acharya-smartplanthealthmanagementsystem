@@ -1,29 +1,18 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import SwitchAccountModal from "./SwitchAccountModal";
+import NotificationBell from "./NotificationBell";
 import { useLanguage } from "../context/LanguageContext";
 import { useCart } from "../context/CartContext";
 import { useTheme } from "../context/ThemeContext";
-import { authService } from "../services/api";
-import { Leaf, Activity, Camera, ShieldCheck, List, Settings, LogOut, ChevronDown, User, Users, Store, ShoppingCart, Sun, Moon, WifiOff, Package } from "lucide-react";
+import { authService, predictionService } from "../services/api";
+import { Leaf, Activity, Camera, ShieldCheck, List, Settings, LogOut, ChevronDown, User, Users, Store, ShoppingCart, Sun, Moon, Package, Heart, MessageSquare, FlaskConical } from "lucide-react";
+import { offlineStore } from "../utils/offlineStore";
 
 const Navbar = ({ activePage }) => {
   const navigate = useNavigate();
   const [isSwitchModalOpen, setIsSwitchModalOpen] = useState(false);
-  const [isOffline, setIsOffline] = useState(!window.navigator.onLine);
 
-  useEffect(() => {
-    const handleOnline = () => setIsOffline(false);
-    const handleOffline = () => setIsOffline(true);
-
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, []);
   const username = sessionStorage.getItem("username") || "User";
   const isAdmin = sessionStorage.getItem("is_staff") === "true" || sessionStorage.getItem("is_superuser") === "true";
   const { t, language, setLanguage } = useLanguage();
@@ -39,43 +28,48 @@ const Navbar = ({ activePage }) => {
     setLanguage(language === "en" ? "ne" : "en");
   };
 
+  // Sync offline updates when user comes back online
+  useEffect(() => {
+    const syncOfflineData = async () => {
+      if (!window.navigator.onLine) return;
+      
+      const updates = offlineStore.getOfflineUpdates();
+      const ids = Object.keys(updates);
+      
+      if (ids.length === 0) return;
+      
+      console.log(`[Sync] Restored connection: Syncing ${ids.length} pending updates...`);
+      
+      for (const id of ids) {
+        try {
+          await predictionService.update(id, updates[id]);
+          offlineStore.clearOfflineUpdate(id);
+          console.log(`[Sync] Successfully synced prediction ${id}`);
+        } catch (err) {
+          console.error(`[Sync] Failed to sync prediction ${id}:`, err);
+        }
+      }
+    };
+
+    window.addEventListener('online', syncOfflineData);
+    // Also try syncing immediately if we are already online (e.g. on component mount)
+    if (window.navigator.onLine) syncOfflineData();
+
+    return () => window.removeEventListener('online', syncOfflineData);
+  }, []);
+
   return (
     <nav className="navbar">
       <div className="navbar-brand">
         <Link to="/dashboard" style={{ textDecoration: 'none' }}>
-          <h2 style={{ fontSize: '1.25rem', margin: 0 }}>
-            <Leaf size={24} className="text-primary" />
+          <h2 style={{ fontSize: '0.95rem', margin: 0, whiteSpace: 'nowrap' }}>
+            <Leaf size={20} className="text-primary" />
             <span>{t("nav.brand")}</span>
           </h2>
         </Link>
       </div>
- 
-      {/* Offline Indicator - Modern Floating Badge */}
-      <div 
-        className={`offline-toast ${isOffline ? 'visible' : ''}`}
-        style={{
-          position: 'fixed',
-          bottom: isOffline ? '2rem' : '-5rem',
-          left: '2rem',
-          background: 'var(--danger)',
-          color: 'white',
-          padding: '0.75rem 1.25rem',
-          borderRadius: '50px',
-          fontWeight: 700,
-          fontSize: '0.85rem',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.75rem',
-          boxShadow: '0 10px 25px rgba(239, 68, 68, 0.4)',
-          zIndex: 9999,
-          transition: 'all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-          opacity: isOffline ? 1 : 0,
-          pointerEvents: isOffline ? 'auto' : 'none'
-        }}
-      >
-        <WifiOff size={18} />
-        <span>{t("nav.offline") || "You are offline. Showing cached data."}</span>
-      </div>
+
+
 
       <div className="navbar-links">
         <Link to="/dashboard" className={`nav-link ${activePage === "dashboard" ? "active" : ""}`}>
@@ -93,19 +87,27 @@ const Navbar = ({ activePage }) => {
         <Link to="/store" className={`nav-link ${activePage === 'store' ? 'active' : ''}`}>
           <Store size={18} /> <span>{t("nav.store") || "Store"}</span>
         </Link>
+        <Link to="/chat" className={`nav-link ${activePage === 'chat' ? 'active' : ''}`}>
+          <MessageSquare size={18} /> <span>{t("nav.chat") || "Expert Chat"}</span>
+        </Link>
+        <Link to="/soil" className={`nav-link ${activePage === 'soil' ? 'active' : ''}`}>
+          <FlaskConical size={18} /> <span>{t("nav.soil") || "Soil"}</span>
+        </Link>
 
         {/* Knowledge & Records Dropdown */}
         <div className="nav-dropdown">
           <button className={`nav-link ${(activePage === 'diseases' || activePage === 'treatment' || activePage === 'history' || activePage === 'treatment-history' || activePage === 'orders') ? 'active' : ''}`}>
-             <Settings size={18} /> <span>{t("nav.library") || "Library & History"}</span> <ChevronDown size={14} />
+            <Settings size={18} /> <span>{t("nav.library") !== "nav.library" ? t("nav.library") : "Knowledge & History"}</span> <ChevronDown size={14} />
           </button>
           <div className="dropdown-menu">
-            <Link to="/diseases" className="dropdown-item"><Activity size={16} /> {t("nav.diseases")}</Link>
-            <Link to="/treatment" className="dropdown-item"><ShieldCheck size={16} /> {t("nav.treatments")}</Link>
+            <Link to="/diseases" className="dropdown-item"><Activity size={16} /> {t("nav.diseaseAtlas") || "Disease Database"}</Link>
+            <Link to="/treatment" className="dropdown-item"><ShieldCheck size={16} /> {t("nav.treatmentProtocols") || "Treatment Protocols"}</Link>
             <div className="dropdown-divider"></div>
             <Link to="/history" className="dropdown-item"><Activity size={16} /> {t("nav.history")}</Link>
             <Link to="/treatment-history" className="dropdown-item"><Activity size={16} /> {t("nav.treatmentHistory")}</Link>
             <Link to="/orders" className="dropdown-item"><Package size={16} /> {t("nav.orders") || "Orders"}</Link>
+            <Link to="/cart" className="dropdown-item"><ShoppingCart size={16} /> {t("nav.cart")}</Link>
+            <Link to="/wishlist" className="dropdown-item"><Heart size={16} /> {t("nav.wishlist")}</Link>
           </div>
         </div>
 
@@ -114,88 +116,82 @@ const Navbar = ({ activePage }) => {
         </Link>
       </div>
 
-      <div className="navbar-actions">
-        <Link to="/cart" style={{ position: 'relative', marginRight: '1rem', color: 'var(--text-muted)' }}>
-          <ShoppingCart size={24} />
+      <div className="navbar-actions" style={{ gap: "0.5rem", alignItems: "center" }}>
+
+        {/* Cart */}
+        <Link to="/cart" style={{ position: "relative", width: 40, height: 40, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "10px", border: "1px solid var(--border-light)", color: "var(--text-muted)", background: "transparent", flexShrink: 0 }}
+          title="Shopping Cart">
+          <ShoppingCart size={19} />
           {totalItems > 0 && (
-            <span style={{
-              position: 'absolute', top: '-8px', right: '-8px',
-              background: 'var(--danger)', color: 'white',
-              fontSize: '0.7rem', padding: '0.2rem 0.4rem',
-              borderRadius: '50%', minWidth: '18px', textAlign: 'center',
-              fontWeight: 800, border: '2px solid var(--white)'
-            }}>
+            <span style={{ position: "absolute", top: "-5px", right: "-5px", background: "var(--danger)", color: "white", fontSize: "0.62rem", padding: "1px 5px", borderRadius: "99px", minWidth: 17, textAlign: "center", fontWeight: 900, border: "2px solid var(--bg-main)" }}>
               {totalItems}
             </span>
           )}
         </Link>
 
-        {isAdmin && (
-          <Link
-            to="/admin-panel"
-            style={{
-              display: 'flex', alignItems: 'center', gap: '0.4rem',
-              padding: '0.4rem 0.9rem', borderRadius: '8px',
-              background: 'linear-gradient(135deg, #10b981, #059669)',
-              color: '#fff', fontWeight: 700, fontSize: '0.82rem',
-              textDecoration: 'none', marginLeft: '0.25rem',
-              boxShadow: '0 2px 8px rgba(16,185,129,0.3)',
-              transition: 'all 0.2s ease'
-            }}
+        {/* Notification Bell */}
+        <NotificationBell />
+
+        {/* Controls Pill: Language + Divider + Theme */}
+        <div style={{ display: "flex", alignItems: "center", background: "var(--bg-card)", border: "1px solid var(--border-light)", borderRadius: "50px", padding: "3px 4px", gap: "2px", flexShrink: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "2px" }}>
+            <button
+              onClick={() => language !== "en" && toggleLanguage()}
+              title="English"
+              style={{ padding: "4px 8px", borderRadius: "50px", border: "none", cursor: "pointer", fontSize: "0.75rem", fontWeight: 800, background: language === "en" ? "var(--primary)" : "transparent", color: language === "en" ? "white" : "var(--text-muted)", transition: "all 0.2s" }}
+            >EN</button>
+            <button
+              onClick={() => language !== "ne" && toggleLanguage()}
+              title="Nepali (नेपाली)"
+              style={{ padding: "4px 8px", borderRadius: "50px", border: "none", cursor: "pointer", fontSize: "0.75rem", fontWeight: 800, background: language === "ne" ? "var(--primary)" : "transparent", color: language === "ne" ? "white" : "var(--text-muted)", transition: "all 0.2s" }}
+            >NP</button>
+          </div>
+          <div style={{ width: 1, height: 20, background: "var(--border-light)", flexShrink: 0 }} />
+          <button
+            onClick={toggleTheme}
+            title={theme === "light" ? "Switch to Dark Mode" : "Switch to Light Mode"}
+            style={{ width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "50px", border: "none", cursor: "pointer", background: "transparent", color: "var(--text-muted)", transition: "all 0.2s" }}
+            onMouseEnter={e => { e.currentTarget.style.background = "var(--primary-subtle)"; e.currentTarget.style.color = "var(--primary)"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--text-muted)"; }}
           >
-            <ShieldCheck size={15} />
-            <span>{t("nav.admin")}</span>
-          </Link>
-        )}
-
-        {/* Language toggle button */}
-        <button
-          onClick={toggleLanguage}
-          title={language === "en" ? "Switch to Nepali" : "English मा फेर्नुहोस्"}
-          className="lang-toggle-btn"
-        >
-          <span className="lang-flag">{language === "en" ? "🇳🇵" : "🇬🇧"}</span>
-          <span className="lang-code">{language === "en" ? "NE" : "EN"}</span>
-        </button>
-
-        {/* Theme toggle button */}
-        <button
-          onClick={toggleTheme}
-          title={theme === "light" ? "Switch to Dark Mode" : "Switch to Light Mode"}
-          className="lang-toggle-btn"
-          style={{ marginLeft: '1rem' }}
-        >
-          {theme === "light" ? <Moon size={18} /> : <Sun size={18} />}
-        </button>
-
-        <div className="nav-dropdown" style={{ marginLeft: '1rem' }}>
-          <button className="nav-link" style={{ gap: '0.75rem', padding: '0.4rem 0.8rem', background: 'var(--bg-surface-inner)', borderRadius: '50px', border: '1px solid var(--border-light)', cursor: 'pointer' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <div style={{ width: '28px', height: '28px', background: 'var(--primary)', color: 'white', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '12px' }}>
-                {username ? username.substring(0,2).toUpperCase() : 'U'}
-              </div>
-              <span style={{ fontWeight: 700, color: 'var(--text-main)', fontSize: '0.9rem' }}>{username}</span>
-            </div>
-            <ChevronDown size={14} style={{ color: 'var(--text-muted)' }} />
+            {theme === "light" ? <Moon size={17} /> : <Sun size={17} />}
           </button>
-          <div className="dropdown-menu" style={{ right: 0, left: 'auto', minWidth: '220px', padding: '0.5rem' }}>
-            <div style={{ padding: '0.75rem 1rem', borderBottom: '1px solid var(--border-light)', marginBottom: '0.5rem' }}>
-              <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t("nav.welcome")}</p>
-              <p style={{ margin: 0, fontWeight: 800, color: 'var(--text-main)' }}>{username}</p>
+        </div>
+
+        {/* User + Admin Dropdown */}
+        <div className="nav-dropdown">
+          <button className="nav-link" style={{ gap: "0.5rem", padding: "5px 10px 5px 5px", background: "var(--bg-card)", borderRadius: "50px", border: "1px solid var(--border-light)", cursor: "pointer" }}>
+            <div style={{ width: 30, height: 30, background: "linear-gradient(135deg,var(--primary),#16a34a)", color: "white", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: "0.75rem", flexShrink: 0 }}>
+              {username.substring(0, 2).toUpperCase()}
             </div>
-            <button onClick={() => setIsSwitchModalOpen(true)} className="dropdown-item" style={{ width: '100%', textAlign: 'left', border: 'none', background: 'none' }}>
+            <span style={{ fontWeight: 700, color: "var(--text-main)", fontSize: "0.875rem", maxWidth: 90, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{username}</span>
+            <ChevronDown size={14} style={{ color: "var(--text-muted)", flexShrink: 0 }} />
+          </button>
+          <div className="dropdown-menu" style={{ right: 0, left: "auto", minWidth: 230, padding: "0.5rem" }}>
+            {/* User Info */}
+            <div style={{ padding: "0.875rem 1rem", borderBottom: "1px solid var(--border-light)", marginBottom: "0.5rem" }}>
+              <p style={{ margin: 0, fontSize: "0.72rem", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>{t("nav.welcome")}</p>
+              <p style={{ margin: "0.2rem 0 0", fontWeight: 800, color: "var(--text-main)", fontSize: "1rem" }}>{username}</p>
+            </div>
+            {/* Admin Panel Link */}
+            {isAdmin && (
+              <Link to="/admin-panel" className="dropdown-item" style={{ color: "#059669", fontWeight: 700 }}>
+                <ShieldCheck size={16} /> {t("nav.admin")}
+              </Link>
+            )}
+            {/* Switch Account */}
+            <button onClick={() => setIsSwitchModalOpen(true)} className="dropdown-item" style={{ width: "100%", textAlign: "left", border: "none", background: "none" }}>
               <Users size={16} /> {t("nav.switchAccount") || "Switch Account"}
             </button>
-            <button onClick={handleLogout} className="dropdown-item" style={{ width: '100%', textAlign: 'left', border: 'none', background: 'none', color: 'var(--danger)' }}>
+            <div style={{ height: 1, background: "var(--border-light)", margin: "0.4rem 0" }} />
+            {/* Logout */}
+            <button onClick={handleLogout} className="dropdown-item" style={{ width: "100%", textAlign: "left", border: "none", background: "none", color: "var(--danger)" }}>
               <LogOut size={16} /> {t("nav.logout")}
             </button>
           </div>
         </div>
 
-        <SwitchAccountModal
-          isOpen={isSwitchModalOpen}
-          onClose={() => setIsSwitchModalOpen(false)}
-        />
+        <SwitchAccountModal isOpen={isSwitchModalOpen} onClose={() => setIsSwitchModalOpen(false)} />
       </div>
     </nav>
   );

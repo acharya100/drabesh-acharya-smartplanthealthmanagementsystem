@@ -12,7 +12,7 @@ const SwitchAccountModal = ({ isOpen, onClose }) => {
     const [switchingId, setSwitchingId] = useState(null);
     const [error, setError] = useState("");
 
-    const currentUsername = localStorage.getItem("username");
+    const currentUserId = sessionStorage.getItem("user_id");
 
     useEffect(() => {
         if (isOpen) {
@@ -37,10 +37,14 @@ const SwitchAccountModal = ({ isOpen, onClose }) => {
             setSwitchingId(userId);
             const { data } = await authService.switchUser(userId);
 
-            // Update local storage with new session data
+            // Update session storage with new user data
             sessionStorage.setItem("access_token", data.access);
             sessionStorage.setItem("refresh_token", data.refresh);
             sessionStorage.setItem("username", data.username);
+            sessionStorage.setItem("email", data.email);
+            sessionStorage.setItem("user_id", data.user_id);
+            sessionStorage.setItem("is_staff", data.is_staff ? "true" : "false");
+            sessionStorage.setItem("is_superuser", data.is_superuser ? "true" : "false");
             sessionStorage.setItem("isAuthenticated", "true");
 
             // Reload to apply new user context across the app
@@ -123,7 +127,7 @@ const SwitchAccountModal = ({ isOpen, onClose }) => {
                                         alignItems: 'center',
                                         justifyContent: 'space-between',
                                         padding: '1.25rem 1.5rem',
-                                        background: user.username === currentUsername ? 'var(--primary-subtle)' : 'transparent',
+                                        background: String(user.id) === String(currentUserId) ? 'var(--primary-subtle)' : 'transparent',
                                         borderBottom: index !== users.length - 1 ? '1px solid var(--border-light)' : 'none',
                                         transition: 'background 0.2s'
                                     }}
@@ -132,11 +136,11 @@ const SwitchAccountModal = ({ isOpen, onClose }) => {
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                                         <div style={{
                                             width: '40px', height: '40px',
-                                            background: user.username === currentUsername ? 'var(--primary)' : 'var(--bg-main)',
-                                            color: user.username === currentUsername ? 'white' : 'var(--text-muted)',
+                                            background: String(user.id) === String(currentUserId) ? 'var(--primary)' : 'var(--bg-main)',
+                                            color: String(user.id) === String(currentUserId) ? 'white' : 'var(--text-muted)',
                                             borderRadius: '50%',
                                             display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                            border: user.username === currentUsername ? 'none' : '1px solid var(--border-light)'
+                                            border: String(user.id) === String(currentUserId) ? 'none' : '1px solid var(--border-light)'
                                         }}>
                                             <User size={20} />
                                         </div>
@@ -146,7 +150,7 @@ const SwitchAccountModal = ({ isOpen, onClose }) => {
                                         </div>
                                     </div>
 
-                                    {user.username === currentUsername ? (
+                                    {String(user.id) === String(currentUserId) ? (
                                         <span style={{
                                             fontSize: '0.7rem',
                                             fontWeight: 800,

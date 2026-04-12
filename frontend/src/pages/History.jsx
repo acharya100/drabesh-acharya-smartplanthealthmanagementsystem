@@ -7,8 +7,42 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { predictionService } from "../services/api";
-import { Calendar, AlertTriangle, CheckCircle, ArrowRight, Clock, Trash2, Search, Edit, X, Activity } from "lucide-react";
+import { Calendar, AlertTriangle, CheckCircle, ArrowRight, Clock, Trash2, Search, Edit, X, Activity, ShoppingCart, Leaf, Ban } from "lucide-react";
 import { useLanguage } from "../context/LanguageContext";
+
+// ── Helpers ───────────────────────────────────────────────────────────
+const getDisplayTitle = (pred, t) => {
+    if (pred.treatment_status === 'non_plant' || pred.is_plant_image === false) return t("history.badgeNonLeaf");
+    if (pred.treatment_status === 'out_of_scope' || pred.disease_name === 'Outside Scope' || pred.disease_name === 'Unrecognized')
+        return t("history.badgeOutsideScope");
+    if (pred.is_healthy || pred.disease_name === 'Healthy')
+        return `${pred.plant_name || t("plants.plantName")} – ${t("history.badgeHealthy")}`;
+    return pred.disease_name_ne && t.language === 'ne' ? pred.disease_name_ne : pred.disease_name;
+};
+
+const StatusBadge = ({ pred, t }) => {
+    if (pred.is_plant_image === false)
+        return <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', padding: '0.25rem 0.75rem', borderRadius: 100, fontSize: '0.72rem', fontWeight: 800, background: '#f1f5f9', color: '#475569' }}><Ban size={12} />{t("history.badgeNonLeaf")}</span>;
+    if (pred.is_healthy)
+        return <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', padding: '0.25rem 0.75rem', borderRadius: 100, fontSize: '0.72rem', fontWeight: 800, background: '#dcfce7', color: '#15803d' }}><CheckCircle size={12} />{t("history.badgeHealthy")}</span>;
+    if (pred.disease_name === 'Outside Scope' || pred.treatment_status === 'out_of_scope' || !pred.disease_name)
+        return <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', padding: '0.25rem 0.75rem', borderRadius: 100, fontSize: '0.72rem', fontWeight: 800, background: '#fef3c7', color: '#b45309' }}><AlertTriangle size={12} />{t("history.badgeOutsideScope")}</span>;
+    return <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', padding: '0.25rem 0.75rem', borderRadius: 100, fontSize: '0.72rem', fontWeight: 800, background: '#fee2e2', color: '#dc2626' }}><AlertTriangle size={12} />{t("history.badgeDiseased")}</span>;
+};
+
+const SeverityBadge = ({ severity, t }) => {
+    if (!severity || severity === 'unknown') return null;
+    const map = {
+        low: { bg: '#fef9c3', color: '#854d0e', label: t("history.severityLow") },
+        minor: { bg: '#fef9c3', color: '#854d0e', label: t("history.severityLow") },
+        moderate: { bg: '#ffedd5', color: '#9a3412', label: t("history.severityModerate") },
+        severe: { bg: '#fee2e2', color: '#dc2626', label: t("history.severityHigh") },
+        high: { bg: '#fee2e2', color: '#dc2626', label: t("history.severityHigh") },
+        critical: { bg: '#fef2f2', color: '#991b1b', label: t("history.severityCritical") },
+    };
+    const s = map[severity?.toLowerCase()] || { bg: '#f1f5f9', color: '#475569', label: severity };
+    return <span style={{ padding: '0.2rem 0.6rem', borderRadius: 100, fontSize: '0.7rem', fontWeight: 800, background: s.bg, color: s.color }}>{s.label}</span>;
+};
 
 const History = () => {
     const { t } = useLanguage();
@@ -17,7 +51,7 @@ const History = () => {
     const [filter, setFilter] = useState("all"); // all, healthy, infected
     const [showEditModal, setShowEditModal] = useState(false);
     const [editingPrediction, setEditingPrediction] = useState(null);
-
+    const [infoModalData, setInfoModalData] = useState(null);
 
     useEffect(() => {
         loadHistory();
@@ -37,7 +71,9 @@ const History = () => {
 
     const filteredPredictions = predictions.filter(p => {
         if (filter === "healthy") return p.is_healthy;
-        if (filter === "infected") return !p.is_healthy;
+        if (filter === "infected") return !p.is_healthy && p.is_plant_image && p.treatment_status !== 'out_of_scope' && p.disease_name !== 'Outside Scope' && p.disease_name !== 'Non-Leaf Image';
+        if (filter === "outside_scope") return p.treatment_status === 'out_of_scope' || p.disease_name === 'Outside Scope';
+        if (filter === "non_leaf") return p.is_plant_image === false || p.treatment_status === 'non_plant' || p.disease_name === 'Non-Leaf Image';
         return true;
     });
 
@@ -60,7 +96,8 @@ const History = () => {
         if (window.confirm(t("history.deleteConfirm") || "Delete this scan record? This cannot be undone.")) {
             try {
                 await predictionService.delete(id);
-                loadHistory();
+                // Remove from local state instead of re-fetching to preserve scroll position
+                setPredictions(prev => prev.filter(p => p.id !== id));
             } catch (e) {
                 console.error(e);
                 alert(t("history.deleteFailed") || "Failed to delete record");
@@ -89,27 +126,53 @@ const History = () => {
         <div className="page-container">
             <Navbar activePage="history" />
             <div className="page-content animate-slide-up">
-                <div className="page-header">
+                <div className="page-header" style={{ marginBottom: '3rem' }}>
                     <div>
                         <h1>{t("history.title")}</h1>
                         <p className="subtitle">{t("history.subtitle")}</p>
                     </div>
-                    <div className="filter-group" style={{ display: 'flex', gap: '0.5rem' }}>
+                </div>
+
+                <div className="filter-tabs-container" style={{
+                    display: 'flex',
+                    gap: '1rem',
+                    marginBottom: '2rem',
+                    background: 'var(--bg-surface-inner)',
+                    padding: '0.4rem',
+                    borderRadius: '16px',
+                    width: 'fit-content',
+                    border: '1px solid var(--border-light)'
+                }}>
+                    {[
+                        { id: 'all', label: t("history.filterAll"), icon: <Search size={16} /> },
+                        { id: 'infected', label: t("history.filterInfected"), icon: <AlertTriangle size={16} />, color: '#dc2626' },
+                        { id: 'healthy', label: t("history.filterHealthy"), icon: <CheckCircle size={16} />, color: '#15803d' },
+                        { id: 'outside_scope', label: t("history.filterOutsideScope"), icon: <Leaf size={16} />, color: '#b45309' },
+                        { id: 'non_leaf', label: t("history.filterNonLeaf"), icon: <Ban size={16} />, color: '#475569' }
+                    ].map(tab => (
                         <button
-                            className={`btn-secondary ${filter === 'all' ? 'active' : ''}`}
-                            onClick={() => setFilter("all")}
-                            style={{ background: filter === 'all' ? 'var(--primary)' : 'transparent', color: filter === 'all' ? 'white' : 'inherit' }}
+                            key={tab.id}
+                            onClick={() => setFilter(tab.id)}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.5rem',
+                                padding: '0.6rem 1.2rem',
+                                borderRadius: '12px',
+                                border: 'none',
+                                fontSize: '0.9rem',
+                                fontWeight: 700,
+                                cursor: 'pointer',
+                                transition: 'all 0.2s ease',
+                                background: filter === tab.id ? (tab.color || 'var(--primary)') : 'transparent',
+                                color: filter === tab.id ? 'white' : 'var(--text-secondary)',
+                                boxShadow: filter === tab.id ? '0 4px 12px rgba(0,0,0,0.1)' : 'none'
+                            }}
                         >
-                            {t("history.filterAll")}
+                            {tab.icon}
+                            {tab.label}
                         </button>
-                        <button
-                            className={`btn-secondary ${filter === 'infected' ? 'active' : ''}`}
-                            onClick={() => setFilter("infected")}
-                            style={{ background: filter === 'infected' ? '#dc2626' : 'transparent', color: filter === 'infected' ? 'white' : 'inherit' }}
-                        >
-                            {t("history.filterInfected")}
-                        </button>
-                    </div>
+                    ))}
                 </div>
 
                 {loading ? (
@@ -145,49 +208,35 @@ const History = () => {
 
                                         {/* Content */}
                                         <div style={{ flex: 1 }}>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                                                <h3 style={{ fontSize: '1.2rem', fontWeight: 800 }}>
-                                                    {pred.is_plant_image === false
-                                                        ? t("history.nonPlantDetected")
-                                                        : (pred.disease_name === "Unrecognized"
-                                                            ? "Unrecognized (Out of Scope)"
-                                                            : (pred.disease_name === "Healthy" || pred.is_healthy
-                                                                ? `${pred.plant_name || ""} ${t("history.healthyStatus")}`
-                                                                : (pred.disease_name || t("history.unidentifiedIssue")))
-                                                        )
-                                                    }
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', gap: '1rem', flexWrap: 'wrap' }}>
+                                                <h3 style={{
+                                                    fontSize: '1.1rem', fontWeight: 900, margin: 0,
+                                                    color: pred.is_plant_image === false ? '#475569'
+                                                        : pred.is_healthy ? '#15803d'
+                                                            : 'var(--text-main)'
+                                                }}>
+                                                    {getDisplayTitle(pred, t)}
                                                 </h3>
-                                                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.4rem', whiteSpace: 'nowrap' }}>
                                                     <Clock size={14} /> {formatDate(pred.created_at)}
                                                 </span>
                                             </div>
 
-                                            <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
-                                                <div className={`status-badge ${pred.is_plant_image === false ? 'not-plant' : (pred.is_healthy ? 'healthy' : 'infected')}`} style={{
-                                                    display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
-                                                    padding: '0.3rem 1rem', borderRadius: '100px',
-                                                    fontSize: '0.75rem', fontWeight: 800,
-                                                    background: pred.is_plant_image === false ? 'var(--bg-surface-2)' : (pred.is_healthy ? 'var(--primary-subtle)' : 'var(--danger-subtle)'),
-                                                    color: pred.is_plant_image === false ? 'var(--text-muted)' : (pred.is_healthy ? 'var(--primary)' : 'var(--danger)')
-                                                }}>
-                                                    {pred.is_plant_image === false ? <X size={14} /> : (pred.is_healthy ? <CheckCircle size={14} /> : <AlertTriangle size={14} />)}
-                                                    {pred.is_plant_image === false ? t("history.badgeNonPlant") : (pred.is_healthy ? t("history.optionHealthy") : t("history.badgeDiseased"))}
-                                                </div>
-
-                                                <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                                            {/* Badges row */}
+                                            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                                                <StatusBadge pred={pred} t={t} />
+                                                <SeverityBadge severity={pred.severity} t={t} />
+                                                <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
                                                     {t("history.confidence")}: <strong>{Math.round(pred.confidence || 0)}%</strong>
                                                 </span>
-
-                                                {pred.severity && !pred.is_healthy && pred.is_plant_image !== false && (
-                                                    <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                                                        {t("history.severity")}: <strong style={{ textTransform: 'uppercase', color: pred.severity === 'critical' ? 'var(--danger)' : 'inherit' }}>{pred.severity}</strong>
-                                                    </span>
-                                                )}
-
                                                 {!pred.is_healthy && pred.is_plant_image !== false && (
-                                                    <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                                                        {t("history.treatmentStatusLabel")}: <strong style={{ color: pred.treatment_status === 'treated' ? 'var(--success)' : (pred.treatment_status === 'in_progress' ? 'var(--warning)' : 'var(--text-muted)') }}>
-                                                            {pred.treatment_status === 'untreated' ? t("history.statusUntreated") : (pred.treatment_status === 'in_progress' ? t("history.statusInProgress") : t("history.statusTreated"))}
+                                                    <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+                                                        {t("history.treatmentStatusLabel")}: <strong style={{ color: pred.treatment_status === 'treated' ? '#15803d' : pred.treatment_status === 'in_progress' ? '#b45309' : 'inherit' }}>
+                                                            {pred.treatment_status === 'untreated' ? t("history.statusUntreated")
+                                                                : pred.treatment_status === 'in_progress' ? t("history.statusInProgress")
+                                                                    : pred.treatment_status === 'treated' ? t("history.statusTreated")
+                                                                        : pred.treatment_status === 'healthy' ? t("history.statusHealthy")
+                                                                            : pred.treatment_status || t("history.statusUntreated")}
                                                         </strong>
                                                     </span>
                                                 )}
@@ -197,8 +246,16 @@ const History = () => {
                                         {/* Actions */}
                                         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                                             <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                                                {/* View Treatment link for ALL cases EXCEPT Unrecognized */}
-                                                {pred.disease_name !== 'Unrecognized' && pred.is_plant_image !== false && (
+                                                {/* Button logic for special cases and valid cases */}
+                                                {(pred.treatment_status === 'non_plant' || pred.is_plant_image === false || pred.treatment_status === 'out_of_scope' || pred.disease_name === 'Unrecognized') ? (
+                                                    <button
+                                                        onClick={() => setInfoModalData(pred)}
+                                                        className="btn-secondary"
+                                                        style={{ fontSize: '0.85rem', padding: '0.5rem 1rem' }}
+                                                    >
+                                                        {t("history.viewDetails")}
+                                                    </button>
+                                                ) : (
                                                     <div style={{ display: 'flex', gap: '0.5rem' }}>
                                                         <Link
                                                             to="/treatment"
@@ -228,7 +285,7 @@ const History = () => {
                                                                 title="Move to Treatment History"
                                                             >
                                                                 <Activity size={16} style={{ marginRight: '0.4rem' }} />
-                                                                {t("dashboard.actionTreatments") || "Start Treatment"}
+                                                                {t("history.startTreatment")}
                                                             </button>
                                                         )}
                                                     </div>
@@ -272,6 +329,40 @@ const History = () => {
                     </div>
                 )}
             </div>
+
+            {/* Info Modal for Non-Plant / Out-of-Scope */}
+            {infoModalData && (
+                <div className="modal-overlay">
+                    <div className="modal-content animate-slide-up" style={{ maxWidth: '450px', padding: '2rem' }}>
+                        <div className="modal-header" style={{ marginBottom: '1.5rem' }}>
+                            <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-primary)', margin: 0 }}>
+                                {infoModalData.is_plant_image === false || infoModalData.treatment_status === 'non_plant' ? (
+                                    <><Ban size={24} style={{ color: '#475569' }} /> {t("history.modalTitleNonPlant")}</>
+                                ) : (
+                                    <><AlertTriangle size={24} style={{ color: '#b45309' }} /> {t("history.modalTitleOutsideScope")}</>
+                                )}
+                            </h2>
+                            <button className="close-btn" onClick={() => setInfoModalData(null)}><X /></button>
+                        </div>
+                        <div className="modal-body" style={{ color: 'var(--text-muted)', lineHeight: '1.6' }}>
+                            {infoModalData.is_plant_image === false || infoModalData.treatment_status === 'non_plant' ? (
+                                <p>{t("history.modalBodyNonPlant")}</p>
+                            ) : (
+                                <p>{t("history.modalBodyOutsideScope")}</p>
+                            )}
+                            <div style={{ background: 'var(--bg-surface-inner)', padding: '1rem', borderRadius: '12px', marginTop: '1.5rem', display: 'flex', justifyContent: 'space-between' }}>
+                                <span style={{ fontWeight: 700, color: 'var(--text-main)' }}>{t("detection.aiConfidenceLabel") || "AI Confidence"}</span>
+                                <span style={{ fontWeight: 900, color: 'var(--primary)' }}>{Math.round(infoModalData.confidence || 0)}%</span>
+                            </div>
+                        </div>
+                        <div className="modal-footer" style={{ marginTop: '2rem', justifyContent: 'center' }}>
+                            <button type="button" className="btn-primary" onClick={() => setInfoModalData(null)}>
+                                {t("history.modalAcknowledge")}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Edit Modal */}
             {showEditModal && editingPrediction && (

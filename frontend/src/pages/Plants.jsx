@@ -11,6 +11,7 @@ import { useLanguage } from "../context/LanguageContext";
 
 const Plants = () => {
   const { t } = useLanguage();
+  const location = useLocation();
   const [plants, setPlants] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -19,6 +20,11 @@ const Plants = () => {
     water: "",
     difficulty: ""
   });
+  const [activeTab, setActiveTab] = useState(() => {
+    const params = new URLSearchParams(location.search);
+    return params.get('filter') || "all";
+  });
+
   const [showFilters, setShowFilters] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
@@ -33,18 +39,23 @@ const Plants = () => {
     sunlight_requirement: "partial_sun",
     water_frequency: "weekly",
     difficulty_level: "beginner",
-    is_edible: false,
-    is_medicinal: false,
-    is_toxic: false
+    health_status: "healthy"
   });
   const [plantImage, setPlantImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
 
-  const location = useLocation();
+  // Sync activeTab with URL filter parameter
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const filter = params.get('filter');
+    if (filter && filter !== activeTab) {
+      setActiveTab(filter);
+    }
+  }, [location.search]);
 
   useEffect(() => {
     loadPlants();
-  }, [filters, location]);
+  }, [filters, activeTab, location]);
 
   const loadPlants = async () => {
     try {
@@ -57,8 +68,8 @@ const Plants = () => {
         difficulty_level: filters.difficulty
       };
 
-      if (queryParams.get('filter') === 'healthy') {
-        params.is_toxic = false;
+      if (activeTab && activeTab !== 'all') {
+        params.health_status = activeTab;
       }
 
       const { data } = await plantService.getAll(params);
@@ -120,20 +131,53 @@ const Plants = () => {
       const { data } = await predictionService.identify(formData);
 
       if (data.success) {
-        setNewPlant(prev => ({
-          ...prev,
-          name: data.data.name,
-          scientific_name: data.data.scientific_name,
-          sunlight_requirement: data.data.suggestions.sunlight.toLowerCase().replace(' ', '_'),
-          water_frequency: data.data.suggestions.water.toLowerCase(),
-          difficulty_level: data.data.suggestions.difficulty.toLowerCase()
-        }));
+        const isNonPlant = data.data.is_plant_image === false;
+        const isOutOfScope = data.data.is_out_of_scope === true;
+        const rawName = data.data.name || '';
+        const rawSci = data.data.scientific_name || '';
+
+        // Non-plant image
+        if (isNonPlant || !data.data.is_plant_image) {
+          setNewPlant(prev => ({
+            ...prev,
+            name: 'Non-Leaf Image',
+            scientific_name: 'N/A',
+            health_status: 'non_leaf',
+            sunlight_requirement: 'outside_scope',
+            water_frequency: 'outside_scope',
+            description: 'This image does not contain a recognizable plant leaf.'
+          }));
+        }
+        // Outside scope image
+        else if (isOutOfScope || data.data.disease_name === 'Outside Scope') {
+          setNewPlant(prev => ({
+            ...prev,
+            name: 'Outside Scope',
+            scientific_name: 'N/A',
+            health_status: 'out_of_scope',
+            sunlight_requirement: 'outside_scope',
+            water_frequency: 'outside_scope',
+            description: 'This species is not currently supported by our disease detection models.'
+          }));
+        }
+        // Valid plant
+        else {
+          setNewPlant(prev => ({
+            ...prev,
+            name: rawName,
+            scientific_name: rawSci,
+            sunlight_requirement: data.data.suggestions?.sunlight?.toLowerCase().replace(' ', '_') || 'partial_sun',
+            water_frequency: data.data.suggestions?.water?.toLowerCase() || 'weekly',
+            difficulty_level: data.data.suggestions?.difficulty?.toLowerCase() || 'beginner',
+            description: ''
+          }));
+        }
       }
       setIsAnalyzing(false);
     } catch (error) {
-      console.error("AI Analysis failed:", error);
+      console.error('AI Analysis failed:', error);
       setIsAnalyzing(false);
-      alert(t("plants.aiAnalysisFailed") || "AI analysis failed. Please fill the details manually.");
+      alert(t('plants.aiAnalysisFailed') || 'AI analysis failed. Please fill the details manually.');
     }
   };
 
@@ -148,9 +192,7 @@ const Plants = () => {
       sunlight_requirement: plant.sunlight_requirement,
       water_frequency: plant.water_frequency,
       difficulty_level: plant.difficulty_level,
-      is_edible: plant.is_edible,
-      is_medicinal: plant.is_medicinal,
-      is_toxic: plant.is_toxic
+      health_status: plant.health_status || 'healthy'
     });
     setImagePreview(plant.image);
     setShowAddModal(true);
@@ -177,11 +219,34 @@ const Plants = () => {
 
   const handleSubmitNewPlant = async (e) => {
     e.preventDefault();
+
+    const isNonLeaf = newPlant.health_status === 'non_leaf';
+    const isOutScope = newPlant.health_status === 'out_of_scope';
+
+    // Auto-correct labels before saving
+    const finalPlant = { ...newPlant };
+    if (isNonLeaf) {
+      finalPlant.name = 'Non-Plant Image';
+      finalPlant.scientific_name = 'Non-Plant Image';
+      finalPlant.sunlight_requirement = 'not_needed';
+      finalPlant.water_frequency = 'not_needed';
+    } else if (isOutScope) {
+      finalPlant.name = 'Out of Scope';
+      finalPlant.scientific_name = 'Out of Scope';
+      finalPlant.sunlight_requirement = 'outside_scope';
+      finalPlant.water_frequency = 'outside_scope';
+    } else if (!finalPlant.name.trim()) {
+      alert(t("plants.saveFailedInfo") || "Please provide a valid Plant Name before saving.");
+      return;
+    }
+
     try {
       setLoading(true);
       const formData = new FormData();
-      Object.keys(newPlant).forEach(key => {
-        formData.append(key, newPlant[key]);
+      Object.keys(finalPlant).forEach(key => {
+        if (finalPlant[key] !== null && finalPlant[key] !== undefined && finalPlant[key] !== '') {
+          formData.append(key, finalPlant[key]);
+        }
       });
       if (plantImage && typeof plantImage !== 'string') {
         formData.append('image', plantImage);
@@ -213,9 +278,7 @@ const Plants = () => {
       sunlight_requirement: "partial_sun",
       water_frequency: "weekly",
       difficulty_level: "beginner",
-      is_edible: false,
-      is_medicinal: false,
-      is_toxic: false
+      health_status: "healthy"
     });
     setPlantImage(null);
     setImagePreview(null);
@@ -239,6 +302,15 @@ const Plants = () => {
             <Plus size={20} />
             <span>{t("plants.addNewPlant")}</span>
           </button>
+        </div>
+
+        {/* --- NEW TABS --- */}
+        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
+          <button className={`btn-secondary ${activeTab === 'all' ? 'active' : ''}`} onClick={() => setActiveTab('all')} style={{ background: activeTab === 'all' ? 'var(--primary)' : 'transparent', color: activeTab === 'all' ? 'white' : 'var(--text-main)', border: activeTab === 'all' ? 'none' : '1px solid var(--border-light)' }}>{t("history.filterAll") || "All"}</button>
+          <button className={`btn-secondary ${activeTab === 'healthy' ? 'active' : ''}`} onClick={() => setActiveTab('healthy')} style={{ background: activeTab === 'healthy' ? '#15803d' : 'transparent', color: activeTab === 'healthy' ? 'white' : 'var(--text-main)', border: activeTab === 'healthy' ? 'none' : '1px solid var(--border-light)' }}>{t("dashboard.statHealthyPlants") || "Healthy Plants"}</button>
+          <button className={`btn-secondary ${activeTab === 'unhealthy' ? 'active' : ''}`} onClick={() => setActiveTab('unhealthy')} style={{ background: activeTab === 'unhealthy' ? '#dc2626' : 'transparent', color: activeTab === 'unhealthy' ? 'white' : 'var(--text-main)', border: activeTab === 'unhealthy' ? 'none' : '1px solid var(--border-light)' }}>{t("dashboard.statUnhealthyPlants") || "Unhealthy Plants"}</button>
+          <button className={`btn-secondary ${activeTab === 'out_of_scope' ? 'active' : ''}`} onClick={() => setActiveTab('out_of_scope')} style={{ background: activeTab === 'out_of_scope' ? '#d97706' : 'transparent', color: activeTab === 'out_of_scope' ? 'white' : 'var(--text-main)', border: activeTab === 'out_of_scope' ? 'none' : '1px solid var(--border-light)' }}>{t("dashboard.statOutOfScope") || "Out of Scope"}</button>
+          <button className={`btn-secondary ${activeTab === 'non_leaf' ? 'active' : ''}`} onClick={() => setActiveTab('non_leaf')} style={{ background: activeTab === 'non_leaf' ? '#64748b' : 'transparent', color: activeTab === 'non_leaf' ? 'white' : 'var(--text-main)', border: activeTab === 'non_leaf' ? 'none' : '1px solid var(--border-light)' }}>{t("dashboard.statNonPlant") || "Non-Plant Images"}</button>
         </div>
 
         {/* Search and Filter Section */}
@@ -277,19 +349,37 @@ const Plants = () => {
                   </div>
                   <div className="plant-info">
                     <div className="plant-header">
-                      <h3>{plant.name}</h3>
-                      <span className="scientific-name">{plant.scientific_name}</span>
+                      <h3>
+                        {plant.health_status === 'non_leaf' ? (t("history.badgeNonPlant") || 'Non-Plant Image') :
+                          plant.health_status === 'out_of_scope' ? (t("history.badgeOutsideScope") || 'Out of Scope') :
+                            plant.name}
+                      </h3>
+                      <span className="scientific-name">
+                        {plant.health_status === 'non_leaf' ? (t("history.badgeNonPlant") || 'Non-Plant Image') :
+                          plant.health_status === 'out_of_scope' ? (t("history.badgeOutsideScope") || 'Out of Scope') :
+                            plant.scientific_name}
+                      </span>
                     </div>
 
                     <div className="plant-specs">
-                      <div className="spec-item"><Sun size={16} />{plant.sunlight_display}</div>
-                      <div className="spec-item"><Droplets size={16} />{plant.water_frequency_display}</div>
+                      <div className="spec-item"><Sun size={16} />
+                        {plant.health_status === 'non_leaf' ? (t("common.notNeeded") || 'Not Needed') :
+                          plant.health_status === 'out_of_scope' ? (t("common.notAvailable") || 'Not Available') :
+                            plant.sunlight_display}
+                      </div>
+                      <div className="spec-item"><Droplets size={16} />
+                        {plant.health_status === 'non_leaf' ? (t("common.notNeeded") || 'Not Needed') :
+                          plant.health_status === 'out_of_scope' ? (t("common.notAvailable") || 'Not Available') :
+                            plant.water_frequency_display}
+                      </div>
                     </div>
 
                     <div className="plant-footer">
                       <div className="plant-badges">
-                        {plant.is_edible && <span className="badge badge-edible">{t("plants.edible")}</span>}
-                        {plant.is_toxic && <span className="badge badge-toxic">{t("plants.toxic")}</span>}
+                        {plant.health_status === 'healthy' && <span className="badge badge-edible">{t("history.badgeHealthy") || "Healthy"}</span>}
+                        {plant.health_status === 'unhealthy' && <span className="badge badge-toxic">{t("history.badgeDiseased") || "Unhealthy"}</span>}
+                        {plant.health_status === 'non_leaf' && <span className="badge" style={{ backgroundColor: 'var(--warning-subtle)', color: '#d97706', fontWeight: 600 }}>{t("history.badgeNonLeaf") || "Non Leaf"}</span>}
+                        {plant.health_status === 'out_of_scope' && <span className="badge" style={{ backgroundColor: 'var(--text-muted)', color: 'white', fontWeight: 600 }}>{t("history.badgeOutsideScope") || "Out of Scope"}</span>}
                       </div>
                       <div style={{ display: 'flex', gap: '0.5rem', width: '100%', justifyContent: 'flex-end' }}>
                         <button className="btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }} onClick={() => handleEdit(plant)}>
@@ -364,8 +454,9 @@ const Plants = () => {
                         type="text"
                         value={newPlant.name}
                         onChange={(e) => setNewPlant({ ...newPlant, name: e.target.value })}
-                        required
                         placeholder={t("plants.plantNamePlaceholder") || "e.g. Fiddle Leaf Fig"}
+                        readOnly={newPlant.health_status === 'non_leaf' || newPlant.health_status === 'out_of_scope'}
+                        style={{ opacity: (newPlant.health_status === 'non_leaf' || newPlant.health_status === 'out_of_scope') ? 0.7 : 1 }}
                       />
                     </div>
                     <div className="form-group">
@@ -375,6 +466,8 @@ const Plants = () => {
                         value={newPlant.scientific_name}
                         onChange={(e) => setNewPlant({ ...newPlant, scientific_name: e.target.value })}
                         placeholder={t("plants.scientificNamePlaceholder") || "e.g. Ficus lyrata"}
+                        readOnly={newPlant.health_status === 'non_leaf' || newPlant.health_status === 'out_of_scope'}
+                        style={{ opacity: (newPlant.health_status === 'non_leaf' || newPlant.health_status === 'out_of_scope') ? 0.7 : 1 }}
                       />
                     </div>
                   </div>
@@ -389,41 +482,72 @@ const Plants = () => {
                     ></textarea>
                   </div>
 
-                  <div className="form-group-row">
-                    <div className="form-group">
-                      <label>{t("plants.sunlightReq")}</label>
-                      <select
-                        value={newPlant.sunlight_requirement}
-                        onChange={(e) => setNewPlant({ ...newPlant, sunlight_requirement: e.target.value })}
-                      >
-                        <option value="full_sun">{t("plants.sunFull") || "Full Sun"}</option>
-                        <option value="partial_sun">{t("plants.sunPartialSun") || "Partial Sun"}</option>
-                        <option value="partial_shade">{t("plants.sunPartialShade") || "Partial Shade"}</option>
-                        <option value="full_shade">{t("plants.sunFullShade") || "Full Shade"}</option>
-                      </select>
+                  {/* Sunlight + Water — hidden for non_leaf, 'Not Known' info for out_of_scope */}
+                  {newPlant.health_status === 'non_leaf' ? (
+                    <div style={{ padding: '1rem 1.25rem', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0', color: '#64748b', fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      ℹ️ Sunlight requirement and watering frequency are not applicable for non-plant images.
                     </div>
-                    <div className="form-group">
-                      <label>{t("plants.waterFreq")}</label>
-                      <select
-                        value={newPlant.water_frequency}
-                        onChange={(e) => setNewPlant({ ...newPlant, water_frequency: e.target.value })}
-                      >
-                        <option value="daily">{t("plants.waterDaily") || "Daily"}</option>
-                        <option value="every_2_days">{t("plants.waterEvery2Days") || "Every 2 Days"}</option>
-                        <option value="weekly">{t("plants.waterWeekly") || "Weekly"}</option>
-                        <option value="bi_weekly">{t("plants.waterBiWeekly") || "Every 2 Weeks"}</option>
-                      </select>
+                  ) : newPlant.health_status === 'out_of_scope' ? (
+                    <div style={{ padding: '1rem 1.25rem', background: '#fefce8', borderRadius: '10px', border: '1px solid #fde047', color: '#854d0e', fontSize: '0.875rem', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                      <div style={{ fontWeight: 700 }}>⚠️ Out of Scope Image</div>
+                      <div>Sunlight Requirement: <strong>Not Available</strong></div>
+                      <div>Watering Frequency: <strong>Not Available</strong></div>
                     </div>
-                  </div>
+                  ) : (
+                    <div className="form-group-row">
+                      <div className="form-group">
+                        <label>{t("plants.sunlightReq")}</label>
+                        <select
+                          value={newPlant.sunlight_requirement}
+                          onChange={(e) => setNewPlant({ ...newPlant, sunlight_requirement: e.target.value })}
+                        >
+                          <option value="full_sun">{t("plants.sunFull") || "Full Sun"}</option>
+                          <option value="partial_sun">{t("plants.sunPartialSun") || "Partial Sun"}</option>
+                          <option value="partial_shade">{t("plants.sunPartialShade") || "Partial Shade"}</option>
+                          <option value="full_shade">{t("plants.sunFullShade") || "Full Shade"}</option>
+                          <option value="outside_scope">{t("plants.outsideScope") || "Outside Scope"}</option>
+                        </select>
+                      </div>
+                      <div className="form-group">
+                        <label>{t("plants.waterFreq")}</label>
+                        <select
+                          value={newPlant.water_frequency}
+                          onChange={(e) => setNewPlant({ ...newPlant, water_frequency: e.target.value })}
+                        >
+                          <option value="daily">{t("plants.waterDaily") || "Daily"}</option>
+                          <option value="every_2_days">{t("plants.waterEvery2Days") || "Every 2 Days"}</option>
+                          <option value="weekly">{t("plants.waterWeekly") || "Weekly"}</option>
+                          <option value="bi_weekly">{t("plants.waterBiWeekly") || "Every 2 Weeks"}</option>
+                          <option value="outside_scope">{t("plants.outsideScope") || "Outside Scope"}</option>
+                        </select>
+                      </div>
+                    </div>
+                  )}
 
-                  <div className="form-checkbox-group" style={{ display: 'flex', gap: '2rem', border: '1px solid var(--border-light)', padding: '1.5rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-surface-inner)' }}>
+                  <div className="form-checkbox-group" style={{ display: 'flex', gap: '2rem', border: '1px solid var(--border-light)', padding: '1.5rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-surface-inner)', flexWrap: 'wrap' }}>
                     <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 'bold' }}>
-                      <input type="checkbox" checked={newPlant.is_edible} onChange={(e) => setNewPlant({ ...newPlant, is_edible: e.target.checked })} style={{ width: '20px', height: '20px' }} />
-                      {t("plants.edibleLabel")}
+                      <input type="radio" value="healthy" checked={newPlant.health_status === 'healthy'}
+                        onChange={() => setNewPlant({ ...newPlant, health_status: 'healthy' })}
+                        style={{ width: '20px', height: '20px' }} />
+                      Healthy
                     </label>
                     <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 'bold' }}>
-                      <input type="checkbox" checked={newPlant.is_toxic} onChange={(e) => setNewPlant({ ...newPlant, is_toxic: e.target.checked })} style={{ width: '20px', height: '20px' }} />
-                      {t("plants.toxicLabel")}
+                      <input type="radio" value="unhealthy" checked={newPlant.health_status === 'unhealthy'}
+                        onChange={() => setNewPlant({ ...newPlant, health_status: 'unhealthy' })}
+                        style={{ width: '20px', height: '20px' }} />
+                      Unhealthy
+                    </label>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 'bold' }}>
+                      <input type="radio" value="non_leaf" checked={newPlant.health_status === 'non_leaf'}
+                        onChange={() => setNewPlant({ ...newPlant, health_status: 'non_leaf', name: 'Non-Leaf Image', scientific_name: 'N/A', sunlight_requirement: 'outside_scope', water_frequency: 'outside_scope' })}
+                        style={{ width: '20px', height: '20px' }} />
+                      Non-Leaf Image
+                    </label>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 'bold' }}>
+                      <input type="radio" value="out_of_scope" checked={newPlant.health_status === 'out_of_scope'}
+                        onChange={() => setNewPlant({ ...newPlant, health_status: 'out_of_scope', name: 'Outside Scope', scientific_name: 'N/A', sunlight_requirement: 'outside_scope', water_frequency: 'outside_scope' })}
+                        style={{ width: '20px', height: '20px' }} />
+                      Outside Scope
                     </label>
                   </div>
                 </div>
@@ -482,9 +606,10 @@ const Plants = () => {
                   </div>
 
                   <div style={{ display: 'flex', gap: '1rem' }}>
-                    {selectedPlant.is_edible && <span className="badge badge-edible" style={{ padding: '0.6rem 1.2rem' }}>{t("plants.edibleSpecies")}</span>}
-                    {selectedPlant.is_toxic && <span className="badge badge-toxic" style={{ padding: '0.6rem 1.2rem' }}>{t("plants.toxicSpecies")}</span>}
-                    {selectedPlant.is_medicinal && <span className="badge" style={{ padding: '0.6rem 1.2rem', background: 'var(--info-subtle)', color: 'var(--info)', border: '1px solid var(--info)' }}>{t("plants.medicinalUse")}</span>}
+                    {selectedPlant.health_status === 'healthy' && <span className="badge badge-edible" style={{ padding: '0.6rem 1.2rem' }}>Healthy</span>}
+                    {selectedPlant.health_status === 'unhealthy' && <span className="badge badge-toxic" style={{ padding: '0.6rem 1.2rem' }}>Unhealthy</span>}
+                    {selectedPlant.health_status === 'non_leaf' && <span className="badge" style={{ padding: '0.6rem 1.2rem', backgroundColor: 'var(--warning-subtle)', color: '#d97706', fontWeight: 600 }}>Non Leaf</span>}
+                    {selectedPlant.health_status === 'out_of_scope' && <span className="badge" style={{ padding: '0.6rem 1.2rem', backgroundColor: 'var(--text-muted)', color: 'white', fontWeight: 600 }}>Out of Scope</span>}
                   </div>
                 </div>
               </div>

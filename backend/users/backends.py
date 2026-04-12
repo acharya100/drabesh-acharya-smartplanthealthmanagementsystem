@@ -12,8 +12,12 @@ class EmailOrUsernameModelBackend(ModelBackend):
             username = kwargs.get(User.USERNAME_FIELD)
             
         try:
-            # Look for a user whose email matches the input, or whose username matches
-            user = User.objects.get(Q(username__iexact=username) | Q(email__iexact=username))
+            # Look for a user whose email, username, or phone_number matches the input
+            user = User.objects.get(
+                Q(username__iexact=username) | 
+                Q(email__iexact=username) | 
+                Q(phone_number__exact=username)
+            )
             
             # If a user is found, check if their password is correct
             if user.check_password(password) and self.user_can_authenticate(user):
@@ -23,6 +27,10 @@ class EmailOrUsernameModelBackend(ModelBackend):
             return None
         except User.MultipleObjectsReturned:
             # This shouldn't happen with unique constraints, but as a safety measure
-            return User.objects.filter(Q(username__iexact=username) | Q(email__iexact=username)).first()
+            return User.objects.filter(
+                Q(username__iexact=username) | 
+                Q(email__iexact=username) | 
+                Q(phone_number__exact=username)
+            ).first()
         
         return None

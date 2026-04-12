@@ -210,17 +210,28 @@ const Diseases = () => {
                                     </div>
 
                                     <div className="disease-body-info" style={{ padding: '0 2rem 1.5rem 2rem' }}>
-                                        {/* We show a snippet of the symptoms to keep the cards looking neat and uniform */}
-                                        <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
-                                            {disease.symptoms?.substring(0, 140)}...
+                                        {/* Symptoms */}
+                                        <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1rem', lineHeight: '1.4' }}>
+                                            <strong>Symptoms: </strong>{disease.symptoms?.substring(0, 100) || "Not detailed"}...
                                         </p>
 
-                                        <div className="disease-meta" style={{ display: 'flex', gap: '1.5rem', fontSize: '0.85rem', fontWeight: 'bold' }}>
+                                        {/* Causes */}
+                                        <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1.5rem', lineHeight: '1.4' }}>
+                                            <strong>Cause: </strong>{disease.causes?.substring(0, 100) || "Unknown or unrecorded causes"}...
+                                        </p>
+
+                                        <div className="disease-meta" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', fontSize: '0.85rem', fontWeight: 'bold' }}>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                                <Activity size={16} /> {disease.is_contagious ? 'Contagious' : 'Not Contagious'}
+                                                <Activity size={16} color="var(--primary)" /> {disease.is_contagious ? 'Contagious Disease' : 'Not Contagious'}
                                             </div>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                                <AlertTriangle size={16} /> {disease.affected_plant_count} Host Plants
+                                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
+                                                <AlertTriangle size={16} color="var(--warning)" style={{ marginTop: '2px' }} />
+                                                <div>
+                                                    <span style={{ display: 'block' }}>Affects:</span>
+                                                    <span style={{ fontWeight: 'normal', color: 'var(--text-muted)' }}>
+                                                        {disease.affected_plants?.length > 0 ? disease.affected_plants.map(p => p.name).join(", ") : "Various Host Plants"}
+                                                    </span>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>

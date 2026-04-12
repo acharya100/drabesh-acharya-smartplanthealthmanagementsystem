@@ -36,8 +36,9 @@ const Dashboard = () => {
       setStats({
         totalPlants: statsData.total_plants,
         healthyPlants: statsData.healthy_plants,
-        diseasesDetected: statsData.diseases_detected,
-        treatmentsAvailable: statsData.treatments_available
+        unhealthyPlants: statsData.unhealthy_plants,
+        outOfScope: statsData.out_of_scope,
+        nonPlant: statsData.non_plant_images
       });
 
       const historyData = historyRes.data.results || historyRes.data;
@@ -87,14 +88,14 @@ const Dashboard = () => {
             <p>{t("dashboard.loading")}</p>
           </div>
         ) : (
-          <div className="stats-grid" style={{ marginBottom: '4rem' }}>
-            <Link to="/plants" className="stat-card professional-card" style={{
+          <div className="stats-grid" style={{ marginBottom: '4rem', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
+            <Link to="/plants?filter=all" className="stat-card professional-card" style={{
               background: 'var(--bg-surface-1)',
               border: '1px solid var(--border-light)'
             }}>
-              <div className="stat-icon" style={{ background: 'var(--primary-subtle)', color: 'var(--primary)' }}><Leaf size={28} /></div>
+              <div className="stat-icon" style={{ background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6' }}><Activity size={28} /></div>
               <div>
-                <h3>{stats.totalPlants}</h3>
+                <h3>{stats.totalPlants || 0}</h3>
                 <p>{t("dashboard.statPlants")}</p>
               </div>
             </Link>
@@ -103,34 +104,46 @@ const Dashboard = () => {
               background: 'var(--bg-surface-1)',
               border: '1px solid var(--border-light)'
             }}>
-              <div className="stat-icon" style={{ background: 'var(--primary-subtle)', color: 'var(--primary)' }}><Activity size={28} /></div>
+              <div className="stat-icon" style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981' }}><Activity size={28} /></div>
               <div>
-                <h3>{stats.healthyPlants}</h3>
+                <h3>{stats.healthyPlants || 0}</h3>
                 <p>{t("dashboard.statHealthyPlants")}</p>
               </div>
             </Link>
 
-            <Link to="/history" className="stat-card professional-card" style={{
+            <Link to="/plants?filter=unhealthy" className="stat-card professional-card" style={{
               background: 'var(--bg-surface-1)',
               border: '1px solid var(--border-light)'
             }}>
-              <div className="stat-icon" style={{ background: 'var(--primary-subtle)', color: 'var(--primary)' }}><Camera size={28} /></div>
+              <div className="stat-icon" style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444' }}><Camera size={28} /></div>
               <div>
-                <h3>{stats.diseasesDetected}</h3>
-                <p>{t("dashboard.statDiseasesIdentified")}</p>
+                <h3>{stats.unhealthyPlants || 0}</h3>
+                <p>{t("dashboard.statUnhealthyPlants") || "Unhealthy Plants"}</p>
               </div>
             </Link>
 
-            <Link to="/treatment" className="stat-card professional-card" style={{
+            <Link to="/plants?filter=out_of_scope" className="stat-card professional-card" style={{
               background: 'var(--bg-surface-1)',
               border: '1px solid var(--border-light)'
             }}>
-              <div className="stat-icon" style={{ background: 'var(--primary-subtle)', color: 'var(--primary)' }}><ShieldCheck size={28} /></div>
+              <div className="stat-icon" style={{ background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b' }}><ShieldCheck size={28} /></div>
               <div>
-                <h3>{stats.treatmentsAvailable}</h3>
-                <p>{t("dashboard.statTreatmentsAvailable")}</p>
+                <h3>{stats.outOfScope || 0}</h3>
+                <p>{t("dashboard.statOutOfScope") || "Out of Scope"}</p>
               </div>
             </Link>
+
+            <Link to="/plants?filter=non_leaf" className="stat-card professional-card" style={{
+              background: 'var(--bg-surface-1)',
+              border: '1px solid var(--border-light)'
+            }}>
+              <div className="stat-icon" style={{ background: 'rgba(100, 116, 139, 0.1)', color: '#64748b' }}><Leaf size={28} /></div>
+              <div>
+                <h3>{stats.nonPlant || 0}</h3>
+                <p>{t("dashboard.statNonPlant") || "Non-Plant Images"}</p>
+              </div>
+            </Link>
+
           </div>
         )}
 
@@ -168,22 +181,32 @@ const Dashboard = () => {
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {recentPredictions.length > 0 ? recentPredictions.map(item => (
-                <div key={item.id} className="activity-item" style={{
-                  display: 'flex', alignItems: 'center', gap: '1rem',
-                  padding: '1rem', background: 'var(--bg-card)', borderRadius: '16px',
-                  border: '1px solid var(--border-light)', boxShadow: 'var(--shadow-sm)'
-                }}>
-                  <img src={item.image_url || item.image} alt="" style={{ width: '48px', height: '48px', borderRadius: '10px', objectFit: 'cover' }} />
-                  <div style={{ flex: 1 }}>
-                    <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 800 }}>{item.disease_name}</h4>
-                    <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>{item.plant_name}</p>
+              {recentPredictions.length > 0 ? recentPredictions.map(item => {
+                const isNonPlant = item.treatment_status === 'non_plant' || item.is_plant_image === false;
+                const isOutOfScope = item.treatment_status === 'out_of_scope' || item.disease_name === 'Unrecognized';
+
+                const displayName = isNonPlant ? t("history.badgeNonPlant") || 'Non-Plant Image' : isOutOfScope ? t("history.badgeOutsideScope") || 'Out of Scope' : item.disease_name;
+                const displayPlant = isNonPlant ? t("history.badgeNonPlant") || 'Non-Plant Image' : isOutOfScope ? t("history.badgeOutsideScope") || 'Out of Scope' : item.plant_name;
+                const badgeText = isNonPlant ? t("history.badgeNonLeaf") || 'NON LEAF' : isOutOfScope ? t("history.badgeOutsideScope") || 'SCOPE' : item.is_healthy ? t("history.badgeHealthy") || 'HEALTHY' : t("history.badgeDiseased") || 'DISEASED';
+                const badgeClass = isNonPlant || isOutOfScope ? 'neutral' : item.is_healthy ? 'success' : 'danger';
+
+                return (
+                  <div key={item.id} className="activity-item" style={{
+                    display: 'flex', alignItems: 'center', gap: '1rem',
+                    padding: '1rem', background: 'var(--bg-card)', borderRadius: '16px',
+                    border: '1px solid var(--border-light)', boxShadow: 'var(--shadow-sm)'
+                  }}>
+                    <img src={item.image_url || item.image} alt="" style={{ width: '48px', height: '48px', borderRadius: '10px', objectFit: 'cover' }} />
+                    <div style={{ flex: 1 }}>
+                      <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 800 }}>{displayName}</h4>
+                      <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>{displayPlant}</p>
+                    </div>
+                    <div className={`badge ${badgeClass}`} style={{ fontSize: '0.65rem' }}>
+                      {badgeText}
+                    </div>
                   </div>
-                  <div className={`badge ${item.is_healthy ? 'success' : 'danger'}`} style={{ fontSize: '0.65rem' }}>
-                    {item.is_healthy ? 'HEALTHY' : 'DISEASED'}
-                  </div>
-                </div>
-              )) : (
+                );
+              }) : (
                 <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)', background: 'var(--bg-app)', borderRadius: '16px', border: '1px dashed var(--border-light)' }}>
                   <Clock size={32} style={{ marginBottom: '0.5rem', opacity: 0.5 }} />
                   <p>No recent activity</p>

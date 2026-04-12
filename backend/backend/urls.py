@@ -32,8 +32,9 @@ class CustomTokenObtainPairView(TokenObtainPairView):
 def api_root(request):
     return JsonResponse({
         "status": "online",
-        "message": "Backend API is running...",
-        "frontend_url": "http://localhost:5173",
+        "message": "Smart Plant Health Management System — API is running",
+        "application": "Smart Plant Health Management System",
+        "frontend_url": "Smart Plant Health Management System",
         "endpoints": {
             "admin": "/admin/",
             "auth": "/api/auth/",
@@ -41,6 +42,8 @@ def api_root(request):
             "diseases": "/api/diseases/",
             "predictions": "/api/predictions/",
             "ecommerce": "/api/ecommerce/",
+            "chat": "/api/chat/",
+            "soil": "/api/soil/",
         }
     })
 
@@ -53,6 +56,8 @@ urlpatterns = [
     path('api/diseases/', include('diseases.urls')),
     path('api/predictions/', include('predictions.urls')),
     path('api/ecommerce/', include('ecommerce.urls')),
+    path('api/chat/', include('chat.urls')),
+    path('api/soil/', include('soil.urls')),
     path('', api_root),
 ]
 

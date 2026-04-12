@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
-import DiseaseRecommendations from "../components/DiseaseRecommendations";
 import { predictionService } from "../services/api";
 import { Upload, Camera, AlertTriangle, CheckCircle, ArrowRight, RefreshCw, X, Activity } from "lucide-react";
 import { useLanguage } from "../context/LanguageContext";
+import { offlineStore } from "../utils/offlineStore";
 
 /**
  * AI Disease Detection Lab
@@ -145,13 +145,27 @@ const DiseaseDetection = () => {
   const handleStartTreatment = async () => {
     if (!result || !result.id) return;
 
+    // Optimistic UI update for professional offline-first experience
+    if (!window.navigator.onLine) {
+      console.log("[Detection] Offline mode: Saving treatment status locally");
+      offlineStore.saveOfflineUpdate(result.id, { treatment_status: 'in_progress' });
+      setResult(prev => ({ ...prev, treatment_status: 'in_progress' }));
+      // Still navigate to history so user sees it "working"
+      navigate("/treatment-history");
+      return;
+    }
+
     try {
       setLoading(true);
       await predictionService.update(result.id, { treatment_status: 'in_progress' });
-      navigate('/treatment-history');
+      setResult(prev => ({ ...prev, treatment_status: 'in_progress' }));
+      // Navigate to treatment history to see the progress
+      navigate("/treatment-history");
     } catch (err) {
       console.error("Error starting treatment:", err);
-      setError("Failed to start treatment tracking. Please try again.");
+      // Fallback: If update fails (e.g. network blip), save locally anyway
+      offlineStore.saveOfflineUpdate(result.id, { treatment_status: 'in_progress' });
+      navigate("/treatment-history");
     } finally {
       setLoading(false);
     }
@@ -265,7 +279,50 @@ const DiseaseDetection = () => {
               {result ? (
                 <div className="result-card-v2 animate-slide-up" style={{ background: 'var(--bg-card)', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--glass-shadow)', overflow: 'hidden', border: '1px solid var(--border-light)' }}>
 
-                  {result.is_recognized === false ? (
+                  {/* ── NON-PLANT IMAGE ─────────────────────────────────── */}
+                  {result.is_plant_image === false ? (
+                    <div style={{ padding: 0 }}>
+                      <div style={{ padding: '2rem 2.5rem', background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'flex-start', gap: '1.25rem' }}>
+                        <div style={{ width: '52px', height: '52px', borderRadius: '14px', background: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                          <X size={28} color="white" />
+                        </div>
+                        <div>
+                          <div style={{ fontSize: '0.7rem', fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#475569', marginBottom: '0.4rem' }}>
+                            Scan Complete — Invalid Detection
+                          </div>
+                          <h2 style={{ fontSize: '1.4rem', fontWeight: 900, color: '#1e293b', margin: 0 }}>
+                            Non-Leaf Image detected
+                          </h2>
+                          <p style={{ margin: '0.4rem 0 0', color: '#64748b', fontSize: '0.88rem' }}>
+                            Please upload a photo of a plant leaf.
+                          </p>
+                        </div>
+                      </div>
+                      <div style={{ padding: '2rem 2.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                        <div style={{ background: '#f8fafc', borderRadius: '12px', padding: '1.25rem', border: '1px solid #e2e8f0' }}>
+                          <h4 style={{ fontSize: '0.78rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#64748b', marginBottom: '0.75rem' }}>Why this happened</h4>
+                          <p style={{ color: '#475569', fontSize: '0.88rem', lineHeight: 1.6, margin: 0 }}>
+                            Our AI model analyses plant leaves for disease. The uploaded image does not contain a recognisable plant leaf — it may be a photo of a person, landscape, object, or animal.
+                          </p>
+                        </div>
+                        {[
+                          { icon: '🌿', text: 'Upload a clear, close-up photo of a plant leaf.' },
+                          { icon: '💡', text: 'Ensure adequate lighting and a clean background.' },
+                          { icon: '✂️', text: 'Crop the image so the leaf fills most of the frame.' },
+                        ].map((tip, i) => (
+                          <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', padding: '0.75rem', borderRadius: '10px', background: 'var(--bg-main)', border: '1px solid var(--border-light)' }}>
+                            <span style={{ fontSize: '1.1rem', flexShrink: 0 }}>{tip.icon}</span>
+                            <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>{tip.text}</span>
+                          </div>
+                        ))}
+                        <button onClick={() => { setResult(null); setPreview(null); }} style={{ width: '100%', padding: '0.9rem', borderRadius: '10px', background: '#475569', color: 'white', border: 'none', fontWeight: 800, fontSize: '1rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                          <RefreshCw size={16} /> Try Another Image
+                        </button>
+                      </div>
+                    </div>
+
+                  /* ── OUT-OF-SCOPE / UNRECOGNISED LEAF ─────────────────── */
+                  ) : result.is_recognized === false ? (
                     <div style={{ padding: '0' }}>
                       {/* Header Banner */}
                       <div style={{
@@ -288,10 +345,10 @@ const DiseaseDetection = () => {
                             Analysis Complete — Species Not Supported
                           </div>
                           <h2 style={{ fontSize: '1.5rem', fontWeight: 900, color: '#78350f', margin: 0 }}>
-                            Leaf Not in Our Database
+                            Outside Scope
                           </h2>
                           <p style={{ margin: '0.5rem 0 0', color: '#92400e', fontSize: '0.9rem' }}>
-                            Confidence in any known match: <strong>{result.confidence.toFixed(1)}%</strong>
+                            This plant species is currently not supported by our AI models.
                           </p>
                         </div>
                       </div>
@@ -399,41 +456,44 @@ const DiseaseDetection = () => {
                             <p className="healthy-tip" style={{ color: 'var(--text-muted)', lineHeight: 1.6 }}>{t("detection.healthyTip")}</p>
                           ) : (
                             <>
-                                <div className="next-steps-container">
-                                  <h4 style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 800, textTransform: 'uppercase', fontSize: '0.85rem', color: 'var(--primary)', marginBottom: '1.5rem' }}><ArrowRight size={18} /> {t("detection.recommendedActions")}</h4>
-                                  <div className="treatment-preview">
-                                    {result.recommended_treatment ? (
-                                      <div className="treatment-cta" style={{ background: 'var(--bg-main)', padding: '1.5rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-light)' }}>
-                                        <p style={{ fontSize: '0.95rem', marginBottom: '1.5rem', lineHeight: 1.5 }}>Recommended treatment: <strong style={{ color: 'var(--secondary)' }}>{result.recommended_treatment.name}</strong></p>
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
-                                          <button
-                                            onClick={handleStartTreatment}
-                                            className="btn-primary"
-                                            disabled={loading}
-                                            style={{ width: '100%', justifyContent: 'center', gap: '0.5rem', background: 'var(--secondary)' }}
-                                          >
-                                            {loading ? <RefreshCw size={18} className="animate-spin" /> : <Activity size={18} />}
-                                            Start Treatment Progress
-                                          </button>
-                                          
-                                          <Link
-                                            to="/treatment"
-                                            state={{ initialDiseaseId: result.disease_id, initialDiseaseName: result.disease_name }}
-                                            className="btn-secondary"
-                                            style={{ display: 'flex', justifyContent: 'center', padding: '0.8rem', fontSize: '0.9rem', width: '100%' }}
-                                          >
-                                            {t("detection.viewTreatmentGuide")}
-                                          </Link>
-                                        </div>
+                              <div className="next-steps-container">
+                                <h4 style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 800, textTransform: 'uppercase', fontSize: '0.85rem', color: 'var(--primary)', marginBottom: '1.5rem' }}><ArrowRight size={18} /> {t("detection.recommendedActions")}</h4>
+                                <div className="treatment-preview">
+                                  {result.recommended_treatment ? (
+                                    <div className="treatment-cta" style={{ background: 'var(--bg-main)', padding: '1.5rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-light)' }}>
+                                      <p style={{ fontSize: '0.95rem', marginBottom: '1.5rem', lineHeight: 1.5 }}>Recommended treatment: <strong style={{ color: 'var(--secondary)' }}>{result.recommended_treatment.name}</strong></p>
+                                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                                        <button
+                                          onClick={handleStartTreatment}
+                                          className="btn-primary"
+                                          disabled={loading || result.treatment_status === 'in_progress'}
+                                          style={{ 
+                                            width: '100%', 
+                                            justifyContent: 'center', 
+                                            gap: '0.5rem', 
+                                            background: result.treatment_status === 'in_progress' ? 'var(--primary)' : 'var(--secondary)',
+                                            opacity: result.treatment_status === 'in_progress' ? 0.8 : 1
+                                          }}
+                                        >
+                                          {loading ? <RefreshCw size={18} className="animate-spin" /> : <Activity size={18} />}
+                                          {result.treatment_status === 'in_progress' ? t("detection.treatmentInProgress") || 'Treatment in Progress' : t("detection.startTreatmentBtn") || 'Start Treatment Progress'}
+                                        </button>
+
+                                        <Link
+                                          to="/treatment"
+                                          state={{ initialDiseaseId: result.disease_id, initialDiseaseName: result.disease_name }}
+                                          className="btn-secondary"
+                                          style={{ display: 'flex', justifyContent: 'center', padding: '0.8rem', fontSize: '0.9rem', width: '100%' }}
+                                        >
+                                          {t("detection.viewTreatmentGuide")}
+                                        </Link>
                                       </div>
-                                    ) : (
-                                      <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>{t("detection.noTreatmentFound")}</p>
-                                    )}
-                                  </div>
+                                    </div>
+                                  ) : (
+                                    <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>{t("detection.noTreatmentFound")}</p>
+                                  )}
                                 </div>
-                                
-                                {/* Disease Product Recommendations */}
-                                <DiseaseRecommendations diseaseName={result.disease_name} />
+                              </div>
                             </>
                           )}
                         </div>

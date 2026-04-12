@@ -1,238 +1,155 @@
-import { useState } from "react";
 import Navbar from "../components/Navbar";
 import { useCart } from "../context/CartContext";
-import { eCommerceService } from "../services/api";
-import { Trash2, Plus, Minus, CreditCard, Home, CheckCircle, ArrowLeft, ArrowRight, ShoppingBag, Truck, ShieldCheck, MapPin } from "lucide-react";
+import { Trash2, Plus, Minus, ArrowRight, ShoppingBag, Truck, ShieldCheck, Tag, CheckCircle } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useLanguage } from "../context/LanguageContext";
-import SavedAddresses from "../components/SavedAddresses";
 
 const Cart = () => {
     const { t } = useLanguage();
     const { cartItems, removeFromCart, updateQuantity, totalPrice, clearCart } = useCart();
     const navigate = useNavigate();
-    
-    const [step, setStep] = useState(1);
-    const [address, setAddress] = useState("");
-    const [selectedAddress, setSelectedAddress] = useState(null);
-    const [phone, setPhone] = useState("");
-    const [isPlacingOrder, setIsPlacingOrder] = useState(false);
 
-    const handlePlaceOrder = async (e) => {
-        e.preventDefault();
-        try {
-            setIsPlacingOrder(true);
-            const orderData = {
-                items: cartItems.map(item => ({
-                    product_id: item.id,
-                    quantity: item.quantity,
-                    price: item.price
-                })),
-                total_amount: totalPrice,
-                shipping_address: selectedAddress ? selectedAddress.full_address : address,
-                phone_number: selectedAddress ? selectedAddress.phone : phone,
-                payment_method: 'cod'
-            };
-            await eCommerceService.placeOrder(orderData);
-            clearCart();
-            setStep(3);
-            setIsPlacingOrder(false);
-        } catch (error) {
-            console.error("Order error:", error);
-            setIsPlacingOrder(false);
-            alert("Failed to place order. Please try again.");
-        }
+    const estimatedDelivery = () => {
+        const d = new Date();
+        d.setDate(d.getDate() + 5);
+        return d.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
     };
-
-    if (step === 3) {
-        return (
-            <div className="page-container">
-                <Navbar />
-                <div className="page-content animate-slide-up" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
-                    <div style={{ background: 'var(--primary-subtle)', padding: '3rem', borderRadius: '50%', marginBottom: '2rem' }}>
-                        <CheckCircle size={80} style={{ color: 'var(--primary)' }} />
-                    </div>
-                    <h1 style={{ marginBottom: '1rem' }}>Order Placed Successfully!</h1>
-                    <p style={{ color: 'var(--text-muted)', fontSize: '1.2rem', maxWidth: '500px', marginBottom: '2rem' }}>
-                        Thank you for your purchase. Our team will start processing your order immediately.
-                    </p>
-                    <button onClick={() => navigate('/store')} className="btn-primary">
-                        Return to Store
-                    </button>
-                </div>
-            </div>
-        );
-    }
 
     return (
         <div className="page-container">
             <Navbar activePage="store" />
             <div className="page-content animate-slide-up" style={{ padding: '2rem 3rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '4rem' }}>
-                    {[1, 2, 3].map((s) => (
-                        <div key={s} style={{ display: 'flex', alignItems: 'center' }}>
-                            <div style={{
-                                width: '40px', height: '40px', borderRadius: '50%',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                background: step >= s ? 'var(--primary)' : 'var(--bg-surface-inner)',
-                                color: step >= s ? '#fff' : 'var(--text-muted)',
-                                fontWeight: 800, fontSize: '1.1rem', transition: 'all 0.3s',
-                                border: step === s ? '4px solid var(--primary-light)' : 'none'
-                            }}>
-                                {step > s ? <CheckCircle size={22} /> : s}
-                            </div>
-                            {s < 3 && (
-                                <div style={{
-                                    width: '100px', height: '4px',
-                                    background: step > s ? 'var(--primary)' : 'var(--bg-surface-inner)',
-                                    margin: '0 1rem', transition: 'all 0.3s'
-                                }} />
-                            )}
-                        </div>
-                    ))}
-                </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '3rem' }}>
-                    <button onClick={() => step === 2 ? setStep(1) : navigate(-1)} style={{ background: 'var(--bg-card)', border: '1px solid var(--border-light)', cursor: 'pointer', color: 'var(--text-muted)', width: '48px', height: '48px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <ArrowLeft size={24} />
-                    </button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2.5rem' }}>
+                    <ShoppingBag size={32} color="var(--primary)" />
                     <div>
-                        <h1 style={{ margin: 0, fontSize: '2.5rem', fontWeight: 900 }}>{step === 1 ? 'Your Shopping Cart' : 'Checkout & Delivery'}</h1>
-                        <p style={{ margin: 0, color: 'var(--text-muted)' }}>{step === 1 ? `${cartItems.length} items ready for checkout` : 'Enter your details to finalize your order'}</p>
+                        <h1 style={{ margin: 0, fontSize: '2rem', fontWeight: 900, color: 'var(--secondary)' }}>Your Shopping Cart</h1>
+                        <p style={{ margin: 0, color: 'var(--text-muted)' }}>{cartItems.length} item{cartItems.length !== 1 ? "s" : ""} in cart</p>
                     </div>
+                    {cartItems.length > 0 && (
+                        <button onClick={clearCart} style={{ marginLeft: "auto", background: "#fef2f2", color: "#ef4444", border: "1px solid #fca5a5", borderRadius: 10, padding: "0.5rem 1rem", cursor: "pointer", fontWeight: 700, fontSize: "0.82rem", display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                            <Trash2 size={14} /> Clear All
+                        </button>
+                    )}
                 </div>
 
-                {cartItems.length === 0 && step === 1 ? (
-                    <div style={{ textAlign: 'center', padding: '5rem', background: 'var(--bg-card)', borderRadius: '30px', border: '1px solid var(--border-light)' }}>
-                        <ShoppingBag size={64} style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }} />
-                        <h2>Your cart is empty</h2>
-                        <p style={{ marginBottom: '2rem' }}>Browse our store and add some essentials for your plants!</p>
-                        <Link to="/store" className="btn-primary">Browse Store</Link>
+                {cartItems.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '6rem 2rem', background: 'var(--bg-card)', borderRadius: '28px', border: '2px dashed var(--border-light)' }}>
+                        <ShoppingBag size={72} style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', opacity: 0.3 }} />
+                        <h2 style={{ color: 'var(--secondary)', marginBottom: '0.75rem' }}>Your Cart is Empty</h2>
+                        <p style={{ marginBottom: '2rem', color: 'var(--text-muted)' }}>Browse our store and add some essentials for your plants!</p>
+                        <Link to="/store" className="btn-primary" style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem" }}>Browse Store <ArrowRight size={18} /></Link>
                     </div>
                 ) : (
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: '3rem', alignItems: 'start' }}>
-                        {/* Left Side: Items or Form */}
-                        <div>
-                            {step === 1 ? (
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                                    {cartItems.map(item => (
-                                        <div key={item.id} style={{
-                                            display: 'flex', alignItems: 'center', gap: '1.5rem',
-                                            padding: '1.5rem', background: 'var(--bg-card)', borderRadius: '24px',
-                                            border: '1px solid var(--border-light)', boxShadow: 'var(--shadow-sm)'
-                                        }}>
-                                            <img src={item.image ? (item.image.startsWith('http') ? item.image : `http://localhost:8000${item.image}`) : 'https://via.placeholder.com/100'} alt="" style={{ width: '80px', height: '80px', borderRadius: '16px', objectFit: 'cover' }} />
-                                            <div style={{ flex: 1 }}>
-                                                <h3 style={{ margin: 0, fontSize: '1.1rem' }}>{item.name}</h3>
-                                                <p style={{ margin: 0, color: 'var(--primary)', fontWeight: 800 }}>NPR {parseFloat(item.price).toLocaleString()}</p>
-                                            </div>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', background: 'var(--bg-app)', padding: '0.5rem', borderRadius: '12px' }}>
-                                                <button onClick={() => updateQuantity(item.id, item.quantity - 1)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><Minus size={16} /></button>
-                                                <span style={{ fontWeight: 800, minWidth: '20px', textAlign: 'center' }}>{item.quantity}</span>
-                                                <button onClick={() => updateQuantity(item.id, item.quantity + 1)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><Plus size={16} /></button>
-                                            </div>
-                                            <button 
-                                                onClick={() => removeFromCart(item.id)}
-                                                style={{ padding: '0.75rem', borderRadius: '12px', background: 'var(--danger-subtle)', color: 'var(--danger)', border: 'none', cursor: 'pointer' }}
-                                            >
-                                                <Trash2 size={20} />
+                        {/* Cart Items */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                            {cartItems.map(item => {
+                                const imgSrc = item.image
+                                    ? (item.image.startsWith('http') ? item.image : `http://localhost:8000${item.image}`)
+                                    : 'https://via.placeholder.com/100';
+                                const itemTotal = parseFloat(item.price) * (item.quantity || 1);
+
+                                return (
+                                    <div key={item.id} style={{
+                                        display: 'flex', alignItems: 'center', gap: '1.5rem',
+                                        padding: '1.5rem', background: 'var(--bg-card)', borderRadius: '20px',
+                                        border: '1px solid var(--border-light)', transition: "all 0.2s"
+                                    }}>
+                                        <img
+                                            src={imgSrc} alt={item.name}
+                                            style={{ width: '80px', height: '80px', borderRadius: '14px', objectFit: 'cover', cursor: "pointer" }}
+                                            onClick={() => navigate(`/store/product/${item.id}`)}
+                                        />
+                                        <div style={{ flex: 1 }}>
+                                            <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, color: 'var(--text-main)', cursor: "pointer" }}
+                                                onClick={() => navigate(`/store/product/${item.id}`)}
+                                            >{item.name}</h3>
+                                            <p style={{ margin: '0.2rem 0 0', color: 'var(--text-muted)', fontSize: '0.82rem' }}>
+                                                Rs. {parseFloat(item.price).toLocaleString()} each
+                                            </p>
+                                        </div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0', border: '1px solid var(--border-light)', borderRadius: '12px', overflow: 'hidden' }}>
+                                            <button onClick={() => updateQuantity(item.id, item.quantity - 1)} style={{ width: '38px', height: '38px', background: 'var(--bg-main)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                <Minus size={14} />
+                                            </button>
+                                            <span style={{ width: '38px', textAlign: 'center', fontWeight: 800, fontSize: '0.95rem' }}>{item.quantity}</span>
+                                            <button onClick={() => updateQuantity(item.id, item.quantity + 1)} style={{ width: '38px', height: '38px', background: 'var(--bg-main)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                <Plus size={14} />
                                             </button>
                                         </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <div style={{ background: 'var(--bg-card)', padding: '3rem', borderRadius: '24px', border: '1px solid var(--border-light)', boxShadow: 'var(--shadow-md)' }}>
-                                    <h2 style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2.5rem', fontWeight: 900 }}>
-                                        <MapPin size={28} className="text-primary" /> SHIPPING INFORMATION
-                                    </h2>
-                                    <form onSubmit={handlePlaceOrder}>
-                                        {/* Saved Addresses */}
-                                        <SavedAddresses
-                                            selectedId={selectedAddress}
-                                            onSelect={(addr) => {
-                                                setSelectedAddress(addr);
-                                                if (addr) { setAddress(addr.full_address); setPhone(addr.phone); }
-                                            }}
-                                        />
-                                        <div className="form-group" style={{ marginBottom: '1.5rem' }}>
-                                            <label style={{ color: 'var(--secondary)', fontWeight: 800, marginBottom: '0.75rem', display: 'block' }}>Or Enter Address Manually</label>
-                                            <textarea
-                                                required
-                                                rows="3"
-                                                value={address}
-                                                onChange={(e) => setAddress(e.target.value)}
-                                                placeholder="Full delivery address..."
-                                                style={{ borderRadius: '14px', padding: '1rem', fontSize: '1rem', border: '1px solid var(--border-light)', background: 'var(--bg-app)', lineHeight: 1.6 }}
-                                            />
+                                        <div style={{ textAlign: 'right', minWidth: '100px' }}>
+                                            <p style={{ margin: 0, fontWeight: 900, color: 'var(--primary)', fontSize: '1.1rem' }}>
+                                                Rs. {itemTotal.toLocaleString()}
+                                            </p>
                                         </div>
-                                        <div className="form-group" style={{ marginBottom: '2rem' }}>
-                                            <label style={{ color: 'var(--secondary)', fontWeight: 800, marginBottom: '0.75rem', display: 'block' }}>Phone Number</label>
-                                            <input
-                                                value={phone}
-                                                onChange={e => setPhone(e.target.value)}
-                                                placeholder="98XXXXXXXX"
-                                                style={{ borderRadius: '14px', padding: '1rem', width: '100%', fontSize: '1rem', border: '1px solid var(--border-light)', background: 'var(--bg-app)' }}
-                                            />
-                                        </div>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', padding: '1.75rem', background: 'var(--primary-subtle)', borderRadius: '18px', border: '1px solid var(--primary-light)' }}>
-                                            <div style={{ background: 'var(--primary)', color: '#fff', padding: '0.75rem', borderRadius: '12px' }}>
-                                                <CreditCard size={24} />
-                                            </div>
-                                            <div>
-                                                <h4 style={{ margin: 0, color: 'var(--primary)', fontWeight: 800 }}>Payment Method</h4>
-                                                <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-muted)' }}>Cash on Delivery (COD) - Pay when you receive.</p>
-                                            </div>
-                                        </div>
-                                    </form>
-                                </div>
-                            )}
+                                        <button
+                                            onClick={() => removeFromCart(item.id)}
+                                            style={{ padding: '0.6rem', borderRadius: '10px', background: '#fef2f2', color: '#ef4444', border: '1px solid #fca5a5', cursor: 'pointer' }}
+                                        >
+                                            <Trash2 size={16} />
+                                        </button>
+                                    </div>
+                                );
+                            })}
                         </div>
 
-                        {/* Right Side: Summary Card */}
-                        <div style={{ 
-                            background: 'var(--bg-card)', borderRadius: '24px', padding: '2.5rem', 
-                            border: '1px solid var(--border-light)', boxShadow: 'var(--shadow-md)',
-                            position: 'sticky', top: '120px'
+                        {/* Summary Sidebar */}
+                        <div style={{
+                            background: 'var(--bg-card)', borderRadius: '24px', padding: '2rem',
+                            border: '1px solid var(--border-light)', position: 'sticky', top: '100px'
                         }}>
-                            <h2 style={{ marginBottom: '1.5rem' }}>Summary</h2>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '2rem' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-muted)' }}>
-                                    <span>Subtotal</span>
-                                    <span>NPR {totalPrice.toLocaleString()}</span>
+                            <h3 style={{ fontWeight: 800, marginBottom: '1.5rem', margin: "0 0 1.5rem" }}>Order Summary</h3>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.5rem' }}>
+                                {cartItems.map((item, i) => (
+                                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
+                                        <span style={{ color: 'var(--text-muted)' }}>{item.name} × {item.quantity}</span>
+                                        <span style={{ fontWeight: 700 }}>Rs. {(parseFloat(item.price) * item.quantity).toLocaleString()}</span>
+                                    </div>
+                                ))}
+                            </div>
+                            <div style={{ borderTop: '1px solid var(--border-light)', paddingTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
+                                    <span>Subtotal</span><span>Rs. {totalPrice.toLocaleString()}</span>
                                 </div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-muted)' }}>
-                                    <span>Shipping</span>
-                                    <span style={{ color: 'var(--success)', fontWeight: 700 }}>FREE</span>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
+                                    <span>Shipping</span><span style={{ color: '#22c55e', fontWeight: 700 }}>Free</span>
                                 </div>
-                                <hr style={{ border: 'none', borderTop: '1px solid var(--border-light)' }} />
-                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.5rem', fontWeight: 900 }}>
-                                    <span>Total</span>
-                                    <span style={{ color: 'var(--primary)' }}>NPR {totalPrice.toLocaleString()}</span>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 900, fontSize: '1.2rem', marginTop: '0.75rem', borderTop: '1px solid var(--border-light)', paddingTop: '0.75rem' }}>
+                                    <span>Total</span><span style={{ color: 'var(--primary)' }}>Rs. {totalPrice.toLocaleString()}</span>
                                 </div>
                             </div>
 
-                            {step === 1 ? (
-                                <button 
-                                    onClick={() => setStep(2)}
-                                    className="btn-primary" 
-                                    style={{ width: '100%', justifyContent: 'center', padding: '1.25rem', borderRadius: '16px' }}
-                                >
-                                    Proceed to Checkout <ArrowRight size={20} />
-                                </button>
-                            ) : (
-                                <button 
-                                    onClick={handlePlaceOrder}
-                                    disabled={!address || isPlacingOrder}
-                                    className="btn-primary" 
-                                    style={{ width: '100%', justifyContent: 'center', padding: '1.25rem', borderRadius: '16px', opacity: isPlacingOrder || !address ? 0.7 : 1 }}
-                                >
-                                    {isPlacingOrder ? 'Processing...' : 'Place Order'}
-                                </button>
-                            )}
-                            
-                            <p style={{ textAlign: 'center', fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '1.5rem' }}>
-                                Prices include VAT where applicable. Secure checkout provided by Smart Plant Health.
-                            </p>
+                            <button
+                                onClick={() => navigate('/checkout')}
+                                className="btn-primary"
+                                style={{ width: '100%', marginTop: '1.5rem', height: '54px', justifyContent: 'center', display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '1rem' }}
+                            >
+                                Proceed to Checkout <ArrowRight size={20} />
+                            </button>
+
+                            {/* Trust badges */}
+                            <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px solid var(--border-light)' }}>
+                                <div style={{ flex: 1, textAlign: 'center', padding: '0.6rem' }}>
+                                    <Truck size={18} color="var(--primary)" style={{ marginBottom: '0.3rem' }} />
+                                    <div style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)' }}>Free Shipping</div>
+                                </div>
+                                <div style={{ flex: 1, textAlign: 'center', padding: '0.6rem' }}>
+                                    <ShieldCheck size={18} color="var(--primary)" style={{ marginBottom: '0.3rem' }} />
+                                    <div style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)' }}>Secure</div>
+                                </div>
+                                <div style={{ flex: 1, textAlign: 'center', padding: '0.6rem' }}>
+                                    <Tag size={18} color="var(--primary)" style={{ marginBottom: '0.3rem' }} />
+                                    <div style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)' }}>Best Price</div>
+                                </div>
+                            </div>
+
+                            {/* Quick Delivery Tag */}
+                            <div style={{ marginTop: '1rem', padding: '0.75rem 1rem', background: 'var(--primary-subtle)', borderRadius: '12px', border: '1px solid var(--primary)', textAlign: 'center' }}>
+                                <span style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                                    <CheckCircle size={14} /> Quick Delivery Guaranteed
+                                </span>
+                            </div>
                         </div>
                     </div>
                 )}

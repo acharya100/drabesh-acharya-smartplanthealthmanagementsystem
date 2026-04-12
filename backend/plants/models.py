@@ -24,6 +24,9 @@ class Plant(models.Model):
         ('partial_sun', 'Partial Sun (4-6 hours)'),
         ('partial_shade', 'Partial Shade (2-4 hours)'),
         ('full_shade', 'Full Shade (< 2 hours)'),
+        ('not_needed', 'Not Needed'),
+        ('not_available', 'Not Available / Not in Database'),
+        ('outside_scope', 'Outside Scope'),
     ]
     
     WATER_FREQUENCY_CHOICES = [
@@ -32,6 +35,9 @@ class Plant(models.Model):
         ('weekly', 'Weekly'),
         ('bi_weekly', 'Bi-Weekly'),
         ('monthly', 'Monthly'),
+        ('not_needed', 'Not Needed'),
+        ('not_available', 'Not Available / Not in Database'),
+        ('outside_scope', 'Outside Scope'),
     ]
     
     DIFFICULTY_CHOICES = [
@@ -126,20 +132,17 @@ class Plant(models.Model):
         help_text="Care difficulty level for growers"
     )
     
-    # Additional characteristics
-    is_edible = models.BooleanField(
-        default=False,
-        help_text="Whether the plant produces edible parts"
-    )
-    
-    is_medicinal = models.BooleanField(
-        default=False,
-        help_text="Whether the plant has medicinal properties"
-    )
-    
-    is_toxic = models.BooleanField(
-        default=False,
-        help_text="Whether the plant is toxic to humans or pets"
+    # Health status
+    health_status = models.CharField(
+        max_length=20,
+        choices=[
+            ('healthy', 'Healthy'), 
+            ('unhealthy', 'Unhealthy'), 
+            ('non_leaf', 'Non leaf image'), 
+            ('out_of_scope', 'Out of scope')
+        ],
+        default='healthy',
+        help_text="Current health status of the plant"
     )
     
     # Media

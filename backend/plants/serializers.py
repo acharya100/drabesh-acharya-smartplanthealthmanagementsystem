@@ -42,9 +42,7 @@ class PlantListSerializer(serializers.ModelSerializer):
             'difficulty_display',
             'temperature_range',
             'is_low_maintenance',
-            'is_edible',
-            'is_medicinal',
-            'is_toxic',
+            'health_status',
             'image',
             'icon',
             'created_at',
@@ -97,9 +95,7 @@ class PlantDetailSerializer(serializers.ModelSerializer):
             'difficulty_level',
             'difficulty_display',
             'is_low_maintenance',
-            'is_edible',
-            'is_medicinal',
-            'is_toxic',
+            'health_status',
             'image',
             'icon',
             'disease_count',
@@ -161,9 +157,7 @@ class PlantCreateUpdateSerializer(serializers.ModelSerializer):
             'growth_rate',
             'mature_height',
             'difficulty_level',
-            'is_edible',
-            'is_medicinal',
-            'is_toxic',
+            'health_status',
             'image',
             'icon',
         ]
@@ -188,10 +182,5 @@ class PlantCreateUpdateSerializer(serializers.ModelSerializer):
                     'temperature': 'Minimum temperature must be less than maximum temperature'
                 })
         
-        # Warn if toxic plant is marked as edible
-        if data.get('is_toxic') and data.get('is_edible'):
-            raise serializers.ValidationError({
-                'is_edible': 'A toxic plant should not be marked as edible'
-            })
         
         return data

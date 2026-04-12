@@ -15,10 +15,16 @@ import TreatmentHistory from "./pages/TreatmentHistory";
 import AdminPanel from "./pages/AdminPanel";
 import Ecommerce from "./pages/Ecommerce";
 import Cart from "./pages/Cart";
+import Checkout from "./pages/Checkout";
 import OrderHistory from "./pages/OrderHistory";
+import ProductDetail from "./pages/ProductDetail";
+import Wishlist from "./pages/Wishlist";
+import Chat from "./pages/Chat";
+import SoilAnalysis from "./pages/SoilAnalysis";
 import { CartProvider } from "./context/CartContext";
 import { ThemeProvider } from "./context/ThemeContext";
-import { useEffect } from "react";
+
+import { useEffect, useState } from "react";
 import "./App.css";
 
 /**
@@ -43,6 +49,7 @@ const App = () => {
   return (
     <ThemeProvider>
       <CartProvider>
+
       <BrowserRouter>
       <Routes>
         <Route path="/" element={<Login />} />
@@ -158,6 +165,49 @@ const App = () => {
           element={
             <ProtectedRoute>
               <OrderHistory />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/checkout"
+          element={
+            <ProtectedRoute>
+              <Checkout />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/store/product/:id"
+          element={
+            <ProtectedRoute>
+              <ProductDetail />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/wishlist"
+          element={
+            <ProtectedRoute>
+              <Wishlist />
+            </ProtectedRoute>
+          }
+        />
+        {/* Redirect common URL typos */}
+        <Route path="/admin panel" element={<Navigate to="/admin-panel" replace />} />
+        <Route path="/adminpanel" element={<Navigate to="/admin-panel" replace />} />
+        <Route
+          path="/chat"
+          element={
+            <ProtectedRoute>
+              <Chat />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/soil"
+          element={
+            <ProtectedRoute>
+              <SoilAnalysis />
             </ProtectedRoute>
           }
         />
