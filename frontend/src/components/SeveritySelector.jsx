@@ -1,22 +1,25 @@
 /**
- * SeveritySelector — Standalone severity dropdown with dynamic cost display
- * Low → NPR 250 | Moderate → NPR 350 | Severe → NPR 450
+ * SeveritySelector — Standalone severity dropdown with dynamic cost display and i18n support
+ * Low → NPR 300 | Moderate → NPR 350 | Severe → NPR 400
  * Healthy status → "No treatment required"
  */
 import { ChevronDown } from "lucide-react";
+import { useLanguage } from "../context/LanguageContext";
 
-const SEVERITY_OPTIONS = [
-  { value: "low",      label: "Low",       cost: 250, color: "#10b981" },
-  { value: "moderate", label: "Moderate",  cost: 350, color: "#f59e0b" },
-  { value: "severe",   label: "Severe",    cost: 450, color: "#ef4444" },
-];
-
-const COST_MAP = { low: 250, moderate: 350, severe: 450 };
+const COST_MAP = { minor: 300, moderate: 350, severe: 400 };
 
 const SeveritySelector = ({ severity, onChange, treatmentStatus }) => {
+  const { t } = useLanguage();
   const isHealthy = treatmentStatus === "healthy";
+
+  const SEVERITY_OPTIONS = [
+    { value: "minor",    label: t("history.severityLow") || "Minor",     cost: 300, color: "#10b981" },
+    { value: "moderate", label: t("history.severityModerate") || "Moderate",  cost: 350, color: "#f59e0b" },
+    { value: "severe",   label: t("history.severityHigh") || "Severe",    cost: 400, color: "#ef4444" },
+  ];
+
   const current = SEVERITY_OPTIONS.find(o => o.value === severity) || SEVERITY_OPTIONS[0];
-  const cost = COST_MAP[severity] || 250;
+  const cost = COST_MAP[severity] || 300;
 
   return (
     <div>
@@ -66,8 +69,8 @@ const SeveritySelector = ({ severity, onChange, treatmentStatus }) => {
         marginTop: "0.5rem",
         padding: "0.55rem 0.9rem",
         borderRadius: 8,
-        border: `1px solid ${isHealthy ? "#bbf7d0" : "#e2e8f0"}`,
-        background: isHealthy ? "#f0fdf4" : "var(--bg-main, #f8fafc)",
+        border: `1px solid ${isHealthy ? "#bbf7d0" : "var(--border-light)"}`,
+        background: isHealthy ? "#f0fdf4" : "var(--bg-surface-inner)",
         display: "flex",
         justifyContent: "space-between",
         alignItems: "center",
@@ -75,10 +78,10 @@ const SeveritySelector = ({ severity, onChange, treatmentStatus }) => {
       }}>
         <span style={{
           fontSize: "0.73rem",
-          color: "var(--text-muted, #64748b)",
+          color: "var(--text-muted)",
           fontWeight: 600,
         }}>
-          Estimated Treatment Cost (based on severity)
+          {t("treatmentHistory.totalEstimatedCost") || "Estimated Treatment Cost"}
         </span>
         <span style={{
           fontWeight: 800,
@@ -86,7 +89,7 @@ const SeveritySelector = ({ severity, onChange, treatmentStatus }) => {
           color: isHealthy ? "#15803d" : current.color,
           whiteSpace: "nowrap",
         }}>
-          {isHealthy ? "No treatment required" : `NPR ${cost}`}
+          {isHealthy ? (t("common.notNeeded") || "No treatment required") : `NPR ${cost}`}
         </span>
       </div>
     </div>

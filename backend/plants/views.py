@@ -8,6 +8,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAdminUser, IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Count, Q
+from typing import Any
 
 from .models import Plant
 from .serializers import (
@@ -58,7 +59,7 @@ class PlantViewSet(viewsets.ModelViewSet):
     # Default ordering
     ordering = ['name']
     
-    def get_serializer_class(self):
+    def get_serializer_class(self): # type: ignore[reportIncompatibleMethodOverride]
       
         if self.action == 'list':
             return PlantListSerializer
@@ -66,13 +67,13 @@ class PlantViewSet(viewsets.ModelViewSet):
             return PlantCreateUpdateSerializer
         return PlantDetailSerializer
     
-    def get_permissions(self):
+    def get_permissions(self): # type: ignore[reportIncompatibleMethodOverride]
         
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
             return [IsAuthenticated()]
         return [IsAuthenticatedOrReadOnly()]
     
-    def get_queryset(self):
+    def get_queryset(self): # type: ignore[reportIncompatibleMethodOverride]
         # Global plants for Treatment
         
         if self.request.query_params.get('global') == 'true':
@@ -120,21 +121,48 @@ class PlantViewSet(viewsets.ModelViewSet):
     def statistics(self, request):
         user = self.request.user
         queryset = self.get_queryset()
-        
+
         total_plants = queryset.count()
-        
-        # Exact classification counts directly from the Plant database
-        healthy_count = queryset.filter(health_status='healthy').count()
-        unhealthy_count = queryset.filter(health_status='unhealthy').count()
-        non_plant_count = queryset.filter(health_status='non_leaf').count()
-        out_of_scope_count = queryset.filter(health_status='out_of_scope').count()
+
+        # Plant-based classification counts (from My Plants)
+        healthy_plant_count    = queryset.filter(health_status='healthy').count()
+        unhealthy_plant_count  = queryset.filter(health_status='unhealthy').count()
+        non_plant_count        = queryset.filter(health_status='non_leaf').count()
+        out_of_scope_count     = queryset.filter(health_status='out_of_scope').count()
+
+        # Also count from Disease Detection history (Predictions) for users who
+        # didn't save their scanned images as plants — ensures dashboard is always accurate
+        try:
+            from predictions.models import Prediction
+            det_qs = Prediction.objects.filter(user=user, source='disease_detection')
+
+            healthy_det    = det_qs.filter(is_healthy=True).count()
+            unhealthy_det  = det_qs.filter(is_healthy=False, is_plant_image=True,
+                                           treatment_status__in=['untreated', 'in_progress', 'treated']).count()
+            non_plant_det  = det_qs.filter(treatment_status='non_plant').count()
+            oos_det        = det_qs.filter(treatment_status='out_of_scope').count()
+
+            # Use detection counts only where the plant count is 0 (avoid double counting)
+            if total_plants == 0:
+                healthy_count   = healthy_det
+                unhealthy_count = unhealthy_det
+                non_plant_count = non_plant_det
+                out_of_scope_count = oos_det
+            else:
+                healthy_count   = max(healthy_plant_count,   healthy_det)
+                unhealthy_count = max(unhealthy_plant_count, unhealthy_det)
+                non_plant_count = max(non_plant_count,       non_plant_det)
+                out_of_scope_count = max(out_of_scope_count, oos_det)
+        except Exception:
+            healthy_count   = healthy_plant_count
+            unhealthy_count = unhealthy_plant_count
 
         # Import dynamically to avoid circular dependencies
         from diseases.models import Treatment
-        
+
         # Treatments available globally
         treatments_available = Treatment.objects.count()
-        
+
         return Response({
             'total_plants': total_plants,
             'healthy_plants': healthy_count,

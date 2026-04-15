@@ -57,6 +57,7 @@ const OrderHistory = () => {
   const { addToCart } = useCart();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedId, setExpandedId] = useState(null);
   const [cancellingId, setCancellingId] = useState(null);
@@ -64,15 +65,19 @@ const OrderHistory = () => {
 
   useEffect(() => { fetchOrders(); }, []);
 
-  const fetchOrders = async () => {
+  const fetchOrders = async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
+      else setRefreshing(true);
       const res = await eCommerceService.getOrders();
       setOrders(res.data.results || res.data);
+      
+      if (!silent) setLoading(false);
+      setRefreshing(false);
     } catch (err) {
       console.error("Failed to fetch orders:", err);
-    } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
@@ -122,8 +127,8 @@ const OrderHistory = () => {
               <Search size={16} style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />
               <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder={t("orders.searchPlaceholder")} style={{ paddingLeft: "40px", height: "40px", border: "1px solid var(--border-light)", borderRadius: "10px", background: "var(--bg-card)", color: "var(--text-main)", paddingRight: "1rem", minWidth: "220px" }} />
             </div>
-            <button onClick={fetchOrders} style={{ width: "40px", height: "40px", borderRadius: "10px", border: "1px solid var(--border-light)", background: "var(--bg-card)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }} title="Refresh">
-              <RefreshCw size={16} color="var(--text-muted)" />
+            <button onClick={() => fetchOrders(true)} style={{ width: "40px", height: "40px", borderRadius: "10px", border: "1px solid var(--border-light)", background: "var(--bg-card)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }} title="Refresh">
+              <RefreshCw size={16} className={refreshing ? "animate-spin" : ""} color="var(--text-muted)" />
             </button>
           </div>
         </div>

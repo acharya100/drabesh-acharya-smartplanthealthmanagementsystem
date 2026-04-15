@@ -5,14 +5,15 @@ import { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import { authService } from '../services/api';
 import { User, Mail, ShieldCheck, RefreshCw, X } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 const SwitchAccountModal = ({ isOpen, onClose }) => {
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(false);
     const [switchingId, setSwitchingId] = useState(null);
     const [error, setError] = useState("");
-
-    const currentUserId = sessionStorage.getItem("user_id");
+    const { t } = useLanguage();
+    const currentUserId = sessionStorage.getItem("userId");
 
     useEffect(() => {
         if (isOpen) {
@@ -26,7 +27,7 @@ const SwitchAccountModal = ({ isOpen, onClose }) => {
             const { data } = await authService.listUsers();
             setUsers(data);
         } catch (err) {
-            setError("Failed to load user list.");
+            setError(t("nav.switchAccountFailed") || "Failed to load user list.");
         } finally {
             setLoading(false);
         }
@@ -42,15 +43,15 @@ const SwitchAccountModal = ({ isOpen, onClose }) => {
             sessionStorage.setItem("refresh_token", data.refresh);
             sessionStorage.setItem("username", data.username);
             sessionStorage.setItem("email", data.email);
-            sessionStorage.setItem("user_id", data.user_id);
-            sessionStorage.setItem("is_staff", data.is_staff ? "true" : "false");
-            sessionStorage.setItem("is_superuser", data.is_superuser ? "true" : "false");
+            sessionStorage.setItem("userId", data.userId);
+            sessionStorage.setItem("isStaff", data.isStaff ? "true" : "false");
+            sessionStorage.setItem("isSuperuser", data.isSuperuser ? "true" : "false");
             sessionStorage.setItem("isAuthenticated", "true");
 
             // Reload to apply new user context across the app
             window.location.reload();
         } catch (err) {
-            setError("Failed to switch account.");
+            setError(t("nav.switchAccountFailed") || "Failed to switch account.");
             setSwitchingId(null);
         }
     };
@@ -82,8 +83,8 @@ const SwitchAccountModal = ({ isOpen, onClose }) => {
                             <ShieldCheck size={24} />
                         </div>
                         <div>
-                            <h2 style={{ fontSize: '1.25rem', color: 'var(--text-main)', margin: 0, fontWeight: 700 }}>Switch Identity</h2>
-                            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0 }}>Select an account to continue</p>
+                            <h2 style={{ fontSize: '1.25rem', color: 'var(--text-main)', margin: 0, fontWeight: 700 }}>{t("nav.switchAccountTitle") || "Switch Identity"}</h2>
+                            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0 }}>{t("admin.loading") ? (t("nav.switchAccountSubtitle") || "Select an account to continue") : "Select an account to continue"}</p>
                         </div>
                     </div>
                     <button
@@ -115,7 +116,7 @@ const SwitchAccountModal = ({ isOpen, onClose }) => {
                     {loading ? (
                         <div style={{ padding: '3rem', textAlign: 'center' }}>
                             <RefreshCw className="animate-spin text-primary" size={32} style={{ margin: '0 auto' }} />
-                            <p className="mt-4" style={{ color: 'var(--text-muted)' }}>Loading accounts...</p>
+                            <p className="mt-4" style={{ color: 'var(--text-muted)' }}>{t("admin.loading") || "Loading accounts..."}</p>
                         </div>
                     ) : (
                         <div className="account-list" style={{ display: 'flex', flexDirection: 'column' }}>
@@ -160,7 +161,7 @@ const SwitchAccountModal = ({ isOpen, onClose }) => {
                                             borderRadius: '6px',
                                             textTransform: 'uppercase',
                                             letterSpacing: '0.05em'
-                                        }}>Current</span>
+                                        }}>{t("admin.statTotalPlants") ? "Current" : "Current"}</span>
                                     ) : (
                                         <button
                                             className="btn-primary"
@@ -168,7 +169,7 @@ const SwitchAccountModal = ({ isOpen, onClose }) => {
                                             onClick={() => handleSwitch(user.id)}
                                             disabled={switchingId === user.id}
                                         >
-                                            {switchingId === user.id ? "..." : "Switch"}
+                                            {switchingId === user.id ? "..." : (t("admin.actionView") ? (t("admin.tabUsers") ? "Switch" : "Switch") : "Switch")}
                                         </button>
                                     )}
                                 </div>
@@ -188,7 +189,7 @@ const SwitchAccountModal = ({ isOpen, onClose }) => {
                         onClick={onClose}
                         style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border-light)', background: 'var(--bg-surface-1)', borderRadius: 'var(--radius-sm)', cursor: 'pointer', color: 'var(--text-muted)', fontWeight: 600 }}
                     >
-                        Cancel
+                        {t("common.cancel") || "Cancel"}
                     </button>
                 </div>
             </div>

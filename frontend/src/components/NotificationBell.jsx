@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Bell, CheckCheck, ExternalLink, ShoppingBag, Package, AlertTriangle } from "lucide-react";
 import { eCommerceService } from "../services/api";
 import { useNavigate } from "react-router-dom";
+import { useLanguage } from "../context/LanguageContext";
 
 const TYPE_ICONS = {
   order_placed: ShoppingBag,
@@ -25,6 +26,7 @@ const TYPE_COLORS = {
 
 const NotificationBell = () => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -134,12 +136,12 @@ const NotificationBell = () => {
           {/* Header */}
           <div style={{ padding: "1rem 1.25rem", borderBottom: "1px solid var(--border-light)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <h4 style={{ margin: 0, fontWeight: 800, color: "var(--text-main)", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-              <Bell size={16} stroke="var(--primary)" /> Notifications
-              {unreadCount > 0 && <span style={{ background: "var(--primary-subtle)", color: "var(--primary)", borderRadius: "100px", padding: "0.1rem 0.5rem", fontSize: "0.7rem", fontWeight: 800 }}>{unreadCount} new</span>}
+              <Bell size={16} stroke="var(--primary)" /> {t("nav.wishlist") ? (t("notif.title") || "Notifications") : "Notifications"}
+              {unreadCount > 0 && <span style={{ background: "var(--primary-subtle)", color: "var(--primary)", borderRadius: "100px", padding: "0.1rem 0.5rem", fontSize: "0.7rem", fontWeight: 800 }}>{unreadCount} {t("admin.scansCount") ? (t("notif.new") || "new") : "new"}</span>}
             </h4>
             {unreadCount > 0 && (
               <button onClick={handleMarkAllRead} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "0.78rem", color: "var(--primary)", fontWeight: 700, display: "flex", alignItems: "center", gap: "0.3rem" }}>
-                <CheckCheck size={14} /> Mark all read
+                <CheckCheck size={14} /> {t("notif.markAllRead") || "Mark all read"}
               </button>
             )}
           </div>
@@ -147,11 +149,11 @@ const NotificationBell = () => {
           {/* List */}
           <div style={{ maxHeight: "380px", overflowY: "auto" }}>
             {loading ? (
-              <div style={{ padding: "2rem", textAlign: "center", color: "var(--text-muted)" }}>Loading...</div>
+              <div style={{ padding: "2rem", textAlign: "center", color: "var(--text-muted)" }}>{t("admin.loading") || "Loading..."}</div>
             ) : notifications.length === 0 ? (
               <div style={{ padding: "2.5rem", textAlign: "center" }}>
                 <Bell size={32} style={{ opacity: 0.2, marginBottom: "0.75rem" }} />
-                <p style={{ color: "var(--text-muted)", fontSize: "0.875rem", margin: 0 }}>No notifications yet</p>
+                <p style={{ color: "var(--text-muted)", fontSize: "0.875rem", margin: 0 }}>{t("notif.empty") || "No notifications yet"}</p>
               </div>
             ) : (
               notifications.map(notif => {
@@ -190,7 +192,7 @@ const NotificationBell = () => {
           {/* Footer */}
           <div style={{ padding: "0.75rem 1.25rem", borderTop: "1px solid var(--border-light)", textAlign: "center" }}>
             <button onClick={() => { setOpen(false); navigate("/orders"); }} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--primary)", fontWeight: 700, fontSize: "0.8rem", display: "inline-flex", alignItems: "center", gap: "0.3rem" }}>
-              View All Orders <ExternalLink size={13} />
+              {t("notif.viewAllOrders") || "View All Orders"} <ExternalLink size={13} />
             </button>
           </div>
         </div>

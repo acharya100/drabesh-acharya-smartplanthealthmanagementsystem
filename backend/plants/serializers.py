@@ -43,6 +43,8 @@ class PlantListSerializer(serializers.ModelSerializer):
             'temperature_range',
             'is_low_maintenance',
             'health_status',
+            'is_non_plant',
+            'is_out_of_scope',
             'image',
             'icon',
             'created_at',
@@ -96,6 +98,8 @@ class PlantDetailSerializer(serializers.ModelSerializer):
             'difficulty_display',
             'is_low_maintenance',
             'health_status',
+            'is_non_plant',
+            'is_out_of_scope',
             'image',
             'icon',
             'disease_count',
@@ -124,10 +128,10 @@ class PlantDetailSerializer(serializers.ModelSerializer):
             )
         return value
     
-    def validate(self, data):
+    def validate(self, attrs):
        
-        min_temp = data.get('min_temperature')
-        max_temp = data.get('max_temperature')
+        min_temp = attrs.get('min_temperature')
+        max_temp = attrs.get('max_temperature')
         
         # Check if both temperatures are provided and validate their relationship
         if min_temp is not None and max_temp is not None:
@@ -136,7 +140,7 @@ class PlantDetailSerializer(serializers.ModelSerializer):
                     "Minimum temperature must be less than maximum temperature"
                 )
         
-        return data
+        return attrs
 
 
 class PlantCreateUpdateSerializer(serializers.ModelSerializer):
@@ -158,6 +162,8 @@ class PlantCreateUpdateSerializer(serializers.ModelSerializer):
             'mature_height',
             'difficulty_level',
             'health_status',
+            'is_non_plant',
+            'is_out_of_scope',
             'image',
             'icon',
         ]
@@ -170,11 +176,11 @@ class PlantCreateUpdateSerializer(serializers.ModelSerializer):
         # Capitalize first letter of each word for consistency
         return value.strip().title()
     
-    def validate(self, data):
+    def validate(self, attrs):
        
         # Validate temperature range
-        min_temp = data.get('min_temperature')
-        max_temp = data.get('max_temperature')
+        min_temp = attrs.get('min_temperature')
+        max_temp = attrs.get('max_temperature')
         
         if min_temp is not None and max_temp is not None:
             if min_temp >= max_temp:
@@ -183,4 +189,4 @@ class PlantCreateUpdateSerializer(serializers.ModelSerializer):
                 })
         
         
-        return data
+        return attrs

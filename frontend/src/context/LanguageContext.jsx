@@ -2,7 +2,7 @@
  * Language Context
  * Provides i18n support for English and Nepali across the app.
  */
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 import en from "../locales/en";
 import ne from "../locales/ne";
 
@@ -14,6 +14,11 @@ export const LanguageProvider = ({ children }) => {
     const [language, setLanguageState] = useState(
         () => localStorage.getItem("language") || "en"
     );
+
+    // Sync HTML lang attribute for accessibility and SEO
+    useEffect(() => {
+        document.documentElement.lang = language;
+    }, [language]);
 
     const setLanguage = (lang) => {
         localStorage.setItem("language", lang);

@@ -1,20 +1,24 @@
-import { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import SwitchAccountModal from "./SwitchAccountModal";
-import NotificationBell from "./NotificationBell";
 import { useLanguage } from "../context/LanguageContext";
-import { useCart } from "../context/CartContext";
 import { useTheme } from "../context/ThemeContext";
-import { authService, predictionService } from "../services/api";
-import { Leaf, Activity, Camera, ShieldCheck, List, Settings, LogOut, ChevronDown, User, Users, Store, ShoppingCart, Sun, Moon, Package, Heart, MessageSquare, FlaskConical } from "lucide-react";
-import { offlineStore } from "../utils/offlineStore";
+import { useCart } from "../context/CartContext";
+import NotificationBell from "./NotificationBell";
+import { useOfflineSync } from "../context/OfflineSyncContext";
+import SwitchAccountModal from "./SwitchAccountModal";
+import { Leaf, Activity, Camera, ShieldCheck, List, Settings, LogOut, ChevronDown, User, Users, Store, ShoppingCart, Sun, Moon, Package, Heart, MessageSquare, FlaskConical, Cloud, CloudOff, RefreshCcw, Check } from "lucide-react";
 
+/**
+ * Navbar - Refined Professional Offline Sync Version
+ */
 const Navbar = ({ activePage }) => {
   const navigate = useNavigate();
   const [isSwitchModalOpen, setIsSwitchModalOpen] = useState(false);
 
+  const { isOnline, isSyncing, queueCount, lastSyncStatus, triggerSync } = useOfflineSync();
+
   const username = sessionStorage.getItem("username") || "User";
-  const isAdmin = sessionStorage.getItem("is_staff") === "true" || sessionStorage.getItem("is_superuser") === "true";
+  const isAdmin = sessionStorage.getItem("isStaff") === "true" || sessionStorage.getItem("isSuperuser") === "true";
   const { t, language, setLanguage } = useLanguage();
   const { totalItems } = useCart();
   const { theme, toggleTheme } = useTheme();
@@ -28,35 +32,6 @@ const Navbar = ({ activePage }) => {
     setLanguage(language === "en" ? "ne" : "en");
   };
 
-  // Sync offline updates when user comes back online
-  useEffect(() => {
-    const syncOfflineData = async () => {
-      if (!window.navigator.onLine) return;
-      
-      const updates = offlineStore.getOfflineUpdates();
-      const ids = Object.keys(updates);
-      
-      if (ids.length === 0) return;
-      
-      console.log(`[Sync] Restored connection: Syncing ${ids.length} pending updates...`);
-      
-      for (const id of ids) {
-        try {
-          await predictionService.update(id, updates[id]);
-          offlineStore.clearOfflineUpdate(id);
-          console.log(`[Sync] Successfully synced prediction ${id}`);
-        } catch (err) {
-          console.error(`[Sync] Failed to sync prediction ${id}:`, err);
-        }
-      }
-    };
-
-    window.addEventListener('online', syncOfflineData);
-    // Also try syncing immediately if we are already online (e.g. on component mount)
-    if (window.navigator.onLine) syncOfflineData();
-
-    return () => window.removeEventListener('online', syncOfflineData);
-  }, []);
 
   return (
     <nav className="navbar">
@@ -115,8 +90,31 @@ const Navbar = ({ activePage }) => {
           <Settings size={18} /> <span>{t("nav.settings")}</span>
         </Link>
       </div>
-
-      <div className="navbar-actions" style={{ gap: "0.5rem", alignItems: "center" }}>
+      <div className="navbar-actions" style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+        {/* Global Sync Status Indicator */}
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          {!isOnline ? (
+            <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", padding: "0.3rem 0.7rem", borderRadius: "100px", background: "#fef3c7", color: "#b45309", fontSize: "0.75rem", fontWeight: 800, border: "1px solid #fcd34d" }}>
+              <CloudOff size={14} /> {queueCount > 0 ? `${queueCount} pending` : "Offline"}
+            </div>
+          ) : isSyncing ? (
+            <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", padding: "0.3rem 0.7rem", borderRadius: "100px", background: "var(--primary-subtle)", color: "var(--primary)", fontSize: "0.75rem", fontWeight: 800, border: "1px solid var(--primary-light)" }}>
+              <RefreshCcw size={14} className="animate-spin" /> Syncing...
+            </div>
+          ) : lastSyncStatus === 'success' ? (
+            <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", padding: "0.3rem 0.7rem", borderRadius: "100px", background: "#d1fae5", color: "#065f46", fontSize: "0.75rem", fontWeight: 800, border: "1px solid #6ee7b7" }}>
+              <Check size={14} /> Synced
+            </div>
+          ) : queueCount > 0 ? (
+            <button
+              onClick={triggerSync}
+              style={{ display: "flex", alignItems: "center", gap: "0.4rem", padding: "0.3rem 0.7rem", borderRadius: "100px", background: "var(--bg-card)", color: "var(--primary)", fontSize: "0.75rem", fontWeight: 800, border: "1.5px solid var(--primary)", cursor: "pointer" }}
+              title="Click to manually sync pending changes"
+            >
+              <Cloud size={14} /> Sync Now ({queueCount})
+            </button>
+          ) : null}
+        </div>
 
         {/* Cart */}
         <Link to="/cart" style={{ position: "relative", width: 40, height: 40, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "10px", border: "1px solid var(--border-light)", color: "var(--text-muted)", background: "transparent", flexShrink: 0 }}
@@ -128,6 +126,7 @@ const Navbar = ({ activePage }) => {
             </span>
           )}
         </Link>
+
 
         {/* Notification Bell */}
         <NotificationBell />

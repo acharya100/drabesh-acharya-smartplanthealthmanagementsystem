@@ -3,6 +3,7 @@
  */
 
 import axios from 'axios';
+import { toCamel, toSnake } from '../utils/caseTransformer';
 
 // Base API configuration - points to our Django backend
 const API_URL = 'http://localhost:8000/api';
@@ -23,6 +24,17 @@ api.interceptors.request.use(
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
+
+        // Transform data to snake_case for the backend
+        if (config.data && !(config.data instanceof FormData)) {
+            config.data = toSnake(config.data);
+        }
+
+        // Transform params to snake_case for the backend
+        if (config.params) {
+            config.params = toSnake(config.params);
+        }
+
         return config;
     },
     (error) => Promise.reject(error)
@@ -32,7 +44,13 @@ api.interceptors.request.use(
  * Response Interceptor
  */
 api.interceptors.response.use(
-    (response) => response,
+    (response) => {
+        // Transform data to camelCase for the frontend
+        if (response.data && response.headers['content-type']?.includes('application/json')) {
+            response.data = toCamel(response.data);
+        }
+        return response;
+    },
     async (error) => {
         const originalRequest = error.config;
 
@@ -65,15 +83,15 @@ export const authService = {
     register: (userData) => api.post('/auth/register/', userData),
     forgotPassword: (email) => api.post('/auth/forgot-password/', { email }),
     verifyOtp: (email, code) => api.post('/auth/verify-otp/', { email, code }),
-    resetPassword: (email, code, newPassword) => api.post('/auth/reset-password/', { email, code, new_password: newPassword }),
-    sendPhoneOtp: (phone_number) => api.post('/auth/send-phone-otp/', { phone_number }),
-    verifyPhoneOtp: (phone_number, code) => api.post('/auth/verify-phone-otp/', { phone_number, code }),
+    resetPassword: (email, code, newPassword) => api.post('/auth/reset-password/', { email, code, newPassword }),
+    sendPhoneOtp: (phoneNumber) => api.post('/auth/send-phone-otp/', { phoneNumber }),
+    verifyPhoneOtp: (phoneNumber, code) => api.post('/auth/verify-phone-otp/', { phoneNumber, code }),
     getProfile: () => api.get('/auth/update-profile/'),
     updateProfile: (data) => api.post('/auth/update-profile/', data),
     changePassword: (data) => api.post('/auth/change-password/', data),
-    deleteAccount: () => api.delete('/auth/delete-account/'),
+    deleteAccount: (password) => api.delete('/auth/delete-account/', { data: { password } }),
     listUsers: () => api.get('/auth/list/'),
-    switchUser: (userId) => api.post('/auth/switch/', { user_id: userId }),
+    switchUser: (userId) => api.post('/auth/switch/', { userId }),
 };
 
 // --- Plant Services ---
@@ -134,6 +152,7 @@ export const adminService = {
     getDashboard: () => api.get('/auth/admin/dashboard/'),
     getUsers: () => api.get('/auth/admin/users/'),
     getUserDetail: (userId) => api.get(`/auth/admin/users/${userId}/`),
+    getAllPlants: () => api.get('/auth/admin/plants/'),
     deleteUser: (userId) => api.delete(`/auth/admin/users/${userId}/`),
     getAllPredictions: () => api.get('/auth/admin/predictions/'),
     toggleStaff: (userId) => api.post(`/auth/admin/users/${userId}/toggle-staff/`),
@@ -142,7 +161,7 @@ export const adminService = {
     adminGetAllOrders: () => api.get('/ecommerce/orders/'),
     updateOrderStatus: (orderId, data) => api.patch(`/auth/admin/orders/${orderId}/update-status/`, data),
     // Admin product CRUD (uses ecommerce endpoints with admin token)
-    adminGetAllProducts: (params) => api.get('/ecommerce/products/', { params: { ...params, page_size: 200 } }),
+    adminGetAllProducts: (params) => api.get('/ecommerce/products/', { params: { ...params, pageSize: 200 } }),
     adminCreateProduct: (formData) => api.post('/ecommerce/products/', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
     adminUpdateProduct: (id, formData) => api.patch(`/ecommerce/products/${id}/`, formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
     adminDeleteProduct: (id) => api.delete(`/ecommerce/products/${id}/`),
@@ -155,8 +174,13 @@ export const adminService = {
     // Admin reviews
     adminGetAllReviews: (params) => api.get('/ecommerce/reviews/', { params }),
     adminDeleteReview: (id) => api.delete(`/ecommerce/reviews/${id}/`),
+    adminApproveReview: (id) => api.post(`/ecommerce/reviews/${id}/approve/`),
+    approveReview: (id) => api.post(`/ecommerce/reviews/${id}/approve/`),
     // Admin categories
     adminGetCategories: () => api.get('/ecommerce/categories/'),
+    // Coupon aliases (for backward compatibility with AdminPanel)
+    createCoupon: (data) => api.post('/ecommerce/coupons/', data),
+    updateCoupon: (id, data) => api.patch(`/ecommerce/coupons/${id}/`, data),
 };
 
 // --- Ecommerce Services ---
@@ -188,9 +212,9 @@ export const eCommerceService = {
     // Wishlist
     getWishlist: () => api.get('/ecommerce/wishlist/'),
     getWishlistIds: () => api.get('/ecommerce/wishlist/ids/'),
-    toggleWishlist: (productId) => api.post('/ecommerce/wishlist/toggle/', { product_id: productId }),
+    toggleWishlist: (productId) => api.post('/ecommerce/wishlist/toggle/', { productId }),
     // Coupons
-    validateCoupon: (code, orderTotal) => api.post('/ecommerce/coupons/validate/', { code, order_total: orderTotal }),
+    validateCoupon: (code, orderTotal) => api.post('/ecommerce/coupons/validate/', { code, orderTotal }),
     getCoupons: () => api.get('/ecommerce/coupons/'),
     createCoupon: (data) => api.post('/ecommerce/coupons/', data),
     updateCoupon: (id, data) => api.patch(`/ecommerce/coupons/${id}/`, data),
@@ -218,6 +242,7 @@ export const soilService = {
     quickAnalyze: (data) => api.post('/soil/quick_analyze/', data),
     getHistory: () => api.get('/soil/'),
     getAnalysis: (id) => api.get(`/soil/${id}/`),
+    deleteHistory: (id) => api.delete(`/soil/${id}/`),
 };
 
 export default api;

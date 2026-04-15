@@ -1,5 +1,9 @@
 """Assign unique images from 'C:\\Product images fyp' to each product."""
 import os, sys, django, shutil
+
+# Add current directory to sys.path to resolve internal apps
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings')
 django.setup()
 

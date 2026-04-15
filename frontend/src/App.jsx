@@ -23,6 +23,7 @@ import Chat from "./pages/Chat";
 import SoilAnalysis from "./pages/SoilAnalysis";
 import { CartProvider } from "./context/CartContext";
 import { ThemeProvider } from "./context/ThemeContext";
+import { OfflineSyncProvider } from "./context/OfflineSyncContext";
 
 import { useEffect, useState } from "react";
 import "./App.css";
@@ -38,183 +39,83 @@ const ProtectedRoute = ({ children }) => {
 // Admin-only route: must be authenticated AND be staff/superuser
 const AdminRoute = ({ children }) => {
   const isAuth = sessionStorage.getItem("isAuthenticated");
-  const isStaff = sessionStorage.getItem("is_staff") === "true";
-  const isSuperuser = sessionStorage.getItem("is_superuser") === "true";
+  const isStaff = sessionStorage.getItem("isStaff") === "true";
+  const isSuperuser = sessionStorage.getItem("isSuperuser") === "true";
   if (!isAuth) return <Navigate to="/" />;
   if (!isStaff && !isSuperuser) return <Navigate to="/dashboard" />;
   return children;
 };
 
+/**
+ * Global Error Boundary
+ */
+import React from 'react';
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError(error) { return { hasError: true }; }
+  componentDidCatch(error, errorInfo) { console.error("Uncaught error:", error, errorInfo); }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding: '2rem', textAlign: 'center', background: '#fff', height: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+          <h2 style={{ color: '#ef4444' }}>Something went wrong.</h2>
+          <p style={{ color: '#64748b', marginTop: '1rem' }}>We encountered an unexpected error. Please try refreshing the page.</p>
+          <button onClick={() => window.location.reload()} style={{ marginTop: '2rem', padding: '0.75rem 1.5rem', background: '#1a4d2e', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>
+            Refresh Page
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 const App = () => {
   return (
-    <ThemeProvider>
-      <CartProvider>
+    <OfflineSyncProvider>
+      <ThemeProvider>
+        <CartProvider>
+          <BrowserRouter>
+            <ErrorBoundary>
+              <Routes>
+                {/* ... routes ... */}
+                <Route path="/" element={<Login />} />
+                <Route path="/signup" element={<SignUp />} />
 
-      <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Login />} />
-        <Route path="/signup" element={<SignUp />} />
+                {/* Protected Routes */}
+                <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+                <Route path="/plants" element={<ProtectedRoute><Plants /></ProtectedRoute>} />
+                <Route path="/disease" element={<ProtectedRoute><DiseaseDetection /></ProtectedRoute>} />
+                <Route path="/history" element={<ProtectedRoute><History /></ProtectedRoute>} />
+                <Route path="/treatment" element={<Treatment />} />
+                <Route path="/treatment-history" element={<ProtectedRoute><TreatmentHistory /></ProtectedRoute>} />
+                <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+                <Route path="/diseases" element={<Diseases />} />
 
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          }
-        />
+                {/* Marketplace & Soil */}
+                <Route path="/store" element={<Ecommerce />} />
+                <Route path="/store/product/:id" element={<ProductDetail />} />
+                <Route path="/cart" element={<Cart />} />
+                <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
+                <Route path="/orders" element={<ProtectedRoute><OrderHistory /></ProtectedRoute>} />
+                <Route path="/wishlist" element={<ProtectedRoute><Wishlist /></ProtectedRoute>} />
+                <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
+                <Route path="/soil" element={<ProtectedRoute><SoilAnalysis /></ProtectedRoute>} />
 
-        <Route
-          path="/plants"
-          element={
-            <ProtectedRoute>
-              <Plants />
-            </ProtectedRoute>
-          }
-        />
+                {/* Admin Routes */}
+                <Route path="/admin-panel" element={<AdminRoute><AdminPanel /></AdminRoute>} />
 
-        <Route
-          path="/diseases"
-          element={
-            <ProtectedRoute>
-              <Diseases />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/disease"
-          element={
-            <ProtectedRoute>
-              <DiseaseDetection />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/history"
-          element={
-            <ProtectedRoute>
-              <History />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/treatment"
-          element={
-            <ProtectedRoute>
-              <Treatment />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/treatment-history"
-          element={
-            <ProtectedRoute>
-              <TreatmentHistory />
-            </ProtectedRoute>
-          }
-        />
-        {/* Alias for underscore version */}
-        <Route
-          path="/treatment_history"
-          element={
-            <ProtectedRoute>
-              <TreatmentHistory />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/settings"
-          element={
-            <ProtectedRoute>
-              <Settings />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/admin-panel"
-          element={
-            <AdminRoute>
-              <AdminPanel />
-            </AdminRoute>
-          }
-        />
-        <Route
-          path="/store"
-          element={
-            <ProtectedRoute>
-              <Ecommerce />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/cart"
-          element={
-            <ProtectedRoute>
-              <Cart />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/orders"
-          element={
-            <ProtectedRoute>
-              <OrderHistory />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/checkout"
-          element={
-            <ProtectedRoute>
-              <Checkout />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/store/product/:id"
-          element={
-            <ProtectedRoute>
-              <ProductDetail />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/wishlist"
-          element={
-            <ProtectedRoute>
-              <Wishlist />
-            </ProtectedRoute>
-          }
-        />
-        {/* Redirect common URL typos */}
-        <Route path="/admin panel" element={<Navigate to="/admin-panel" replace />} />
-        <Route path="/adminpanel" element={<Navigate to="/admin-panel" replace />} />
-        <Route
-          path="/chat"
-          element={
-            <ProtectedRoute>
-              <Chat />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/soil"
-          element={
-            <ProtectedRoute>
-              <SoilAnalysis />
-            </ProtectedRoute>
-          }
-        />
-      </Routes>
-    </BrowserRouter>
-      </CartProvider>
-    </ThemeProvider>
+                {/* Fallback */}
+                <Route path="*" element={<Navigate to="/" />} />
+              </Routes>
+            </ErrorBoundary>
+          </BrowserRouter>
+        </CartProvider>
+      </ThemeProvider>
+    </OfflineSyncProvider>
   );
 };
 

@@ -1,7 +1,9 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { authService } from "../services/api";
 import { Eye, EyeOff } from "lucide-react";
+import { useLanguage } from "../context/LanguageContext";
+import { useTheme } from "../context/ThemeContext";
 
 /* ── 6-Box OTP Input ─────────────────────────────────────────── */
 const OtpBoxes = ({ value, onChange, disabled }) => {
@@ -59,39 +61,39 @@ const OtpBoxes = ({ value, onChange, disabled }) => {
             textAlign: "center",
             fontSize: "22px",
             fontWeight: "700",
-            border: "1.5px solid #d1d5db",
+            border: "1.5px solid var(--border-light)",
             borderRadius: "8px",
-            background: "#fff",
+            background: "var(--bg-input)",
             outline: "none",
-            color: "#111827",
+            color: "var(--text-main)",
             cursor: disabled ? "not-allowed" : "text",
           }}
-          onFocus={(e) => (e.target.style.borderColor = "#111827")}
-          onBlur={(e) => (e.target.style.borderColor = "#d1d5db")}
+          onFocus={(e) => (e.target.style.borderColor = "var(--border-focus)")}
+          onBlur={(e) => (e.target.style.borderColor = "var(--border-light)")}
         />
       ))}
     </div>
   );
 };
 
-/* ── Shared Styles ───────────────────────────────────────────── */
+/* ── Shared Styles (CSS vars for dark/light mode) ───────────── */
 const inputStyle = {
   width: "100%",
   height: "48px",
   fontSize: "15px",
   padding: "0 14px",
-  border: "1.5px solid #d1d5db",
+  border: "1.5px solid var(--border-light)",
   borderRadius: "8px",
-  background: "#f9fafb",
+  background: "var(--bg-input)",
   outline: "none",
-  color: "#111827",
+  color: "var(--text-main)",
   boxSizing: "border-box",
 };
 
 const btnStyle = {
   width: "100%",
   height: "48px",
-  background: "#111827",
+  background: "var(--primary)",
   color: "#fff",
   fontSize: "16px",
   fontWeight: 700,
@@ -104,9 +106,10 @@ const labelStyle = {
   display: "block",
   fontSize: "14px",
   fontWeight: 600,
-  color: "#374151",
+  color: "var(--text-secondary)",
   marginBottom: "8px",
 };
+
 
 const errorBox = (msg) =>
   msg ? (
@@ -129,6 +132,7 @@ const errorBox = (msg) =>
 /* ── Main Login Component ────────────────────────────────────── */
 const Login = () => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   /* Login state */
   const [username, setUsername] = useState("");
@@ -139,7 +143,7 @@ const Login = () => {
 
   /* Forgot password state */
   const [forgotMode, setForgotMode] = useState(false);
-  const [forgotStep, setForgotStep] = useState("email"); // email | reset | success
+  const [forgotStep, setForgotStep] = useState("email"); // email | otp | password | success
   const [forgotEmail, setForgotEmail] = useState(""); // Stores email OR phone
   const [otp, setOtp] = useState("");
   const [newPwd, setNewPwd] = useState("");
@@ -148,10 +152,12 @@ const Login = () => {
   const [showConfirm, setShowConfirm] = useState(false);
   const [forgotError, setForgotError] = useState("");
   const [forgotLoading, setForgotLoading] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(120); // 2 minutes in seconds
 
   /* ── Login submit ── */
   const handleLogin = async (e) => {
     e.preventDefault();
+    if (loginLoading) return;
     setLoginError("");
     if (!username.trim() || !password.trim()) {
       setLoginError("Please fill in all fields.");
@@ -164,17 +170,30 @@ const Login = () => {
       sessionStorage.setItem("refresh_token", data.refresh);
       sessionStorage.setItem("username", data.username);
       sessionStorage.setItem("email", data.email || "");
-      sessionStorage.setItem("user_id", data.user_id || "");
-      sessionStorage.setItem("is_staff", data.is_staff ? "true" : "false");
-      sessionStorage.setItem("is_superuser", data.is_superuser ? "true" : "false");
+      sessionStorage.setItem("userId", data.userId || "");
+      sessionStorage.setItem("isStaff", data.isStaff ? "true" : "false");
+      sessionStorage.setItem("isSuperuser", data.isSuperuser ? "true" : "false");
       sessionStorage.setItem("isAuthenticated", "true");
-      if (data.is_staff || data.is_superuser) navigate("/admin-panel");
+      if (data.isStaff || data.isSuperuser) navigate("/admin-panel");
       else navigate("/dashboard");
     } catch {
       setLoginError("Incorrect email or password. Please check your credentials.");
       setLoginLoading(false);
     }
   };
+
+  /* ── Countdown Timer for OTP ── */
+  useEffect(() => {
+    let timer;
+    if (forgotMode && forgotStep === "otp" && timeLeft > 0) {
+      timer = setInterval(() => {
+        setTimeLeft((prev) => prev - 1);
+      }, 1000);
+    } else if (timeLeft === 0) {
+      setForgotError("The verification code has expired. Please request a new one.");
+    }
+    return () => clearInterval(timer);
+  }, [forgotMode, forgotStep, timeLeft]);
 
   const handleSendCode = async (e) => {
     e.preventDefault();
@@ -186,7 +205,8 @@ const Login = () => {
     setForgotLoading(true);
     try {
       await authService.forgotPassword(forgotEmail.trim());
-      setForgotStep("reset");
+      setForgotStep("otp");
+      setTimeLeft(120); // Reset timer to 2 minutes
     } catch (err) {
       const msg = err.response?.data?.error || "";
       if (msg === "invalid id" || msg === "User not found") setForgotError("Incorrect details. No account found with that email or phone number.");
@@ -196,34 +216,48 @@ const Login = () => {
     }
   };
 
-  /* ── Verify OTP + Reset password ── */
-  const handleReset = async (e) => {
+  /* ── Stage 2: Verify OTP ── */
+  const handleVerifyOtp = async (e) => {
     e.preventDefault();
     if (otp.replace(/\s/g, "").length !== 6) {
       setForgotError("Please enter the complete 6-digit verification code.");
       return;
     }
-    if (newPwd.length < 8) {
-      setForgotError("Password must be at least 8 characters long.");
-      return;
-    }
-    if (newPwd !== confirmPwd) {
-      setForgotError("Passwords do not match. Please try again.");
+    if (timeLeft === 0) {
+      setForgotError("This code has expired. Please request a new one.");
       return;
     }
     setForgotError("");
     setForgotLoading(true);
     try {
       await authService.verifyOtp(forgotEmail.trim(), otp.trim());
+      setForgotStep("password");
+    } catch (err) {
+      const msg = err.response?.data?.error || "";
+      setForgotError(msg === "wrong code" ? "Invalid code. Please check and try again." : (msg || "Verification failed."));
+    } finally {
+      setForgotLoading(false);
+    }
+  };
+
+  /* ── Stage 3: Set New Password ── */
+  const handleFinalReset = async (e) => {
+    e.preventDefault();
+    if (newPwd.length < 8) {
+      setForgotError("Password must be at least 8 characters long.");
+      return;
+    }
+    if (newPwd !== confirmPwd) {
+      setForgotError("Passwords do not match.");
+      return;
+    }
+    setForgotError("");
+    setForgotLoading(true);
+    try {
       await authService.resetPassword(forgotEmail.trim(), otp.trim(), newPwd);
       setForgotStep("success");
     } catch (err) {
-      const msg = err.response?.data?.error || "";
-      if (msg === "wrong code" || msg.toLowerCase().includes("invalid") || msg.toLowerCase().includes("wrong")) {
-        setForgotError("The verification code is incorrect. Please check your messages and try again.");
-      } else {
-        setForgotError(msg || "Failed to reset password. Please try again.");
-      }
+      setForgotError(err.response?.data?.error || "Failed to reset password.");
     } finally {
       setForgotLoading(false);
     }
@@ -237,19 +271,21 @@ const Login = () => {
     setNewPwd("");
     setConfirmPwd("");
     setForgotError("");
+    setTimeLeft(120);
   };
 
   const cardStyle = {
-    background: "#fff",
+    background: "var(--bg-card)",
     borderRadius: "16px",
     padding: "48px 40px",
     boxShadow: "0 4px 32px rgba(0,0,0,0.09)",
     maxWidth: "460px",
     width: "100%",
+    border: "1px solid var(--border-light)",
   };
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh", background: "#f4f4f5" }}>
+    <div style={{ display: "flex", minHeight: "100vh", background: "var(--bg-main)" }}>
       {/* ── Left green panel ── */}
       <div
         className="hide-on-mobile"
@@ -321,7 +357,7 @@ const Login = () => {
           alignItems: "center",
           justifyContent: "center",
           padding: "2rem",
-          background: "#f4f4f5",
+          background: "var(--bg-main)",
         }}
       >
         {forgotMode ? (
@@ -331,106 +367,140 @@ const Login = () => {
             {/* Step 1: Enter email */}
             {forgotStep === "email" && (
               <>
-                <h2 style={{ fontSize: "26px", fontWeight: 800, color: "#111827", marginBottom: "8px", textAlign: "center" }}>
-                  Forgot your password?
+                <h2 style={{ fontSize: "26px", fontWeight: 800, color: "var(--text-main)", marginBottom: "8px", textAlign: "center" }}>
+                  {t("login.forgotTitle") || "Forgot your password?"}
                 </h2>
-                <p style={{ fontSize: "15px", color: "#6b7280", textAlign: "center", marginBottom: "28px", lineHeight: 1.6 }}>
-                  Enter your account email or phone number and we'll send you a reset code.
+                <p style={{ fontSize: "15px", color: "var(--text-muted)", textAlign: "center", marginBottom: "28px", lineHeight: 1.6 }}>
+                  {t("login.forgotDesc") || "Enter your account email or phone number and we'll send you a reset code."}
                 </p>
                 <form onSubmit={handleSendCode}>
                   {errorBox(forgotError)}
                   <div style={{ marginBottom: "20px" }}>
-                    <label style={labelStyle}>Email or Phone Number</label>
+                    <label style={labelStyle}>{t("login.usernameLabel") || "Email or Phone Number"}</label>
                     <input
                       type="text"
-                      placeholder="you@example.com or +977 980..."
+                      placeholder={t("login.usernamePlaceholder") || "you@example.com or +977 980..."}
                       value={forgotEmail}
                       onChange={(e) => { setForgotEmail(e.target.value); setForgotError(""); }}
                       required
                       disabled={forgotLoading}
                       style={inputStyle}
-                      onFocus={(e) => { e.target.style.borderColor = "#111827"; e.target.style.background = "#fff"; }}
-                      onBlur={(e) => { e.target.style.borderColor = "#d1d5db"; e.target.style.background = "#f9fafb"; }}
+                      onFocus={(e) => { e.target.style.borderColor = "var(--border-focus)"; e.target.style.background = "var(--bg-card)"; }}
+                      onBlur={(e) => { e.target.style.borderColor = "var(--border-light)"; e.target.style.background = "var(--bg-input)"; }}
                     />
                   </div>
                   <button
                     type="submit"
                     style={btnStyle}
                     disabled={forgotLoading}
-                    onMouseOver={(e) => (e.target.style.background = "#374151")}
-                    onMouseOut={(e) => (e.target.style.background = "#111827")}
                   >
-                    {forgotLoading ? "Sending..." : "Send Reset Code"}
+                    {forgotLoading ? (t("login.loggingIn") || "Sending...") : (t("login.sendCode") || "Send Reset Code")}
                   </button>
-                  <p style={{ textAlign: "center", marginTop: "20px", fontSize: "14px", color: "#6b7280" }}>
-                    Remember your password?{" "}
-                    <span onClick={resetForgot} style={{ color: "#111827", fontWeight: 700, cursor: "pointer" }}>
-                      Sign in
+                  <p style={{ textAlign: "center", marginTop: "20px", fontSize: "14px", color: "var(--text-muted)" }}>
+                    {t("login.rememberPassword") || "Remember your password?"}{" "}
+                    <span onClick={resetForgot} style={{ color: "var(--primary)", fontWeight: 700, cursor: "pointer" }}>
+                      {t("login.loginBtn") || "Sign in"}
                     </span>
                   </p>
                 </form>
               </>
             )}
 
-            {/* Step 2: Enter OTP + new password */}
-            {forgotStep === "reset" && (
+            {/* Step 2: Enter OTP Code */}
+            {forgotStep === "otp" && (
               <>
-                <h2 style={{ fontSize: "24px", fontWeight: 800, color: "#111827", marginBottom: "8px", textAlign: "center" }}>
-                  Reset your password
+                <h2 style={{ fontSize: "24px", fontWeight: 800, color: "var(--text-main)", marginBottom: "8px", textAlign: "center" }}>
+                  {t("login.verifyTitle") || "Verify it's you"}
                 </h2>
-                <p style={{ fontSize: "14px", color: "#6b7280", textAlign: "center", marginBottom: "24px", lineHeight: 1.6 }}>
-                  Enter the code sent to{" "}
-                  <strong style={{ color: "#111827" }}>{forgotEmail}</strong> and your new password.
+                <p style={{ fontSize: "14px", color: "var(--text-muted)", textAlign: "center", marginBottom: "24px", lineHeight: 1.6 }}>
+                  {t("login.verifyDesc") || "Enter the 6-digit code sent to"}{" "}
+                  <strong style={{ color: "var(--text-main)" }}>{forgotEmail}</strong>
                 </p>
-                <form onSubmit={handleReset} autoComplete="off">
+                <form onSubmit={handleVerifyOtp} autoComplete="off">
                   {errorBox(forgotError)}
                   <div style={{ marginBottom: "20px" }}>
-                    <label style={labelStyle}>Verification Code</label>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+                      <label style={labelStyle}>{t("login.verificationCode") || "Verification Code"}</label>
+                      <span style={{ fontSize: "13px", fontWeight: 700, color: timeLeft < 30 ? "#ef4444" : "var(--text-main)" }}>
+                        {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, '0')} {t("login.remaining") || "remaining"}
+                      </span>
+                    </div>
                     <OtpBoxes value={otp} onChange={setOtp} disabled={forgotLoading} />
                   </div>
+                  <button
+                    type="submit"
+                    style={btnStyle}
+                    disabled={forgotLoading || timeLeft === 0}
+                  >
+                    {forgotLoading ? (t("login.loggingIn") || "Verifying...") : (t("login.verifyCode") || "Verify Code")}
+                  </button>
+                  <p style={{ textAlign: "center", marginTop: "24px", fontSize: "14px", color: "var(--text-muted)" }}>
+                    {t("login.didntGetCode") || "Didn't get the code?"}{" "}
+                    <span
+                      onClick={() => { setForgotStep("email"); setOtp(""); setForgotError(""); }}
+                      style={{ color: "var(--primary)", fontWeight: 700, cursor: "pointer" }}
+                    >
+                      {t("login.resendCode") || "Resend code"}
+                    </span>
+                  </p>
+                </form>
+              </>
+            )}
+
+            {/* Step 3: Enter new password */}
+            {forgotStep === "password" && (
+              <>
+                <h2 style={{ fontSize: "24px", fontWeight: 800, color: "var(--text-main)", marginBottom: "8px", textAlign: "center" }}>
+                  {t("login.secureTitle") || "Secure your account"}
+                </h2>
+                <p style={{ fontSize: "14px", color: "var(--text-muted)", textAlign: "center", marginBottom: "24px", lineHeight: 1.6 }}>
+                  {t("login.secureDesc") || "Code verified! Please choose a strong new password for your account."}
+                </p>
+                <form onSubmit={handleFinalReset} autoComplete="off">
+                  {errorBox(forgotError)}
                   <div style={{ marginBottom: "16px" }}>
-                    <label style={labelStyle}>New Password</label>
+                    <label style={labelStyle}>{t("login.newPassword") || "New Password"}</label>
                     <div style={{ position: "relative" }}>
                       <input
                         type={showNewPwd ? "text" : "password"}
-                        placeholder="At least 8 characters"
+                        placeholder={t("login.newPasswordPlaceholder") || "At least 8 characters"}
                         value={newPwd}
                         onChange={(e) => { setNewPwd(e.target.value); setForgotError(""); }}
                         required
                         disabled={forgotLoading}
                         style={{ ...inputStyle, paddingRight: "44px" }}
-                        onFocus={(e) => { e.target.style.borderColor = "#111827"; e.target.style.background = "#fff"; }}
-                        onBlur={(e) => { e.target.style.borderColor = "#d1d5db"; e.target.style.background = "#f9fafb"; }}
+                        onFocus={(e) => { e.target.style.borderColor = "var(--border-focus)"; e.target.style.background = "var(--bg-card)"; }}
+                        onBlur={(e) => { e.target.style.borderColor = "var(--border-light)"; e.target.style.background = "var(--bg-input)"; }}
                         autoComplete="new-password"
                       />
                       <button
                         type="button"
                         onClick={() => setShowNewPwd(!showNewPwd)}
-                        style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "#9ca3af", display: "flex" }}
+                        style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)", display: "flex" }}
                       >
                         {showNewPwd ? <EyeOff size={18} /> : <Eye size={18} />}
                       </button>
                     </div>
                   </div>
                   <div style={{ marginBottom: "24px" }}>
-                    <label style={labelStyle}>Confirm Password</label>
+                    <label style={labelStyle}>{t("signup.confirmPasswordLabel") || "Confirm Password"}</label>
                     <div style={{ position: "relative" }}>
                       <input
                         type={showConfirm ? "text" : "password"}
-                        placeholder="Confirm your new password"
+                        placeholder={t("signup.confirmPasswordPlaceholder") || "Confirm your new password"}
                         value={confirmPwd}
                         onChange={(e) => { setConfirmPwd(e.target.value); setForgotError(""); }}
                         required
                         disabled={forgotLoading}
                         style={{ ...inputStyle, paddingRight: "44px" }}
-                        onFocus={(e) => { e.target.style.borderColor = "#111827"; e.target.style.background = "#fff"; }}
-                        onBlur={(e) => { e.target.style.borderColor = "#d1d5db"; e.target.style.background = "#f9fafb"; }}
+                        onFocus={(e) => { e.target.style.borderColor = "var(--border-focus)"; e.target.style.background = "var(--bg-card)"; }}
+                        onBlur={(e) => { e.target.style.borderColor = "var(--border-light)"; e.target.style.background = "var(--bg-input)"; }}
                         autoComplete="new-password"
                       />
                       <button
                         type="button"
                         onClick={() => setShowConfirm(!showConfirm)}
-                        style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "#9ca3af", display: "flex" }}
+                        style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)", display: "flex" }}
                       >
                         {showConfirm ? <EyeOff size={18} /> : <Eye size={18} />}
                       </button>
@@ -440,31 +510,14 @@ const Login = () => {
                     type="submit"
                     style={btnStyle}
                     disabled={forgotLoading}
-                    onMouseOver={(e) => (e.target.style.background = "#374151")}
-                    onMouseOut={(e) => (e.target.style.background = "#111827")}
                   >
-                    {forgotLoading ? "Resetting..." : "Reset Password"}
+                    {forgotLoading ? (t("settings.updating") || "Updating...") : (t("settings.updatePassword") || "Update Password")}
                   </button>
-                  <p style={{ textAlign: "center", marginTop: "12px", fontSize: "13px", color: "#6b7280" }}>
-                    Didn't get the code?{" "}
-                    <span
-                      onClick={() => { setForgotStep("email"); setOtp(""); setForgotError(""); }}
-                      style={{ color: "#111827", fontWeight: 700, cursor: "pointer" }}
-                    >
-                      Resend code
-                    </span>
-                  </p>
-                  <p style={{ textAlign: "center", marginTop: "4px", fontSize: "13px", color: "#6b7280" }}>
-                    Back to{" "}
-                    <span onClick={resetForgot} style={{ color: "#111827", fontWeight: 700, cursor: "pointer" }}>
-                      Sign in
-                    </span>
-                  </p>
                 </form>
               </>
             )}
 
-            {/* Step 3: Success */}
+            {/* Step 4: Success */}
             {forgotStep === "success" && (
               <div style={{ textAlign: "center" }}>
                 <div
@@ -483,17 +536,15 @@ const Login = () => {
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
                 </div>
-                <h2 style={{ fontSize: "24px", fontWeight: 800, color: "#111827", marginBottom: "8px" }}>Password Reset!</h2>
-                <p style={{ fontSize: "15px", color: "#6b7280", marginBottom: "32px" }}>
-                  Your password has been successfully updated. You can now sign in.
+                <h2 style={{ fontSize: "24px", fontWeight: 800, color: "var(--text-main)", marginBottom: "8px" }}>{t("login.resetSuccess") || "Password Reset!"}</h2>
+                <p style={{ fontSize: "15px", color: "var(--text-muted)", marginBottom: "32px" }}>
+                  {t("login.resetSuccessDesc") || "Your password has been successfully updated. You can now sign in."}
                 </p>
                 <button
                   onClick={resetForgot}
                   style={btnStyle}
-                  onMouseOver={(e) => (e.target.style.background = "#374151")}
-                  onMouseOut={(e) => (e.target.style.background = "#111827")}
                 >
-                  Back to Sign In
+                  {t("login.loginBtn") || "Sign In"}
                 </button>
               </div>
             )}
@@ -501,64 +552,64 @@ const Login = () => {
         ) : (
           /* ═══════════ MAIN LOGIN ═══════════ */
           <div style={cardStyle}>
-            <h2 style={{ fontSize: "26px", fontWeight: 800, color: "#111827", marginBottom: "6px", textAlign: "center" }}>
-              Welcome back
+            <h2 style={{ fontSize: "26px", fontWeight: 800, color: "var(--text-main)", marginBottom: "6px", textAlign: "center" }}>
+              {t("login.welcomeBack") || "Welcome back"}
             </h2>
-            <p style={{ fontSize: "14px", color: "#6b7280", textAlign: "center", marginBottom: "32px" }}>
-              Enter your credentials to access your dashboard
+            <p style={{ fontSize: "14px", color: "var(--text-muted)", textAlign: "center", marginBottom: "32px" }}>
+              {t("login.subtitle") || "Sign in to manage your plant health"}
             </p>
             <form onSubmit={handleLogin} autoComplete="off">
               {errorBox(loginError)}
               <div style={{ marginBottom: "16px" }}>
-                <label style={labelStyle}>Email or Phone Number</label>
+                <label style={labelStyle}>{t("login.usernameLabel")}</label>
                 <input
                   type="text"
-                  placeholder="Enter your email or phone"
+                  placeholder={t("login.usernamePlaceholder")}
                   value={username}
                   onChange={(e) => { setUsername(e.target.value); setLoginError(""); }}
                   required
                   disabled={loginLoading}
                   style={inputStyle}
-                  onFocus={(e) => { e.target.style.borderColor = "#111827"; e.target.style.background = "#fff"; }}
-                  onBlur={(e) => { e.target.style.borderColor = "#d1d5db"; e.target.style.background = "#f9fafb"; }}
+                  onFocus={(e) => { e.target.style.borderColor = "var(--border-focus)"; e.target.style.background = "var(--bg-card)"; }}
+                  onBlur={(e) => { e.target.style.borderColor = "var(--border-light)"; e.target.style.background = "var(--bg-input)"; }}
                   autoComplete="off"
                 />
               </div>
               <div style={{ marginBottom: "24px" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-                  <label style={labelStyle}>Password</label>
+                  <label style={labelStyle}>{t("login.passwordLabel")}</label>
                   <span
                     onClick={() => {
                       if (!username.trim()) {
-                        setLoginError("Please enter your email address before resetting your password.");
+                        setLoginError(t("login.enterEmailFirst") || "Please enter your email address before resetting your password.");
                       } else {
                         setForgotEmail(username.trim());
                         setForgotMode(true);
                         setLoginError("");
                       }
                     }}
-                    style={{ fontSize: "13px", color: "#111827", fontWeight: 600, cursor: "pointer" }}
+                    style={{ fontSize: "13px", color: "var(--primary)", fontWeight: 600, cursor: "pointer" }}
                   >
-                    Forgot your password?
+                    {t("login.forgotPassword") || "Forgot your password?"}
                   </span>
                 </div>
                 <div style={{ position: "relative" }}>
                   <input
                     type={showPwd ? "text" : "password"}
-                    placeholder="Enter your password"
+                    placeholder={t("login.passwordPlaceholder")}
                     value={password}
                     onChange={(e) => { setPassword(e.target.value); setLoginError(""); }}
                     required
                     disabled={loginLoading}
                     style={{ ...inputStyle, paddingRight: "44px" }}
-                    onFocus={(e) => { e.target.style.borderColor = "#111827"; e.target.style.background = "#fff"; }}
-                    onBlur={(e) => { e.target.style.borderColor = "#d1d5db"; e.target.style.background = "#f9fafb"; }}
+                    onFocus={(e) => { e.target.style.borderColor = "var(--border-focus)"; e.target.style.background = "var(--bg-card)"; }}
+                    onBlur={(e) => { e.target.style.borderColor = "var(--border-light)"; e.target.style.background = "var(--bg-input)"; }}
                     autoComplete="new-password"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPwd(!showPwd)}
-                    style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "#9ca3af", display: "flex" }}
+                    style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)", display: "flex" }}
                   >
                     {showPwd ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
@@ -568,16 +619,14 @@ const Login = () => {
                 type="submit"
                 style={btnStyle}
                 disabled={loginLoading}
-                onMouseOver={(e) => (e.target.style.background = "#374151")}
-                onMouseOut={(e) => (e.target.style.background = "#111827")}
               >
-                {loginLoading ? "Signing in..." : "Sign In"}
+                {loginLoading ? t("login.loggingIn") : t("login.loginBtn")}
               </button>
             </form>
-            <p style={{ textAlign: "center", marginTop: "20px", fontSize: "14px", color: "#6b7280" }}>
-              Don't have an account?{" "}
-              <Link to="/signup" style={{ color: "#111827", fontWeight: 700, textDecoration: "none" }}>
-                Create an account
+            <p style={{ textAlign: "center", marginTop: "20px", fontSize: "14px", color: "var(--text-muted)" }}>
+              {t("login.noAccount")}{" "}
+              <Link to="/signup" style={{ color: "var(--primary)", fontWeight: 700, textDecoration: "none" }}>
+                {t("login.signUp")}
               </Link>
             </p>
           </div>

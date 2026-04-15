@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { authService } from "../services/api";
 import { Eye, EyeOff, UserPlus, Phone, CheckCircle, RefreshCw } from "lucide-react";
+import { useLanguage } from "../context/LanguageContext";
 
 const OTP_LENGTH = 6;
 
@@ -17,6 +18,7 @@ const SignUp = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -31,25 +33,25 @@ const SignUp = () => {
     setLoading(true);
 
     if (!formData.username.trim() || !formData.password.trim()) {
-      setError("Please fill in your Full Name and Password.");
+      setError(t("signup.firstNameLabel") ? `${t("signup.firstNameLabel")} ${t("signup.passwordLabel")} ${t("login.errorEmpty") || "are required."}` : "Please fill in your Full Name and Password.");
       setLoading(false);
       return;
     }
 
     if (!formData.email.trim()) {
-      setError("Please provide an Email Address.");
+      setError(t("signup.emailLabel") ? `${t("signup.emailLabel")} ${t("login.errorEmpty") || "is required."}` : "Please provide an Email Address.");
       setLoading(false);
       return;
     }
 
     if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match.");
+      setError(t("signup.passwordMismatch"));
       setLoading(false);
       return;
     }
 
     if (formData.password.length < 8) {
-      setError("Password must be at least 8 characters long.");
+      setError(t("signup.passwordTooShort"));
       setLoading(false);
       return;
     }
@@ -60,16 +62,16 @@ const SignUp = () => {
         username: formData.username,
         password: formData.password
       });
-      navigate("/", { state: { message: "Account created successfully! Please sign in." } });
+      navigate("/", { state: { message: t("signup.signupSuccessful") || "Account created successfully! Please sign in." } });
     } catch (err) {
       console.error(err);
       if (err.response?.data) {
         const errors = err.response.data;
         if (errors.email) setError(errors.email[0]);
         else if (errors.username) setError(errors.username[0]);
-        else setError("Failed to create account. Please try again.");
+        else setError(t("signup.signupFailed"));
       } else {
-        setError("Server error. Please try again later.");
+        setError(t("login.serverError"));
       }
       setLoading(false);
     }
@@ -114,13 +116,13 @@ const SignUp = () => {
       <div style={{ flex: '1', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem', background: 'var(--bg-main)', overflowY: 'auto' }}>
         <div style={{ maxWidth: '480px', width: '100%' }} className="animate-slide-up">
           <div style={{ marginBottom: '2rem' }}>
-            <h2 style={{ fontSize: '2.25rem', fontWeight: 900, color: 'var(--secondary)', marginBottom: '0.4rem', letterSpacing: '-0.03em' }}>Create an Account</h2>
-            <p style={{ fontSize: '1rem', color: 'var(--text-muted)' }}>Get started with Smart Plant Health Management System</p>
+            <h2 style={{ fontSize: '2.25rem', fontWeight: 900, color: 'var(--secondary)', marginBottom: '0.4rem', letterSpacing: '-0.03em' }}>{t("signup.title")}</h2>
+            <p style={{ fontSize: '1rem', color: 'var(--text-muted)' }}>{t("signup.subtitle")}</p>
           </div>
 
           <form onSubmit={handleSubmit}>
             {error && (
-              <div style={{ background: '#fef2f2', borderLeft: '4px solid #ef4444', color: '#b91c1c', padding: '0.875rem 1rem', borderRadius: '8px', fontSize: '0.9rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
+              <div style={{ background: 'var(--danger-subtle)', borderLeft: '4px solid var(--danger)', color: 'var(--danger)', padding: '0.875rem 1rem', borderRadius: '8px', fontSize: '0.9rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
                 <span>⚠️</span> {error}
               </div>
             )}
@@ -128,13 +130,13 @@ const SignUp = () => {
             {/* Full Name + Email row */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.25rem' }}>
               <div>
-                <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 800, marginBottom: '0.4rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Full Name *</label>
-                <input type="text" name="username" placeholder="John Doe" value={formData.username} onChange={handleChange} required disabled={loading}
+                <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 800, marginBottom: '0.4rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t("signup.firstNameLabel")} *</label>
+                <input type="text" name="username" placeholder={t("signup.firstNamePlaceholder")} value={formData.username} onChange={handleChange} required disabled={loading}
                   style={inputStyle} onFocus={e => e.target.style.borderColor = 'var(--primary)'} onBlur={e => e.target.style.borderColor = 'rgba(0,0,0,0.08)'} autoComplete="off" />
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 800, marginBottom: '0.4rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Email Address *</label>
-                <input type="email" name="email" placeholder="john@example.com" value={formData.email} onChange={handleChange} disabled={loading} required
+                <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 800, marginBottom: '0.4rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t("signup.emailLabel")} *</label>
+                <input type="email" name="email" placeholder={t("signup.emailPlaceholder")} value={formData.email} onChange={handleChange} disabled={loading} required
                   style={inputStyle} onFocus={e => e.target.style.borderColor = 'var(--primary)'} onBlur={e => e.target.style.borderColor = 'rgba(0,0,0,0.08)'} autoComplete="off" />
               </div>
             </div>
@@ -144,9 +146,9 @@ const SignUp = () => {
             {/* Password fields */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '2rem' }}>
               <div>
-                <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 800, marginBottom: '0.4rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Password *</label>
+                <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 800, marginBottom: '0.4rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t("signup.passwordLabel")} *</label>
                 <div style={{ position: 'relative' }}>
-                  <input type={showPassword ? "text" : "password"} name="password" placeholder="Min. 8 characters" value={formData.password} onChange={handleChange} required disabled={loading}
+                  <input type={showPassword ? "text" : "password"} name="password" placeholder={t("signup.passwordPlaceholder")} value={formData.password} onChange={handleChange} required disabled={loading}
                     style={{ ...inputStyle, paddingRight: '3rem' }} onFocus={e => e.target.style.borderColor = 'var(--primary)'} onBlur={e => e.target.style.borderColor = 'rgba(0,0,0,0.08)'} autoComplete="new-password" />
                   <button type="button" onClick={() => setShowPassword(!showPassword)}
                     style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex' }}>
@@ -155,9 +157,9 @@ const SignUp = () => {
                 </div>
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 800, marginBottom: '0.4rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Confirm Password *</label>
+                <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 800, marginBottom: '0.4rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t("signup.confirmPasswordLabel")} *</label>
                 <div style={{ position: 'relative' }}>
-                  <input type={showConfirmPassword ? "text" : "password"} name="confirmPassword" placeholder="Re-enter password" value={formData.confirmPassword} onChange={handleChange} required disabled={loading}
+                  <input type={showConfirmPassword ? "text" : "password"} name="confirmPassword" placeholder={t("signup.confirmPasswordPlaceholder")} value={formData.confirmPassword} onChange={handleChange} required disabled={loading}
                     style={{ ...inputStyle, paddingRight: '3rem' }} onFocus={e => e.target.style.borderColor = 'var(--primary)'} onBlur={e => e.target.style.borderColor = 'rgba(0,0,0,0.08)'} autoComplete="new-password" />
                   <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex' }}>
@@ -170,13 +172,13 @@ const SignUp = () => {
             <button type="submit"
               style={{ width: '100%', height: '54px', background: 'var(--primary)', color: 'white', fontSize: '1.05rem', fontWeight: 800, borderRadius: '12px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', boxShadow: '0 8px 20px -5px rgba(16,185,129,0.4)', transition: 'filter 0.2s' }}
               disabled={loading} onMouseOver={e => e.currentTarget.style.filter = 'brightness(1.1)'} onMouseOut={e => e.currentTarget.style.filter = 'brightness(1)'}>
-              {loading ? "Creating Account..." : <><UserPlus size={20} /> Create Account</>}
+              {loading ? t("signup.creatingAccount") : <><UserPlus size={20} /> {t("signup.signupBtn")}</>}
             </button>
           </form>
 
           <div style={{ marginTop: '2rem', textAlign: 'center', fontSize: '0.95rem', color: 'var(--text-muted)' }}>
-            Already have an account?
-            <Link to="/" style={{ color: 'var(--primary)', fontWeight: 800, textDecoration: 'none', marginLeft: '0.4rem' }}>Sign In</Link>
+            {t("signup.haveAccount")}
+            <Link to="/" style={{ color: 'var(--primary)', fontWeight: 800, textDecoration: 'none', marginLeft: '0.4rem' }}>{t("signup.loginLink")}</Link>
           </div>
         </div>
       </div>

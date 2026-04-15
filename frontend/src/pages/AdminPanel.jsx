@@ -11,7 +11,7 @@ import {
     BarChart2, Clock, Search, Package, ShoppingBag, Tag,
     Star, Store, Plus, Edit2, Save, X, ToggleLeft,
     ToggleRight, DollarSign, MoreVertical, ChevronDown,
-    Moon, Sun, Globe
+    Moon, Sun, Globe, AlertCircle
 } from "lucide-react";
 import { useLanguage } from "../context/LanguageContext";
 import { useTheme } from "../context/ThemeContext";
@@ -27,6 +27,7 @@ const AdminPanel = () => {
     const [selectedUser, setSelectedUser] = useState(null);
     const [userDetail, setUserDetail] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState("");
     const [searchQuery, setSearchQuery] = useState("");
     const [confirmDelete, setConfirmDelete] = useState(null);
@@ -39,24 +40,25 @@ const AdminPanel = () => {
     const [orders, setOrders] = useState([]);
     const [coupons, setCoupons] = useState([]);
     const [reviews, setReviews] = useState([]);
+    const [systemPlants, setSystemPlants] = useState([]);
     const [showProductForm, setShowProductForm] = useState(false);
     const [editingProduct, setEditingProduct] = useState(null);
     const [showCouponForm, setShowCouponForm] = useState(false);
     const [editingCoupon, setEditingCoupon] = useState(null);
     const [expandedOrder, setExpandedOrder] = useState(null);
-    const [productForm, setProductForm] = useState({ name: "", category: "", description: "", price: "", discount_price: "", stock: "", sku: "", tags: "", usage_instructions: "", is_featured: false, is_organic: false, is_active: true });
-    const [couponForm, setCouponForm] = useState({ code: "", discount_type: "percentage", discount_value: "", min_order_amount: "0", max_uses: "", is_active: true, valid_until: "" });
+    const [productForm, setProductForm] = useState({ name: "", category: "", description: "", price: "", discountPrice: "", stock: "", sku: "", tags: "", usageInstructions: "", isFeatured: false, isOrganic: false, isActive: true });
+    const [couponForm, setCouponForm] = useState({ code: "", discountType: "percentage", discountValue: "", minOrderAmount: "0", maxUses: "", isActive: true, validUntil: "" });
     const [toast, setToast] = useState(null);
 
     const username = sessionStorage.getItem("username");
-    const isSuperuser = sessionStorage.getItem("is_superuser") === "true";
+    const isSuperuser = sessionStorage.getItem("isSuperuser") === "true";
 
     const [tabHistory, setTabHistory] = useState(["dashboard"]);
 
     // Guard: only admins can access this page
     useEffect(() => {
-        const isStaff = sessionStorage.getItem("is_staff") === "true";
-        const isSu = sessionStorage.getItem("is_superuser") === "true";
+        const isStaff = sessionStorage.getItem("isStaff") === "true";
+        const isSu = sessionStorage.getItem("isSuperuser") === "true";
         if (!isStaff && !isSu) {
             navigate("/dashboard");
         }
@@ -65,9 +67,13 @@ const AdminPanel = () => {
     // ── Hash-based tab navigation (back/forward button support) ────────────────
     useEffect(() => {
         const hashTab = window.location.hash.replace("#", "");
-        const validTabs = ["dashboard", "users", "predictions", "ecom-overview", "products", "orders", "coupons", "reviews", "user-detail"];
+        const validTabs = ["dashboard", "users", "predictions", "ecom-overview", "products", "orders", "coupons", "reviews", "user-detail", "system-plants"];
         if (hashTab && validTabs.includes(hashTab)) {
             setActiveTab(hashTab);
+        } else {
+            // Explicitly default to dashboard if no hash or invalid hash
+            setActiveTab("dashboard");
+            if (!hashTab) window.history.replaceState(null, "", "#dashboard");
         }
     }, []);
 
@@ -75,7 +81,7 @@ const AdminPanel = () => {
     useEffect(() => {
         const handleHashChange = () => {
             const hashTab = window.location.hash.replace("#", "");
-            const validTabs = ["dashboard", "users", "predictions", "ecom-overview", "products", "orders", "coupons", "reviews"];
+            const validTabs = ["dashboard", "users", "predictions", "ecom-overview", "products", "orders", "coupons", "reviews", "user-detail", "system-plants"];
             if (hashTab && validTabs.includes(hashTab)) {
                 setActiveTab(hashTab);
                 setSearchQuery("");
@@ -92,82 +98,105 @@ const AdminPanel = () => {
 
 
 
-    const fetchDashboard = useCallback(async () => {
+    const fetchDashboard = useCallback(async (silent = false) => {
         try {
-            setLoading(true);
+            if (!silent) setLoading(true);
+            else setRefreshing(true);
             const { data } = await adminService.getDashboard();
             setDashboardData(data);
         } catch (e) {
             setError(t("admin.errorLoadDashboard") || "Failed to load dashboard data.");
         } finally {
             setLoading(false);
+            setRefreshing(false);
         }
     }, [t]);
 
-    const fetchUsers = useCallback(async () => {
+    const fetchUsers = useCallback(async (silent = false) => {
         try {
-            setLoading(true);
+            if (!silent) setLoading(true);
+            else setRefreshing(true);
             const { data } = await adminService.getUsers();
             setUsers(data);
         } catch (e) {
             setError(t("admin.errorLoadUsers") || "Failed to load users.");
         } finally {
             setLoading(false);
+            setRefreshing(false);
         }
     }, [t]);
 
-    const fetchAllPredictions = useCallback(async () => {
+    const fetchAllPredictions = useCallback(async (silent = false) => {
         try {
-            setLoading(true);
+            if (!silent) setLoading(true);
+            else setRefreshing(true);
             const { data } = await adminService.getAllPredictions();
             setAllPredictions(data);
         } catch (e) {
             setError(t("admin.errorLoadPredictions") || "Failed to load predictions.");
         } finally {
             setLoading(false);
+            setRefreshing(false);
         }
     }, [t]);
 
-    const fetchUserDetail = useCallback(async (userId) => {
+    const fetchSystemPlants = useCallback(async (silent = false) => {
         try {
-            setLoading(true);
+            if (!silent) setLoading(true);
+            else setRefreshing(true);
+            const { data } = await adminService.getAllPlants();
+            setUsers(prev => prev); // Placeholder to trigger re-render if needed, but actually we need a state
+            setSystemPlants(data);
+        } catch (e) {
+            setError("Failed to load system plants.");
+        } finally {
+            setLoading(false);
+            setRefreshing(false);
+        }
+    }, []);
+
+    const fetchUserDetail = useCallback(async (userId, silent = false) => {
+        try {
+            if (!silent) setLoading(true);
+            else setRefreshing(true);
             const { data } = await adminService.getUserDetail(userId);
             setUserDetail(data);
         } catch (e) {
             setError(t("admin.errorLoadUser") || "Failed to load user details.");
         } finally {
             setLoading(false);
+            setRefreshing(false);
         }
     }, [t]);
 
     // ---- E-Commerce Fetch Handlers ----
-    const fetchEcomOverview = useCallback(async () => {
-        try { setLoading(true); const { data } = await adminService.getEcommerceOverview(); setEcomOverview(data); }
-        catch (e) { setError("Failed to load e-commerce overview."); } finally { setLoading(false); }
+    const fetchEcomOverview = useCallback(async (silent = false) => {
+        try { if (!silent) setLoading(true); else setRefreshing(true); const { data } = await adminService.getEcommerceOverview(); setEcomOverview(data); }
+        catch (e) { setError("Failed to load e-commerce overview."); } finally { setLoading(false); setRefreshing(false); }
     }, []);
 
-    const fetchProducts = useCallback(async () => {
+    const fetchProducts = useCallback(async (silent = false) => {
         try {
-            setLoading(true);
+            if (!silent) setLoading(true); else setRefreshing(true);
             const [pRes, cRes] = await Promise.all([adminService.adminGetAllProducts(), adminService.adminGetCategories()]);
             setProducts(Array.isArray(pRes.data) ? pRes.data : (pRes.data.results || []));
             setCategories(Array.isArray(cRes.data) ? cRes.data : (cRes.data.results || []));
-        } catch (e) { setError("Failed to load products."); } finally { setLoading(false); }
+        } catch (e) { setError("Failed to load products."); } finally { setLoading(false); setRefreshing(false); }
     }, []);
 
-    const fetchOrders = useCallback(async () => {
-        try { setLoading(true); const { data } = await adminService.adminGetAllOrders(); setOrders(Array.isArray(data) ? data : (data.results || [])); }
-        catch (e) { setError("Failed to load orders."); } finally { setLoading(false); }
+    const fetchOrders = useCallback(async (silent = false) => {
+        try { if (!silent) setLoading(true); else setRefreshing(true); const { data } = await adminService.adminGetAllOrders(); setOrders(Array.isArray(data) ? data : (data.results || [])); }
+        catch (e) { setError("Failed to load orders."); } finally { setLoading(false); setRefreshing(false); }
     }, []);
 
-    const fetchCoupons = useCallback(async () => {
-        try { setLoading(true); const { data } = await adminService.adminGetCoupons(); setCoupons(Array.isArray(data) ? data : (data.results || [])); }
-        catch (e) { setError("Failed to load coupons."); } finally { setLoading(false); }
+    const fetchCoupons = useCallback(async (silent = false) => {
+        try { if (!silent) setLoading(true); else setRefreshing(true); const { data } = await adminService.adminGetCoupons(); setCoupons(Array.isArray(data) ? data : (data.results || [])); }
+        catch (e) { setError("Failed to load coupons."); } finally { setLoading(false); setRefreshing(false); }
     }, []);
 
-    const fetchReviews = useCallback(async () => {
-        try { setLoading(true); const { data } = await adminService.adminGetAllReviews(); setReviews(Array.isArray(data) ? data : (data.results || [])); }
-        catch (e) { setError("Failed to load reviews."); } finally { setLoading(false); }
+    const fetchReviews = useCallback(async (silent = false) => {
+        try { if (!silent) setLoading(true); else setRefreshing(true); const { data } = await adminService.adminGetAllReviews(); setReviews(Array.isArray(data) ? data : (data.results || [])); }
+        catch (e) { setError("Failed to load reviews."); } finally { setLoading(false); setRefreshing(false); }
     }, []);
 
     const showToast = (msg, type = "success") => {
@@ -175,19 +204,21 @@ const AdminPanel = () => {
     };
 
     useEffect(() => {
-        if (activeTab === "dashboard") { fetchDashboard(); fetchEcomOverview(); }
-        else if (activeTab === "users") fetchUsers();
-        else if (activeTab === "predictions") fetchAllPredictions();
-        else if (activeTab === "ecom-overview") fetchEcomOverview();
-        else if (activeTab === "products") fetchProducts();
-        else if (activeTab === "orders") fetchOrders();
-        else if (activeTab === "coupons") fetchCoupons();
-        else if (activeTab === "reviews") fetchReviews();
-    }, [activeTab, fetchDashboard, fetchUsers, fetchAllPredictions, fetchEcomOverview, fetchProducts, fetchOrders, fetchCoupons, fetchReviews]);
+        const silent = !!dashboardData || users.length > 0 || products.length > 0;
+        if (activeTab === "dashboard") { fetchDashboard(silent); fetchEcomOverview(silent); }
+        else if (activeTab === "users") fetchUsers(silent);
+        else if (activeTab === "predictions") fetchAllPredictions(silent);
+        else if (activeTab === "ecom-overview") fetchEcomOverview(silent);
+        else if (activeTab === "products") fetchProducts(silent);
+        else if (activeTab === "orders") fetchOrders(silent);
+        else if (activeTab === "coupons") fetchCoupons(silent);
+        else if (activeTab === "reviews") fetchReviews(silent);
+        else if (activeTab === "system-plants") fetchSystemPlants(silent);
+    }, [activeTab, fetchDashboard, fetchUsers, fetchAllPredictions, fetchEcomOverview, fetchProducts, fetchOrders, fetchCoupons, fetchReviews, fetchSystemPlants]);
 
     const handleViewUser = (user) => {
         setSelectedUser(user);
-        fetchUserDetail(user.id);
+        fetchUserDetail(user.id, false); // Not silent for first detail view
         setActiveTab("user-detail");
         window.location.hash = "user-detail";
     };
@@ -210,9 +241,9 @@ const AdminPanel = () => {
     const handleToggleStaff = async (userId) => {
         try {
             const { data } = await adminService.toggleStaff(userId);
-            setUsers(prev => prev.map(u => u.id === userId ? { ...u, is_staff: data.is_staff } : u));
+            setUsers(prev => prev.map(u => u.id === userId ? { ...u, isStaff: data.isStaff } : u));
             if (userDetail && userDetail.user.id === userId) {
-                setUserDetail(prev => ({ ...prev, user: { ...prev.user, is_staff: data.is_staff } }));
+                setUserDetail(prev => ({ ...prev, user: { ...prev.user, isStaff: data.isStaff } }));
             }
         } catch (e) {
             setError(e.response?.data?.error || t("admin.errorToggleStaff") || "Failed to toggle staff status.");
@@ -233,13 +264,13 @@ const AdminPanel = () => {
     };
 
     const filteredUsers = users.filter(u =>
-        u.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        u.email.toLowerCase().includes(searchQuery.toLowerCase())
+        (u.username || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (u.email || "").toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     const filteredPredictions = allPredictions.filter(p => {
-        const matchesSearch = p.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            p.disease.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesSearch = (p.username || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (p.disease || "").toLowerCase().includes(searchQuery.toLowerCase());
         const matchesCat = scanFilter === "all" || p.category === scanFilter;
         return matchesSearch && matchesCat;
     });
@@ -295,6 +326,7 @@ const AdminPanel = () => {
                         {[
                             { id: "dashboard", icon: <BarChart2 size={17} />, label: t("admin.tabDashboard") || "Dashboard" },
                             { id: "users", icon: <Users size={17} />, label: t("admin.tabUsers") || "Users" },
+                            { id: "system-plants", icon: <Leaf size={17} />, label: t("admin.tabPlants") || "Plants" },
                             { id: "predictions", icon: <Activity size={17} />, label: t("admin.tabPredictions") || "Scan Logs" },
                         ].map(item => (
                             <button key={item.id} onClick={() => { window.location.hash = item.id; setActiveTab(item.id); setSearchQuery(""); setError(""); }}
@@ -398,102 +430,99 @@ const AdminPanel = () => {
                     {/* == DASHBOARD TAB ==*/}
                     {activeTab === "dashboard" && (
                         <div>
-                            <div style={{ marginBottom: "2rem" }}>
-                                <h1 style={{ fontSize: "1.75rem", fontWeight: 800, color: "var(--text-main)", marginBottom: "0.25rem" }}>
-                                    {t("admin.dashboardTitle")}
-                                </h1>
-                                <p style={{ color: "var(--text-muted)", fontSize: "0.95rem" }}>
-                                    {t("admin.dashboardDesc")}
-                                </p>
+                            <div style={{ marginBottom: "2.5rem" }}>
+                                <h1 style={{ fontSize: "2rem", fontWeight: 800, color: "var(--text-main)", marginBottom: "0.5rem" }}>{t("admin.dashboardTitle")}</h1>
+                                <p style={{ color: "var(--text-muted)", fontSize: "1.05rem" }}>{t("admin.dashboardDesc")}</p>
                             </div>
 
-                            {loading ? (
-                                <LoadingSpinner />
-                            ) : dashboardData ? (
+                            {dashboardData && (
                                 <>
-                                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1.25rem", marginBottom: "2rem" }}>
-                                        <StatCard onClick={() => setActiveTab('users')} icon={<Users size={22} />} label={t("admin.statTotalUsers")} value={s.total_users} color="#3b82f6" />
-                                        <StatCard onClick={() => { setActiveTab('predictions'); setScanFilter('all'); }} icon={<Leaf size={22} />} label={t("admin.statTotalPlants")} value={s.total_plants} color="#10b981" />
-                                        <StatCard onClick={() => { setActiveTab('predictions'); setScanFilter('all'); window.location.hash = "predictions"; }} icon={<Activity size={22} />} label={t("admin.statTotalScans")} value={s.total_predictions} color="#8b5cf6" />
-                                        <StatCard onClick={() => { setActiveTab('predictions'); setScanFilter('diseased'); window.location.hash = "predictions"; }} icon={<AlertTriangle size={22} />} label={t("admin.statDiseasedScans")} value={s.diseased_predictions} color="#ef4444" />
-                                        <StatCard onClick={() => { setActiveTab('predictions'); setScanFilter('healthy'); window.location.hash = "predictions"; }} icon={<CheckCircle size={22} />} label={t("admin.statHealthyScans")} value={s.healthy_predictions} color="#10b981" />
-                                        <StatCard onClick={() => { setActiveTab('predictions'); setScanFilter('out_of_scope'); window.location.hash = "predictions"; }} icon={<Activity size={22} />} label={t("treatmentFilters.out_of_scope")} value={s.out_of_scope_predictions} color="#f59e0b" />
-                                        <StatCard onClick={() => { setActiveTab('predictions'); setScanFilter('non_plant'); window.location.hash = "predictions"; }} icon={<Activity size={22} />} label={t("treatmentFilters.non_plant")} value={s.non_plant_predictions} color="#64748b" />
-                                        <StatCard onClick={() => setActiveTab('orders')} icon={<RefreshCw size={22} />} label={t("ecom.revenue")} value={ecomOverview ? `${parseFloat(ecomOverview.total_revenue).toLocaleString()}` : '...'} color="#10b981" />
-                                        <StatCard onClick={() => setActiveTab('orders')} icon={<Package size={22} />} label={t("ecom.totalOrders")} value={ecomOverview ? ecomOverview.total_orders : '...'} color="#3b82f6" />
+                                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "1.5rem", marginBottom: "3rem" }}>
+                                        <StatCard icon={<Users size={22} />} label={t("admin.statTotalUsers")} value={dashboardData?.stats?.totalUsers || 0} color="#3b82f6" onClick={() => { setActiveTab("users"); window.location.hash = "users"; }} />
+                                        <StatCard icon={<Leaf size={22} />} label={t("admin.statTotalPlants")} value={dashboardData?.stats?.totalPlants || 0} color="#10b981" onClick={() => { setActiveTab("system-plants"); window.location.hash = "system-plants"; }} />
+                                        <StatCard icon={<Activity size={22} />} label={t("admin.statTotalScans")} value={dashboardData?.stats?.totalPredictions || 0} color="#8b5cf6" onClick={() => { setActiveTab("predictions"); window.location.hash = "predictions"; }} />
+                                        <StatCard icon={<ShieldCheck size={22} />} label={t("dashboard.statOutOfScope") || "Out of Scope"} value={dashboardData?.stats?.outOfScopePredictions || 0} color="#f59e0b" onClick={() => { setActiveTab("predictions"); setScanFilter("out_of_scope"); window.location.hash = "predictions"; }} />
+                                        <StatCard icon={<XCircle size={22} />} label={t("dashboard.statNonPlant") || "Non-Plant"} value={dashboardData?.stats?.nonPlantPredictions || 0} color="#64748b" onClick={() => { setActiveTab("predictions"); setScanFilter("non_plant"); window.location.hash = "predictions"; }} />
+                                        <StatCard icon={<AlertCircle size={22} />} label={t("admin.statDiseasedScans")} value={dashboardData?.stats?.diseasedPredictions || 0} color="#ef4444" onClick={() => { setActiveTab("predictions"); setScanFilter("diseased"); window.location.hash = "predictions"; }} />
+                                        <StatCard icon={<CheckCircle size={22} />} label={t("admin.statHealthyScans")} value={dashboardData?.stats?.healthyPredictions || 0} color="#059669" onClick={() => { setActiveTab("predictions"); setScanFilter("healthy"); window.location.hash = "predictions"; }} />
                                     </div>
 
-                                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem" }}>
-                                        {/* Recent Predictions */}
-                                        <div style={{ background: "var(--bg-card)", borderRadius: 16, border: "1px solid var(--border-light)", overflow: "hidden" }}>
-                                            <div style={{ padding: "1.25rem 1.5rem", borderBottom: "1px solid var(--border-light)", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                                                <Clock size={16} color="var(--primary)" />
-                                                <h3 style={{ fontSize: "1rem", fontWeight: 700, color: "var(--text-main)" }}>{t("admin.recentScans")}</h3>
+                                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(400px, 1fr))", gap: "2rem" }}>
+                                        {/* Recent Activity */}
+                                        <div style={{ background: "var(--bg-card)", borderRadius: 24, border: "1px solid var(--border-light)", padding: "1.75rem" }}>
+                                            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1.5rem" }}>
+                                                <div style={{ padding: "0.5rem", background: "var(--primary-subtle)", color: "var(--primary)", borderRadius: 12 }}><Clock size={20} /></div>
+                                                <h3 style={{ fontSize: "1.2rem", fontWeight: 800, color: "var(--text-main)" }}>{t("admin.recentScans")}</h3>
                                             </div>
-                                            <div style={{ maxHeight: 380, overflowY: "auto" }}>
-                                                {dashboardData.recent_predictions.map(p => (
-                                                    <div key={p.id} style={{
-                                                        padding: "0.875rem 1.5rem", borderBottom: "1px solid var(--border-light)",
-                                                        display: "flex", alignItems: "center", gap: "0.75rem"
-                                                    }}>
-                                                        <div style={{
-                                                            width: 8, height: 8, borderRadius: "50%", flexShrink: 0,
-                                                            background: p.is_healthy ? "#10b981" : "#ef4444"
-                                                        }} />
-                                                        <div style={{ flex: 1, minWidth: 0 }}>
-                                                            <div style={{ fontWeight: 600, fontSize: "0.85rem", color: "var(--text-main)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                                                                {p.disease}
+                                            <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                                                {(dashboardData?.recentPredictions || []).map((s, i) => {
+                                                    const imgUrl = s.image ? (s.image.startsWith('http') ? s.image : `${window.location.protocol}//${window.location.hostname}:8000${s.image.startsWith('/') ? '' : '/'}${s.image}`) : "/placeholder.png";
+                                                    return (
+                                                        <button
+                                                            key={i}
+                                                            onClick={() => setPreviewImage(imgUrl)}
+                                                            onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.02)'; e.currentTarget.style.borderColor = 'var(--primary)'; }}
+                                                            onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.borderColor = 'var(--border-light)'; }}
+                                                            style={{
+                                                                width: "100%", display: "flex", alignItems: "center", gap: "1rem", padding: "1rem",
+                                                                background: "var(--bg-main)", borderRadius: 16, border: "1px solid var(--border-light)",
+                                                                textAlign: "left", cursor: "pointer", transition: "all 0.2s"
+                                                            }}
+                                                        >
+                                                            <div style={{ width: 44, height: 44, borderRadius: 12, overflow: "hidden", background: "var(--bg-card)", flexShrink: 0 }}>
+                                                                <img src={imgUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                                                             </div>
-                                                            <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
-                                                                {t("admin.byUser")} <strong>{p.username}</strong> · {p.confidence.toFixed(1)}{t("admin.confSuffix")}
+                                                            <div style={{ flex: 1 }}>
+                                                                <div style={{ fontWeight: 700, fontSize: "0.9rem", color: "var(--text-main)" }}>{s.disease}</div>
+                                                                <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 500 }}>{t("admin.byUser")} {s.username} · {new Date(s.createdAt).toLocaleDateString()}</div>
                                                             </div>
-                                                        </div>
-                                                        <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", flexShrink: 0 }}>
-                                                            {new Date(p.created_at).toLocaleDateString()}
-                                                        </div>
-                                                    </div>
-                                                ))}
+                                                            <div style={{ textAlign: "right", flexShrink: 0 }}>
+                                                                <div style={{ fontWeight: 800, color: !s.isHealthy ? "#ef4444" : "#10b981", fontSize: "0.9rem" }}>{Math.round(s.confidence * 100)}{t("admin.confSuffix")}</div>
+                                                                <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 700 }}>{!s.isHealthy ? "Infected" : "Healthy"}</div>
+                                                            </div>
+                                                        </button>
+                                                    );
+                                                })}
                                             </div>
                                         </div>
 
                                         {/* Top Users */}
-                                        <div style={{ background: "var(--bg-card)", borderRadius: 16, border: "1px solid var(--border-light)", overflow: "hidden" }}>
-                                            <div style={{ padding: "1.25rem 1.5rem", borderBottom: "1px solid var(--border-light)", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                                                <Crown size={16} color="#f59e0b" />
-                                                <h3 style={{ fontSize: "1rem", fontWeight: 700, color: "var(--text-main)" }}>{t("admin.topUsers")}</h3>
+                                        <div style={{ background: "var(--bg-card)", borderRadius: 24, border: "1px solid var(--border-light)", padding: "1.75rem" }}>
+                                            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1.5rem" }}>
+                                                <div style={{ padding: "0.5rem", background: "var(--warning-subtle)", color: "#d97706", borderRadius: 12 }}><Crown size={20} /></div>
+                                                <h3 style={{ fontSize: "1.2rem", fontWeight: 800, color: "var(--text-main)" }}>{t("admin.topUsers")}</h3>
                                             </div>
-                                            <div>
-                                                {dashboardData.top_users.map((u, i) => (
-                                                    <div key={u.id} style={{
-                                                        padding: "1rem 1.5rem", borderBottom: "1px solid var(--border-light)",
-                                                        display: "flex", alignItems: "center", gap: "1rem"
-                                                    }}>
-                                                        <div style={{
-                                                            width: 32, height: 32, borderRadius: "50%", flexShrink: 0,
-                                                            background: i === 0 ? "#fef3c7" : i === 1 ? "#f1f5f9" : "#fef3c7",
-                                                            display: "flex", alignItems: "center", justifyContent: "center",
-                                                            fontWeight: 800, fontSize: "0.85rem",
-                                                            color: i === 0 ? "#d97706" : "#64748b"
-                                                        }}>
-                                                            {i + 1}
+                                            <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                                                {(dashboardData?.top_users || []).map((u, i) => (
+                                                    <button
+                                                        key={i}
+                                                        onClick={() => handleViewUser(u)}
+                                                        onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.02)'; e.currentTarget.style.borderColor = 'var(--primary)'; }}
+                                                        onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.borderColor = 'var(--border-light)'; }}
+                                                        style={{
+                                                            width: "100%", display: "flex", alignItems: "center", gap: "1rem", padding: "1rem",
+                                                            background: "var(--bg-main)", borderRadius: 16, border: "1px solid var(--border-light)",
+                                                            textAlign: "left", cursor: "pointer", transition: "all 0.2s"
+                                                        }}
+                                                    >
+                                                        <div style={{ width: 40, height: 40, borderRadius: 12, background: "linear-gradient(135deg, #3b82f6, #10b981)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, color: "#fff", fontSize: "0.9rem", flexShrink: 0 }}>
+                                                            {u.username.charAt(0).toUpperCase()}
                                                         </div>
                                                         <div style={{ flex: 1 }}>
                                                             <div style={{ fontWeight: 700, fontSize: "0.9rem", color: "var(--text-main)" }}>{u.username}</div>
                                                             <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>{u.email}</div>
                                                         </div>
-                                                        <div style={{
-                                                            background: "var(--primary-subtle)", color: "var(--primary)",
-                                                            padding: "0.25rem 0.75rem", borderRadius: 99, fontSize: "0.8rem", fontWeight: 700
-                                                        }}>
-                                                            {u.pred_count} {t("admin.scansCount")}
+                                                        <div style={{ textAlign: "right", flexShrink: 0 }}>
+                                                            <div style={{ fontWeight: 800, color: "var(--primary)", fontSize: "1.1rem" }}>{u.pred_count}</div>
+                                                            <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 700 }}>{t("admin.scansCount")}</div>
                                                         </div>
-                                                    </div>
+                                                    </button>
                                                 ))}
                                             </div>
                                         </div>
                                     </div>
                                 </>
-                            ) : null}
+                            )}
                         </div>
                     )}
 
@@ -542,7 +571,7 @@ const AdminPanel = () => {
                                                     <td style={{ padding: "1rem", display: "flex", alignItems: "center", gap: "0.75rem" }}>
                                                         <div style={{
                                                             width: 36, height: 36, borderRadius: "50%",
-                                                            background: u.is_superuser ? "linear-gradient(135deg,#f59e0b,#d97706)" : u.is_staff ? "linear-gradient(135deg,#10b981,#059669)" : "linear-gradient(135deg,#3b82f6,#2563eb)",
+                                                            background: u.isSuperuser ? "linear-gradient(135deg,#f59e0b,#d97706)" : u.isStaff ? "linear-gradient(135deg,#10b981,#059669)" : "linear-gradient(135deg,#3b82f6,#2563eb)",
                                                             display: "flex", alignItems: "center", justifyContent: "center",
                                                             color: "#fff", fontWeight: 800, fontSize: "0.85rem", flexShrink: 0
                                                         }}>
@@ -551,18 +580,18 @@ const AdminPanel = () => {
                                                         <span style={{ fontWeight: 600, fontSize: "0.9rem", color: "var(--text-main)" }}>{u.username}</span>
                                                     </td>
                                                     <td style={{ padding: "1rem", fontSize: "0.85rem", color: "var(--text-muted)" }}>{u.email}</td>
-                                                    <td style={{ padding: "1rem", fontSize: "0.85rem", fontWeight: 600, color: "var(--text-main)" }}>{u.plant_count}</td>
-                                                    <td style={{ padding: "1rem", fontSize: "0.85rem", fontWeight: 600, color: "var(--text-main)" }}>{u.prediction_count}</td>
+                                                    <td style={{ padding: "1rem", fontSize: "0.85rem", fontWeight: 600, color: "var(--text-main)" }}>{u.plantCount}</td>
+                                                    <td style={{ padding: "1rem", fontSize: "0.85rem", fontWeight: 600, color: "var(--text-main)" }}>{u.predictionCount}</td>
                                                     <td style={{ padding: "1rem", fontSize: "0.8rem", color: "var(--text-muted)" }}>
-                                                        {new Date(u.date_joined).toLocaleDateString()}
+                                                        {new Date(u.dateJoined).toLocaleDateString()}
                                                     </td>
                                                     <td style={{ padding: "1rem" }}>
                                                         <span style={{
                                                             padding: "0.25rem 0.6rem", borderRadius: 99, fontSize: "0.72rem", fontWeight: 700,
-                                                            background: u.is_superuser ? "#fef3c7" : u.is_staff ? "#d1fae5" : "#f1f5f9",
-                                                            color: u.is_superuser ? "#d97706" : u.is_staff ? "#059669" : "#64748b"
+                                                            background: u.isSuperuser ? "#fef3c7" : u.isStaff ? "#d1fae5" : "#f1f5f9",
+                                                            color: u.isSuperuser ? "#d97706" : u.isStaff ? "#059669" : "#64748b"
                                                         }}>
-                                                            {u.is_superuser ? t("admin.roleSuperuser") : u.is_staff ? t("admin.roleStaff") : t("admin.roleUser")}
+                                                            {u.isSuperuser ? t("admin.roleSuperuser") : u.isStaff ? t("admin.roleStaff") : t("admin.roleUser")}
                                                         </span>
                                                     </td>
                                                     <td style={{ padding: "1rem" }}>
@@ -574,16 +603,16 @@ const AdminPanel = () => {
                                                             >
                                                                 <Eye size={13} /> {t("admin.actionView")}
                                                             </button>
-                                                            {isSuperuser && !u.is_superuser && (
+                                                            {isSuperuser && !u.isSuperuser && (
                                                                 <button
                                                                     onClick={() => handleToggleStaff(u.id)}
-                                                                    title={u.is_staff ? t("admin.actionDemote") : t("admin.actionPromote")}
-                                                                    style={{ padding: "0.4rem 0.75rem", background: u.is_staff ? "#fef3c7" : "#f0fdf4", color: u.is_staff ? "#d97706" : "#059669", border: "none", borderRadius: 6, cursor: "pointer", display: "flex", alignItems: "center", gap: "0.3rem", fontSize: "0.8rem", fontWeight: 600 }}
+                                                                    title={u.isStaff ? t("admin.actionDemote") : t("admin.actionPromote")}
+                                                                    style={{ padding: "0.4rem 0.75rem", background: u.isStaff ? "#fef3c7" : "#f0fdf4", color: u.isStaff ? "#d97706" : "#059669", border: "none", borderRadius: 6, cursor: "pointer", display: "flex", alignItems: "center", gap: "0.3rem", fontSize: "0.8rem", fontWeight: 600 }}
                                                                 >
-                                                                    <ShieldCheck size={13} /> {u.is_staff ? t("admin.actionDemote") : t("admin.actionPromote")}
+                                                                    <ShieldCheck size={13} /> {u.isStaff ? t("admin.actionDemote") : t("admin.actionPromote")}
                                                                 </button>
                                                             )}
-                                                            {!u.is_superuser && (
+                                                            {!u.isSuperuser && (
                                                                 <button
                                                                     onClick={() => setConfirmDelete(u)}
                                                                     title={t("admin.deleteUserBtn")}
@@ -631,7 +660,7 @@ const AdminPanel = () => {
                                         <div style={{ flex: 1 }}>
                                             <h2 style={{ fontSize: "1.4rem", fontWeight: 800, color: "var(--text-main)", marginBottom: "0.25rem" }}>
                                                 {userDetail.user.username}
-                                                {userDetail.user.is_staff && (
+                                                {userDetail.user.isStaff && (
                                                     <span style={{ marginLeft: "0.75rem", padding: "0.2rem 0.6rem", background: "#d1fae5", color: "#059669", borderRadius: 99, fontSize: "0.7rem", fontWeight: 700 }}>STAFF</span>
                                                 )}
                                             </h2>
@@ -648,7 +677,7 @@ const AdminPanel = () => {
                                             </div>
                                         </div>
                                         <div style={{ display: "flex", gap: "0.5rem" }}>
-                                            {isSuperuser && !userDetail.user.is_staff && (
+                                            {isSuperuser && !userDetail.user.isStaff && (
                                                 <button
                                                     onClick={() => handleToggleStaff(userDetail.user.id)}
                                                     style={{ padding: "0.6rem 1rem", background: "#f0fdf4", color: "#059669", border: "1px solid #d1fae5", borderRadius: 8, cursor: "pointer", fontWeight: 600, fontSize: "0.85rem", display: "flex", alignItems: "center", gap: "0.4rem" }}
@@ -670,7 +699,7 @@ const AdminPanel = () => {
                                         <div style={{ background: "var(--bg-card)", borderRadius: 16, border: "1px solid var(--border-light)", padding: "1.5rem" }}>
                                             <h3 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: "1rem", color: "var(--text-main)" }}>{t("admin.accountInfo")}</h3>
                                             {[
-                                                { label: t("admin.tableJoined"), value: formatDate(userDetail.user.date_joined) },
+                                                { label: t("admin.tableJoined"), value: formatDate(userDetail.user.dateJoined) },
                                                 { label: t("admin.lastLogin"), value: formatDate(userDetail.user.last_login) },
                                                 { label: t("admin.userId"), value: `#${userDetail.user.id}` },
                                             ].map(item => (
@@ -691,60 +720,38 @@ const AdminPanel = () => {
                                                 {userDetail.plants.length === 0 ? (
                                                     <div style={{ padding: "2rem", textAlign: "center", color: "var(--text-muted)", fontSize: "0.9rem" }}>{t("admin.noPlantsAdded")}</div>
                                                 ) : userDetail.plants.map(p => (
-                                                    <div key={p.id} style={{ padding: "0.75rem 1.5rem", borderBottom: "1px solid var(--border-light)", display: "flex", justifyContent: "space-between" }}>
+                                                    <div key={p.id} style={{ display: "flex", flexDirection: "column", padding: "0.75rem 1.5rem", borderBottom: "1px solid var(--border-light)" }}>
                                                         <span style={{ fontWeight: 600, fontSize: "0.85rem", color: "var(--text-main)" }}>{p.name}</span>
-                                                        <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>{new Date(p.created_at).toLocaleDateString()}</span>
+                                                        <span style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>{p.species}</span>
                                                     </div>
                                                 ))}
                                             </div>
                                         </div>
-                                    </div>
 
-                                    {/* Predictions History */}
-                                    <div style={{ background: "var(--bg-card)", borderRadius: 16, border: "1px solid var(--border-light)", overflow: "hidden", marginTop: "1.5rem" }}>
-                                        <div style={{ padding: "1.25rem 1.5rem", borderBottom: "1px solid var(--border-light)", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                                            <Activity size={16} color="#8b5cf6" />
-                                            <h3 style={{ fontSize: "1rem", fontWeight: 700, color: "var(--text-main)" }}>{t("admin.scanHistory")} ({userDetail.predictions.length})</h3>
-                                        </div>
-                                        <div style={{ maxHeight: 400, overflowY: "auto" }}>
-                                            {userDetail.predictions.length === 0 ? (
-                                                <div style={{ padding: "2rem", textAlign: "center", color: "var(--text-muted)" }}>{t("admin.noScansYet")}</div>
-                                            ) : (
-                                                <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                                                    <thead>
-                                                        <tr style={{ background: "var(--bg-main)" }}>
-                                                            {[t("admin.tableStatus"), t("admin.tableDisease"), t("admin.tableConfidence"), t("admin.tableSeverity"), t("admin.tableDate")].map((h, idx) => (
-                                                                <th key={idx} style={{ padding: "0.75rem 1rem", textAlign: "left", fontSize: "0.72rem", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>{h}</th>
-                                                            ))}
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        {userDetail.predictions.map(p => (
-                                                            <tr key={p.id} style={{ borderBottom: "1px solid var(--border-light)" }}>
-                                                                <td style={{ padding: "0.75rem 1rem" }}>
-                                                                    {p.is_healthy
-                                                                        ? <CheckCircle size={16} color="#10b981" />
-                                                                        : <XCircle size={16} color="#ef4444" />}
-                                                                </td>
-                                                                <td style={{ padding: "0.75rem 1rem", fontSize: "0.85rem", fontWeight: 600, color: "var(--text-main)" }}>{p.disease}</td>
-                                                                <td style={{ padding: "0.75rem 1rem", fontSize: "0.85rem", color: "var(--text-muted)" }}>{p.confidence.toFixed(1)}%</td>
-                                                                <td style={{ padding: "0.75rem 1rem" }}>
-                                                                    <span style={{
-                                                                        padding: "0.2rem 0.6rem", borderRadius: 99, fontSize: "0.72rem", fontWeight: 700,
-                                                                        background: p.severity === "Critical" ? "#fef2f2" : p.severity === "High" ? "#fff7ed" : "#f0fdf4",
-                                                                        color: p.severity === "Critical" ? "#ef4444" : p.severity === "High" ? "#f97316" : "#10b981"
-                                                                    }}>
-                                                                        {p.severity || "N/A"}
-                                                                    </span>
-                                                                </td>
-                                                                <td style={{ padding: "0.75rem 1rem", fontSize: "0.8rem", color: "var(--text-muted)" }}>
-                                                                    {new Date(p.created_at).toLocaleDateString()}
-                                                                </td>
-                                                            </tr>
-                                                        ))}
-                                                    </tbody>
-                                                </table>
-                                            )}
+                                        {/* Activity Log */}
+                                        <div style={{ background: "var(--bg-card)", borderRadius: 16, border: "1px solid var(--border-light)", overflow: "hidden" }}>
+                                            <div style={{ padding: "1.25rem 1.5rem", borderBottom: "1px solid var(--border-light)", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                                                <Activity size={16} color="#8b5cf6" />
+                                                <h3 style={{ fontSize: "1rem", fontWeight: 700, color: "var(--text-main)" }}>{t("admin.recentScans")}</h3>
+                                            </div>
+                                            <div style={{ maxHeight: 400, overflowY: "auto" }}>
+                                                {userDetail.predictions.length === 0 ? (
+                                                    <div style={{ padding: "2rem", textAlign: "center", color: "var(--text-muted)", fontSize: "0.9rem" }}>{t("history.noPredictions")}</div>
+                                                ) : userDetail.predictions.map(p => (
+                                                    <div key={p.id} style={{ display: "flex", alignItems: "center", gap: "1rem", padding: "1rem 1.5rem", borderBottom: "1px solid var(--border-light)" }}>
+                                                        <div style={{ width: 44, height: 44, borderRadius: 10, background: "var(--bg-main)", overflow: "hidden" }}>
+                                                            {p.image && <img src={p.image.startsWith('http') ? p.image : `http://localhost:8000${p.image.startsWith('/') ? '' : '/'}${p.image}`} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
+                                                        </div>
+                                                        <div style={{ flex: 1 }}>
+                                                            <div style={{ fontSize: "0.9rem", fontWeight: 700, color: "var(--text-main)" }}>{p.disease}</div>
+                                                            <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>{new Date(p.createdAt).toLocaleDateString()}</div>
+                                                        </div>
+                                                        <div style={{ padding: "0.25rem 0.6rem", borderRadius: 99, fontSize: "0.72rem", fontWeight: 800, background: p.isHealthy ? "var(--success-subtle)" : "#fef2f2", color: p.isHealthy ? "#059669" : "#ef4444" }}>
+                                                            {p.isHealthy ? t("history.badgeHealthy") : t("history.badgeDiseased")}
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
                                         </div>
                                     </div>
                                 </>
@@ -752,7 +759,97 @@ const AdminPanel = () => {
                         </div>
                     )}
 
-                    {/* ==ALL PREDICTIONS TAB ==== */}
+                    {/* === SYSTEM PLANTS TAB == */}
+                    {activeTab === "system-plants" && (
+                        <div>
+                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1.5rem" }}>
+                                <div>
+                                    <h1 style={{ fontSize: "1.75rem", fontWeight: 800, color: "var(--text-main)", marginBottom: "0.25rem" }}>{t("admin.tabPlants") || "System Plants"}</h1>
+                                    <p style={{ color: "var(--text-muted)", fontSize: "0.9rem" }}>{systemPlants.length} {t("admin.plantsDesc") || "Total plants across all users"}</p>
+                                </div>
+                                <button onClick={() => fetchSystemPlants()} style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.6rem 1rem", background: "var(--bg-card)", border: "1px solid var(--border-light)", borderRadius: 8, cursor: "pointer", fontSize: "0.85rem", fontWeight: 600, color: "var(--text-main)" }}>
+                                    <RefreshCw size={14} /> {t("admin.refreshBtn")}
+                                </button>
+                            </div>
+
+                            {/* Search */}
+                            <div style={{ position: "relative", marginBottom: "1.5rem" }}>
+                                <Search size={16} style={{ position: "absolute", left: "1rem", top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />
+                                <input
+                                    placeholder={t("admin.searchPlants") || "Search by plant name or owner..."}
+                                    value={searchQuery}
+                                    onChange={e => setSearchQuery(e.target.value)}
+                                    style={{ paddingLeft: "2.75rem", width: "100%", height: 44, borderRadius: 10, background: "var(--bg-card)", border: "1px solid var(--border-light)", color: "var(--text-main)" }}
+                                />
+                            </div>
+
+                            {loading ? <LoadingSpinner t={t} /> : (
+                                <div style={{ background: "var(--bg-card)", borderRadius: 16, border: "1px solid var(--border-light)", overflow: "hidden" }}>
+                                    <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                                        <thead>
+                                            <tr style={{ background: "var(--bg-main)" }}>
+                                                {["Plant", "Owner", "Health", "Sunlight", "Water", "Joined", "Actions"].map((h, idx) => (
+                                                    <th key={idx} style={{ padding: "0.875rem 1rem", textAlign: "left", fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em", borderBottom: "1px solid var(--border-light)" }}>
+                                                        {h}
+                                                    </th>
+                                                ))}
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {systemPlants.filter(p => (p.name || "").toLowerCase().includes(searchQuery.toLowerCase()) || (p.owner || "").toLowerCase().includes(searchQuery.toLowerCase())).map(p => (
+                                                <tr key={p.id} style={{ borderBottom: "1px solid var(--border-light)", transition: "background 0.15s" }}
+                                                    onMouseEnter={e => e.currentTarget.style.background = "var(--bg-main)"}
+                                                    onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                                                >
+                                                    <td style={{ padding: "1rem", display: "flex", alignItems: "center", gap: "1rem" }}>
+                                                        <div style={{ width: 44, height: 44, borderRadius: 12, overflow: "hidden", background: "var(--bg-main)", flexShrink: 0, border: "1px solid var(--border-light)" }}>
+                                                            <img src={p.image || "/placeholder.png"} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                                                        </div>
+                                                        <div>
+                                                            <div style={{ fontWeight: 600, fontSize: "0.9rem", color: "var(--text-main)" }}>{p.name}</div>
+                                                            <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontStyle: "italic" }}>{p.scientificName}</div>
+                                                        </div>
+                                                    </td>
+                                                    <td style={{ padding: "1rem" }}>
+                                                        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.85rem", color: "var(--text-main)" }}>
+                                                            <Users size={14} style={{ color: "var(--primary)" }} />
+                                                            {p.owner}
+                                                        </div>
+                                                    </td>
+                                                    <td style={{ padding: "1rem" }}>
+                                                        <span style={{
+                                                            padding: "0.25rem 0.6rem", borderRadius: 99, fontSize: "0.72rem", fontWeight: 700,
+                                                            background: p.healthStatus === 'healthy' ? "#d1fae5" : p.healthStatus === 'unhealthy' ? "#fee2e2" : "#f1f5f9",
+                                                            color: p.healthStatus === 'healthy' ? "#059669" : p.healthStatus === 'unhealthy' ? "#ef4444" : "#64748b"
+                                                        }}>
+                                                            {p.healthStatus.charAt(0).toUpperCase() + p.healthStatus.slice(1)}
+                                                        </span>
+                                                    </td>
+                                                    <td style={{ padding: "1rem", fontSize: "0.85rem", color: "var(--text-muted)" }}>{p.sunlightDisplay}</td>
+                                                    <td style={{ padding: "1rem", fontSize: "0.85rem", color: "var(--text-muted)" }}>{p.waterFrequencyDisplay}</td>
+                                                    <td style={{ padding: "1rem", fontSize: "0.8rem", color: "var(--text-muted)" }}>
+                                                        {new Date(p.createdAt).toLocaleDateString()}
+                                                    </td>
+                                                    <td style={{ padding: "1rem" }}>
+                                                        <button
+                                                            onClick={() => setPreviewImage(p.image)}
+                                                            title={t("admin.actionView")}
+                                                            style={{ padding: "0.4rem 0.75rem", background: "var(--primary-subtle)", color: "var(--primary)", border: "none", borderRadius: 6, cursor: "pointer", display: "flex", alignItems: "center", gap: "0.3rem", fontSize: "0.8rem", fontWeight: 600 }}
+                                                        >
+                                                            <Eye size={13} /> {t("admin.actionView")}
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                    {systemPlants.length === 0 && <div style={{ padding: "3rem", textAlign: "center", color: "var(--text-muted)" }}>No plants found.</div>}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* === PREDICTIONS TAB (GLOBAL SCAN LOGS) == */}
                     {activeTab === "predictions" && (
                         <div>
                             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1.5rem" }}>
@@ -760,8 +857,8 @@ const AdminPanel = () => {
                                     <h1 style={{ fontSize: "1.75rem", fontWeight: 800, color: "var(--text-main)", marginBottom: "0.25rem" }}>{t("admin.predictionsTitle")}</h1>
                                     <p style={{ color: "var(--text-muted)", fontSize: "0.9rem" }}>{t("admin.predictionsDesc")}</p>
                                 </div>
-                                <button onClick={fetchAllPredictions} style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.6rem 1rem", background: "var(--bg-card)", border: "1px solid var(--border-light)", borderRadius: 8, cursor: "pointer", fontSize: "0.85rem", fontWeight: 600, color: "var(--text-muted)" }}>
-                                    <RefreshCw size={14} /> {t("admin.refreshBtn")}
+                                <button onClick={() => fetchAllPredictions(true)} style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.6rem 1rem", background: "var(--bg-card)", border: "1px solid var(--border-light)", borderRadius: 8, cursor: "pointer", fontSize: "0.85rem", fontWeight: 600, color: "var(--text-main)" }}>
+                                    <RefreshCw size={14} className={refreshing ? "animate-spin" : ""} /> {t("admin.refreshBtn")}
                                 </button>
                             </div>
 
@@ -771,24 +868,30 @@ const AdminPanel = () => {
                                     placeholder={t("admin.searchPredictions")}
                                     value={searchQuery}
                                     onChange={e => setSearchQuery(e.target.value)}
-                                    style={{ paddingLeft: "2.75rem", height: 44, borderRadius: 10, width: "100%", border: "1px solid var(--border-light)", background: "var(--bg-surface-1)", color: "var(--text-main)" }}
+                                    style={{ paddingLeft: "2.75rem", height: 44, borderRadius: 10, width: "100%", border: "1px solid var(--border-light)", background: "var(--bg-card)", color: "var(--text-main)", outline: "none" }}
                                 />
                             </div>
 
                             <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1.5rem", flexWrap: "wrap" }}>
-                                {['all', 'healthy', 'diseased', 'out_of_scope', 'non_plant'].map(filter => (
+                                {[
+                                    { key: 'all', label: t("treatmentFilters.all") },
+                                    { key: 'healthy', label: t("history.badgeHealthy") },
+                                    { key: 'diseased', label: t("history.badgeDiseased") },
+                                    { key: 'out_of_scope', label: t("history.badgeOutsideScope") || "Outside Scope" },
+                                    { key: 'non_plant', label: t("history.badgeNonPlant") || "Non-Plant Image" }
+                                ].map(f => (
                                     <button
-                                        key={filter}
-                                        onClick={() => setScanFilter(filter)}
+                                        key={f.key}
+                                        onClick={() => setScanFilter(f.key)}
                                         style={{
                                             padding: "0.4rem 1rem", borderRadius: 20, fontSize: "0.8rem", fontWeight: 700,
-                                            border: "1px solid", textTransform: "capitalize", cursor: "pointer", transition: "all 0.2s",
-                                            background: scanFilter === filter ? "var(--primary)" : "transparent",
-                                            color: scanFilter === filter ? "#fff" : "var(--text-muted)",
-                                            borderColor: scanFilter === filter ? "var(--primary)" : "var(--border-light)"
+                                            border: "1px solid", cursor: "pointer", transition: "all 0.2s",
+                                            background: scanFilter === f.key ? "var(--primary)" : "transparent",
+                                            color: scanFilter === f.key ? "#fff" : "var(--text-muted)",
+                                            borderColor: scanFilter === f.key ? "var(--primary)" : "var(--border-light)"
                                         }}
                                     >
-                                        {filter.replace('_', ' ')}
+                                        {f.label}
                                     </button>
                                 ))}
                             </div>
@@ -810,15 +913,11 @@ const AdminPanel = () => {
                                                     onMouseLeave={e => e.currentTarget.style.background = "transparent"}
                                                 >
                                                     <td style={{ padding: "0.875rem 1rem" }}>
-                                                        {p.category === "non_plant" ? (
-                                                            <span style={{ color: "#64748b", fontSize: "0.75rem", fontWeight: 700 }}>Not a Plant</span>
-                                                        ) : p.category === "out_of_scope" ? (
-                                                            <span style={{ color: "#f59e0b", fontSize: "0.75rem", fontWeight: 700 }}>Out of Scope</span>
-                                                        ) : p.is_healthy ? (
-                                                            <span style={{ color: "#10b981", fontSize: "0.75rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "0.2rem" }}><CheckCircle size={14} /> Healthy</span>
-                                                        ) : (
-                                                            <span style={{ color: "#ef4444", fontSize: "0.75rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "0.2rem" }}><XCircle size={14} /> Diseased</span>
-                                                        )}
+                                                        <StatusBadge
+                                                            category={p.category}
+                                                            healthy={p.isHealthy}
+                                                            t={t}
+                                                        />
                                                     </td>
                                                     <td style={{ padding: "0.875rem 1rem" }}>
                                                         <button
@@ -829,7 +928,7 @@ const AdminPanel = () => {
                                                         </button>
                                                     </td>
                                                     <td style={{ padding: "0.875rem 1rem", fontSize: "0.85rem", fontWeight: 600, color: "var(--text-main)" }}>{p.disease}</td>
-                                                    <td style={{ padding: "0.875rem 1rem", fontSize: "0.85rem", color: "var(--text-muted)" }}>{p.confidence.toFixed(1)}%</td>
+                                                    <td style={{ padding: "0.875rem 1rem", fontSize: "0.85rem", color: "var(--text-muted)" }}>{Math.round(p.confidence * 100)}{t("admin.confSuffix")}</td>
                                                     <td style={{ padding: "0.875rem 1rem" }}>
                                                         <span style={{
                                                             padding: "0.2rem 0.6rem", borderRadius: 99, fontSize: "0.72rem", fontWeight: 700,
@@ -840,11 +939,11 @@ const AdminPanel = () => {
                                                         </span>
                                                     </td>
                                                     <td style={{ padding: "0.875rem 1rem", fontSize: "0.8rem", color: "var(--text-muted)" }}>
-                                                        {new Date(p.created_at).toLocaleDateString()}
+                                                        {new Date(p.createdAt).toLocaleDateString()}
                                                     </td>
                                                     <td style={{ padding: "0.875rem 1rem" }}>
                                                         {p.image && (
-                                                            <button onClick={() => setPreviewImage(p.image)} style={{ background: "none", border: "none", color: "var(--primary)", fontSize: "0.8rem", fontWeight: 600, cursor: "pointer", textDecoration: "underline" }}>
+                                                            <button onClick={() => setPreviewImage(p.image.startsWith('http') ? p.image : `http://localhost:8000${p.image.startsWith('/') ? '' : '/'}${p.image}`)} style={{ background: "none", border: "none", color: "var(--primary)", fontSize: "0.8rem", fontWeight: 600, cursor: "pointer", textDecoration: "underline" }}>
                                                                 {t("admin.viewImage")}
                                                             </button>
                                                         )}
@@ -872,102 +971,57 @@ const AdminPanel = () => {
                                 <>
                                     {/* KPI Cards */}
                                     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "1rem", marginBottom: "2rem" }}>
-                                        <StatCard icon={<ShoppingBag size={22} />} label={t("ecom.totalProducts")} value={ecomOverview.products.total} color="#3b82f6" onClick={() => setActiveTab("products")} />
-                                        <StatCard icon={<Package size={22} />} label={t("ecom.totalOrders")} value={ecomOverview.orders.total} color="#8b5cf6" onClick={() => setActiveTab("orders")} />
-                                        <StatCard icon={<RefreshCw size={22} />} label={t("ecom.revenue")} value={`₨ ${Number(ecomOverview.orders.total_revenue).toLocaleString()}`} color="#10b981" onClick={() => setActiveTab("orders")} />
-                                        <StatCard icon={<Clock size={22} />} label={t("ecom.pendingOrders")} value={ecomOverview.orders.pending} color="#f59e0b" onClick={() => { setActiveTab("orders"); setSearchQuery("pending"); window.location.hash = "orders"; }} />
-                                        <StatCard icon={<AlertTriangle size={22} />} label={t("ecom.lowStockItems")} value={ecomOverview.products.low_stock} color="#ef4444" onClick={() => setActiveTab("products")} />
-                                        <StatCard icon={<Tag size={22} />} label={t("ecom.activeCoupons")} value={ecomOverview.coupons.active} color="#06b6d4" onClick={() => setActiveTab("coupons")} />
-                                        <StatCard icon={<Star size={22} />} label={t("ecom.totalReviews")} value={ecomOverview.reviews.total} color="#f59e0b" onClick={() => setActiveTab("reviews")} />
-                                        <StatCard icon={<CheckCircle size={22} />} label={t("ecom.delivered")} value={ecomOverview.orders.delivered} color="#10b981" onClick={() => { setActiveTab("orders"); setSearchQuery("delivered"); window.location.hash = "orders"; }} />
+                                        <StatCard icon={<ShoppingBag size={22} />} label={t("ecom.totalProducts")} value={ecomOverview?.products?.total} color="#3b82f6" onClick={() => { setActiveTab("products"); window.location.hash = "products"; }} />
+                                        <StatCard icon={<Package size={22} />} label={t("ecom.totalOrders")} value={ecomOverview?.orders?.total} color="#8b5cf6" onClick={() => { setActiveTab("orders"); window.location.hash = "orders"; }} />
+                                        <StatCard icon={<RefreshCw size={22} />} label={t("ecom.revenue")} value={`${Number(ecomOverview?.orders?.total_revenue || 0).toLocaleString()}`} color="#10b981" onClick={() => { setActiveTab("orders"); window.location.hash = "orders"; }} />
+                                        <StatCard icon={<Clock size={22} />} label={t("ecom.pendingOrders")} value={ecomOverview?.orders?.pending} color="#f59e0b" onClick={() => { setActiveTab("orders"); setSearchQuery("pending"); window.location.hash = "orders"; }} />
+                                        <StatCard icon={<TrendingUp size={22} />} label={t("ecom.activeCoupons")} value={ecomOverview?.coupons?.active} color="#ef4444" onClick={() => { setActiveTab("coupons"); window.location.hash = "coupons"; }} />
                                     </div>
-                                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem", marginBottom: "1.5rem" }}>
-                                        {/* Order Status Breakdown */}
-                                        <div style={{ background: "var(--bg-card)", borderRadius: 16, border: "1px solid var(--border-light)", padding: "1.5rem" }}>
-                                            <h3 style={{ fontWeight: 700, fontSize: "1rem", marginBottom: "1rem", color: "var(--text-main)" }}>{t("ecom.statusBreakdown")}</h3>
-                                            {[
-                                                { label: "pending", value: ecomOverview.orders.pending, color: "#f59e0b" },
-                                                { label: "processing", value: ecomOverview.orders.processing, color: "#3b82f6" },
-                                                { label: "shipped", value: ecomOverview.orders.shipped, color: "#8b5cf6" },
-                                                { label: "delivered", value: ecomOverview.orders.delivered, color: "#10b981" },
-                                                { label: "cancelled", value: ecomOverview.orders.cancelled, color: "#ef4444" },
-                                            ].map(s => (
-                                                <div 
-                                                    key={s.label} 
-                                                    onClick={() => { setActiveTab("orders"); setSearchQuery(s.label); window.location.hash = "orders"; }}
-                                                    style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.75rem", cursor: "pointer", padding: "0.4rem 0.6rem", borderRadius: "8px", transition: "background 0.2s" }}
-                                                    onMouseEnter={e => e.currentTarget.style.background = "var(--bg-main)"}
-                                                    onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-                                                >
-                                                    <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-                                                        <div style={{ width: 10, height: 10, borderRadius: "50%", background: s.color }} />
-                                                        <span style={{ fontSize: "0.9rem", fontWeight: 600, color: "var(--text-main)" }}>{t(`ecom.status.${s.label}`)}</span>
-                                                    </div>
-                                                    <span style={{ fontWeight: 800, fontSize: "1rem", color: s.color }}>{s.value}</span>
-                                                </div>
-                                            ))}
-                                        </div>
-                                        {/* Top Selling Products */}
-                                        <div style={{ background: "var(--bg-card)", borderRadius: 16, border: "1px solid var(--border-light)", overflow: "hidden" }}>
-                                            <div style={{ padding: "1.25rem 1.5rem", borderBottom: "1px solid var(--border-light)" }}>
-                                                <h3 style={{ fontWeight: 700, fontSize: "1rem", color: "var(--text-main)" }}>🏆 {t("ecom.topSellingProducts")}</h3>
+
+                                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(400px, 1fr))", gap: "1.5rem" }}>
+                                        {/* Low Stock Alerts */}
+                                        <div style={{ background: "var(--bg-card)", borderRadius: 16, border: "1px solid var(--border-light)", padding: "1.25rem" }}>
+                                            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "1rem" }}>
+                                                <Activity size={18} color="#ef4444" />
+                                                <h3 style={{ fontSize: "1rem", fontWeight: 700, color: "var(--text-main)" }}>{t("ecom.lowStockAlerts")}</h3>
                                             </div>
-                                            {ecomOverview.top_products.map((p, i) => (
-                                                <div 
-                                                    key={p.product__id} 
-                                                    onClick={() => { setActiveTab("products"); setSearchQuery(p.product__name); window.location.hash = "products"; }}
-                                                    style={{ display: "flex", alignItems: "center", gap: "1rem", padding: "0.875rem 1.5rem", borderBottom: "1px solid var(--border-light)", cursor: "pointer", transition: "background 0.2s" }}
-                                                    onMouseEnter={e => e.currentTarget.style.background = "var(--bg-main)"}
-                                                    onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-                                                >
-                                                    <span style={{ fontWeight: 800, fontSize: "1rem", color: i === 0 ? "#f59e0b" : "var(--text-muted)", minWidth: 20 }}>#{i + 1}</span>
-                                                    <span style={{ flex: 1, fontWeight: 600, fontSize: "0.9rem", color: "var(--text-main)" }}>{p.product__name}</span>
-                                                    <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", fontWeight: 600 }}>{p.units_sold} {t("ecom.soldCount")}</span>
-                                                </div>
-                                            ))}
-                                            {ecomOverview.top_products.length === 0 && <div style={{ padding: "2rem", textAlign: "center", color: "var(--text-muted)" }}>{t("ecom.noSalesData")}</div>}
-                                        </div>
-                                    </div>
-                                    {/* Low Stock Alert */}
-                                    {ecomOverview.low_stock_products.length > 0 && (
-                                        <div style={{ background: "var(--bg-card)", borderRadius: 16, border: "1px solid #fee2e2", overflow: "hidden" }}>
-                                            <div style={{ padding: "1.25rem 1.5rem", borderBottom: "1px solid #fee2e2", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                                                <AlertTriangle size={16} color="#ef4444" />
-                                                <h3 style={{ fontWeight: 700, fontSize: "1rem", color: "#ef4444" }}>{t("ecom.lowStockAlerts")}</h3>
-                                            </div>
-                                            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "1rem", padding: "1rem 1.5rem" }}>
-                                                {ecomOverview.low_stock_products.map(p => (
-                                                    <div 
-                                                        key={p.id} 
-                                                        onClick={() => { setActiveTab("products"); setSearchQuery(p.name); window.location.hash = "products"; }}
-                                                        style={{ background: "#fef2f2", borderRadius: 10, padding: "0.875rem 1rem", border: "1px solid #fee2e2", cursor: "pointer" }}
-                                                    >
-                                                        <div style={{ fontWeight: 700, fontSize: "0.85rem", color: "#991b1b", marginBottom: "0.25rem" }}>{p.name}</div>
-                                                        <div style={{ fontSize: "0.8rem", color: "#ef4444" }}>{p.stock === 0 ? "❌ Out of stock" : `⚠️ Only ${p.stock} left`}</div>
+                                            <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                                                {(ecomOverview?.low_stock_products || []).length > 0 ? ecomOverview.low_stock_products.map(item => (
+                                                    <div key={item.id} style={{ display: "flex", justifyContent: "space-between", padding: "0.75rem", background: "var(--bg-main)", borderRadius: 8 }}>
+                                                        <span style={{ fontSize: "0.85rem", color: "var(--text-main)", fontWeight: 600 }}>{item.name}</span>
+                                                        <span style={{ fontSize: "0.85rem", color: "#ef4444", fontWeight: 700 }}>{t("ecom.status.lowStock") || "Low Stock: "}{item.stock}</span>
                                                     </div>
-                                                ))}
+                                                )) : <div style={{ padding: "1rem", textAlign: "center", color: "var(--text-muted)", fontSize: "0.85rem" }}>{t("ecom.noDataAvailable")}</div>}
                                             </div>
                                         </div>
-                                    )}
-                                    {/* Monthly Revenue */}
-                                    <div style={{ background: "var(--bg-card)", borderRadius: 16, border: "1px solid var(--border-light)", padding: "1.5rem", marginTop: "1.5rem" }}>
-                                        <h3 style={{ fontWeight: 700, fontSize: "1rem", marginBottom: "1.5rem", color: "var(--text-main)" }}>📈 {t("ecom.monthlyRevenue")}</h3>
-                                        <div style={{ display: "flex", alignItems: "flex-end", gap: "0.75rem", height: 120 }}>
-                                            {ecomOverview.monthly_revenue.map((m, i) => {
-                                                const max = Math.max(...ecomOverview.monthly_revenue.map(x => x.revenue), 1);
-                                                const h = Math.max((m.revenue / max) * 100, 4);
-                                                return (
-                                                    <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem" }}>
-                                                        <span style={{ fontSize: "0.65rem", color: "var(--text-muted)", fontWeight: 600 }}>₨{(m.revenue / 1000).toFixed(0)}k</span>
-                                                        <div style={{ width: "100%", height: `${h}%`, background: "linear-gradient(180deg,#3b82f6,#1d4ed8)", borderRadius: "4px 4px 0 0", minHeight: 4, transition: "height 0.5s ease" }} />
-                                                        <span style={{ fontSize: "0.65rem", color: "var(--text-muted)", textAlign: "center" }}>{m.month}</span>
-                                                    </div>
-                                                );
-                                            })}
+
+                                        {/* Status Breakdown */}
+                                        <div style={{ background: "var(--bg-card)", borderRadius: 16, border: "1px solid var(--border-light)", padding: "1.25rem" }}>
+                                            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "1.5rem" }}>
+                                                <Activity size={18} color="var(--primary)" />
+                                                <h3 style={{ fontSize: "1rem", fontWeight: 700, color: "var(--text-main)" }}>{t("ecom.statusBreakdown")}</h3>
+                                            </div>
+                                            <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                                                {['pending', 'processing', 'shipped', 'delivered', 'cancelled'].map((status) => {
+                                                    const count = ecomOverview?.orders?.[status] || 0;
+                                                    const total = ecomOverview?.orders?.total || 1;
+                                                    return (
+                                                        <div key={status} style={{ width: "100%" }}>
+                                                            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.4rem", fontSize: "0.8rem", fontWeight: 700 }}>
+                                                                <span style={{ textTransform: "capitalize", color: "var(--text-muted)" }}>{t(`ecom.status.${status}`) || status}</span>
+                                                                <span style={{ color: "var(--text-main)" }}>{count}</span>
+                                                            </div>
+                                                            <div style={{ height: 6, background: "var(--bg-main)", borderRadius: 3, overflow: "hidden" }}>
+                                                                <div style={{ height: "100%", background: status === 'delivered' ? '#10b981' : status === 'pending' ? '#f59e0b' : 'var(--primary)', width: `${(count / total) * 100}%` }} />
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
                                         </div>
                                     </div>
                                 </>
-                            ) : <div style={{ textAlign: "center", padding: "4rem", color: "var(--text-muted)" }}>{t("ecom.noDataAvailable")}</div>}
+                            ) : null}
                         </div>
                     )}
 
@@ -976,66 +1030,58 @@ const AdminPanel = () => {
                         <div>
                             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1.5rem" }}>
                                 <div>
-                                    <h1 style={{ fontSize: "1.75rem", fontWeight: 800, color: "var(--text-main)", marginBottom: "0.25rem" }}>Products</h1>
-                                    <p style={{ color: "var(--text-muted)", fontSize: "0.9rem" }}>{products.length} products in catalog</p>
+                                    <h1 style={{ fontSize: "1.75rem", fontWeight: 800, color: "var(--text-main)", marginBottom: "0.25rem" }}>{t("admin.tabProducts")}</h1>
+                                    <p style={{ color: "var(--text-muted)", fontSize: "0.9rem" }}>{products.length} {t("ecom.totalProducts")}</p>
                                 </div>
                                 <div style={{ display: "flex", gap: "0.75rem" }}>
-                                    <button onClick={fetchProducts} style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.6rem 1rem", background: "var(--bg-card)", border: "1px solid var(--border-light)", borderRadius: 8, cursor: "pointer", fontSize: "0.85rem", fontWeight: 600, color: "var(--text-muted)" }}>
-                                        <RefreshCw size={14} /> Refresh
+                                    <button onClick={() => fetchProducts(true)} style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.6rem 1rem", background: "var(--bg-card)", border: "1px solid var(--border-light)", borderRadius: 8, cursor: "pointer", fontSize: "0.85rem", fontWeight: 600, color: "var(--text-main)" }}>
+                                        <RefreshCw size={14} className={refreshing ? "animate-spin" : ""} /> {t("admin.refreshBtn")}
                                     </button>
-                                    <button onClick={() => { setEditingProduct(null); setProductForm({ name: "", category: categories[0]?.id || "", description: "", price: "", discount_price: "", stock: "", sku: "", tags: "", usage_instructions: "", is_featured: false, is_organic: false, is_active: true }); setShowProductForm(true); }}
-                                        style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.6rem 1.25rem", background: "linear-gradient(135deg,#3b82f6,#1d4ed8)", color: "#fff", border: "none", borderRadius: 8, cursor: "pointer", fontSize: "0.85rem", fontWeight: 700 }}>
-                                        <Plus size={15} /> Add Product
+                                    <button onClick={() => { setEditingProduct(null); setProductForm({ name: "", category: "", description: "", price: "", discountPrice: "", stock: "", sku: "", tags: "", usageInstructions: "", isFeatured: false, isOrganic: false, isActive: true }); setShowProductForm(true); }}
+                                        style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.6rem 1.25rem", background: "var(--primary)", color: "#fff", border: "none", borderRadius: 8, cursor: "pointer", fontSize: "0.85rem", fontWeight: 700 }}>
+                                        <Plus size={15} /> {editingProduct ? t("ecom.productForm.editTitle") : t("ecom.productForm.create")}
                                     </button>
                                 </div>
                             </div>
-                            <div style={{ position: "relative", marginBottom: "1.5rem" }}>
-                                <Search size={16} style={{ position: "absolute", left: "1rem", top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />
-                                <input placeholder="Search products..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} style={{ paddingLeft: "2.75rem", height: 44, borderRadius: 10, width: "100%" }} />
-                            </div>
+
                             {loading ? <LoadingSpinner t={t} /> : (
                                 <div style={{ background: "var(--bg-card)", borderRadius: 16, border: "1px solid var(--border-light)", overflow: "hidden" }}>
                                     <table style={{ width: "100%", borderCollapse: "collapse" }}>
                                         <thead>
                                             <tr style={{ background: "var(--bg-main)" }}>
-                                                {["Product", "Category", "Price (NPR)", "Stock", "Tags", "Status", "Actions"].map((h, i) => (
+                                                {[t("ecom.tableHeaders.image"), t("ecom.tableHeaders.product"), t("ecom.tableHeaders.category"), t("ecom.tableHeaders.price"), t("ecom.tableHeaders.stock"), t("ecom.tableHeaders.status"), t("ecom.tableHeaders.actions")].map((h, i) => (
                                                     <th key={i} style={{ padding: "0.875rem 1rem", textAlign: "left", fontSize: "0.72rem", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em", borderBottom: "1px solid var(--border-light)" }}>{h}</th>
                                                 ))}
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {products.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase())).map(p => (
-                                                <tr key={p.id} style={{ borderBottom: "1px solid var(--border-light)" }}
-                                                    onMouseEnter={e => e.currentTarget.style.background = "var(--bg-main)"}
-                                                    onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                                            {products.map(p => (
+                                                <tr key={p.id} style={{ borderBottom: "1px solid var(--border-light)" }} onMouseEnter={e => e.currentTarget.style.background = "var(--bg-main)"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
                                                     <td style={{ padding: "0.875rem 1rem" }}>
-                                                        <div style={{ fontWeight: 700, fontSize: "0.9rem", color: "var(--text-main)" }}>{p.name}</div>
-                                                        {p.sku && <div style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>SKU: {p.sku}</div>}
-                                                    </td>
-                                                    <td style={{ padding: "0.875rem 1rem", fontSize: "0.85rem", color: "var(--text-muted)" }}>{p.category_name}</td>
-                                                    <td style={{ padding: "0.875rem 1rem" }}>
-                                                        <div style={{ fontWeight: 700, fontSize: "0.9rem", color: "var(--text-main)" }}>₨{Number(p.effective_price).toLocaleString()}</div>
-                                                        {p.discount_price && <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", textDecoration: "line-through" }}>₨{Number(p.price).toLocaleString()}</div>}
-                                                    </td>
-                                                    <td style={{ padding: "0.875rem 1rem" }}>
-                                                        <span style={{ padding: "0.2rem 0.6rem", borderRadius: 99, fontSize: "0.78rem", fontWeight: 700, background: p.stock === 0 ? "#fef2f2" : p.is_low_stock ? "#fff7ed" : "#f0fdf4", color: p.stock === 0 ? "#ef4444" : p.is_low_stock ? "#f97316" : "#10b981" }}>
-                                                            {p.stock === 0 ? "Out of Stock" : p.is_low_stock ? `Low: ${p.stock}` : p.stock}
-                                                        </span>
-                                                    </td>
-                                                    <td style={{ padding: "0.875rem 1rem" }}>
-                                                        <div style={{ display: "flex", gap: "0.3rem", flexWrap: "wrap" }}>
-                                                            {p.is_featured && <span style={{ padding: "0.15rem 0.5rem", borderRadius: 99, fontSize: "0.68rem", fontWeight: 700, background: "#fef3c7", color: "#d97706" }}>⭐ Featured</span>}
-                                                            {p.is_organic && <span style={{ padding: "0.15rem 0.5rem", borderRadius: 99, fontSize: "0.68rem", fontWeight: 700, background: "#d1fae5", color: "#059669" }}>🌿 Organic</span>}
+                                                        <div style={{ width: 44, height: 44, borderRadius: 8, background: "var(--bg-main)", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid var(--border-light)" }}>
+                                                            {p.image ? <img src={p.image.startsWith('http') ? p.image : `${window.location.protocol}//${window.location.hostname}:8000${p.image.startsWith('/') ? '' : '/'}${p.image}`} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <ShoppingBag size={20} color="var(--text-muted)" />}
                                                         </div>
                                                     </td>
                                                     <td style={{ padding: "0.875rem 1rem" }}>
-                                                        <span style={{ padding: "0.2rem 0.6rem", borderRadius: 99, fontSize: "0.72rem", fontWeight: 700, background: p.is_active ? "#d1fae5" : "#f1f5f9", color: p.is_active ? "#059669" : "#64748b" }}>{p.is_active ? "Active" : "Inactive"}</span>
+                                                        <div style={{ fontWeight: 800, fontSize: "0.9rem", color: "var(--text-main)" }}>{p.name}</div>
+                                                        <div style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>SKU: {p.sku || "N/A"}</div>
+                                                    </td>
+                                                    <td style={{ padding: "0.875rem 1rem", fontSize: "0.85rem", color: "var(--text-muted)" }}>{categories.find(c => c.id === p.category)?.name || "Uncategorized"}</td>
+                                                    <td style={{ padding: "0.875rem 1rem" }}>
+                                                        <div style={{ fontWeight: 800, color: "var(--text-main)", fontSize: "0.9rem" }}>₨ {p.price}</div>
+                                                        {p.discountPrice && <div style={{ fontSize: "0.72rem", color: "#10b981", fontWeight: 700 }}>SALE: ₨ {p.discountPrice}</div>}
+                                                    </td>
+                                                    <td style={{ padding: "0.875rem 1rem" }}>
+                                                        <span style={{ fontWeight: 700, fontSize: "0.9rem", color: p.stock <= 5 ? "#ef4444" : "var(--text-main)" }}>{p.stock}</span>
+                                                    </td>
+                                                    <td style={{ padding: "0.875rem 1rem" }}>
+                                                        <span style={{ padding: "0.2rem 0.6rem", borderRadius: 99, fontSize: "0.7rem", fontWeight: 700, background: p.isActive ? "var(--success-subtle)" : "#fef2f2", color: p.isActive ? "#059669" : "#ef4444" }}>{p.isActive ? t("ecom.status.active") : t("ecom.status.inactive")}</span>
                                                     </td>
                                                     <td style={{ padding: "0.875rem 1rem" }}>
                                                         <div style={{ display: "flex", gap: "0.4rem" }}>
-                                                            <button onClick={() => { setEditingProduct(p); setProductForm({ name: p.name, category: p.category, description: p.description, price: p.price, discount_price: p.discount_price || "", stock: p.stock, sku: p.sku || "", tags: p.tags || "", usage_instructions: p.usage_instructions || "", is_featured: p.is_featured, is_organic: p.is_organic, is_active: p.is_active }); setShowProductForm(true); }}
+                                                            <button onClick={() => { setEditingProduct(p); setProductForm({ name: p.name, category: p.category, description: p.description, price: p.price, discountPrice: p.discountPrice || "", stock: p.stock, sku: p.sku || "", tags: p.tags || "", usageInstructions: p.usageInstructions || "", isFeatured: p.isFeatured, isOrganic: p.isOrganic, isActive: p.isActive }); setShowProductForm(true); }}
                                                                 style={{ padding: "0.35rem 0.65rem", background: "var(--primary-subtle)", color: "var(--primary)", border: "none", borderRadius: 6, cursor: "pointer", display: "flex", alignItems: "center", gap: "0.3rem", fontSize: "0.78rem", fontWeight: 600 }}>
-                                                                <Edit2 size={12} /> Edit
+                                                                <Edit2 size={12} /> {t("common.edit")}
                                                             </button>
                                                             <button onClick={() => setConfirmDelete({ ...p, _type: "product" })}
                                                                 style={{ padding: "0.35rem 0.65rem", background: "#fef2f2", color: "#ef4444", border: "none", borderRadius: 6, cursor: "pointer", display: "flex", alignItems: "center", fontSize: "0.78rem", fontWeight: 600 }}>
@@ -1047,45 +1093,58 @@ const AdminPanel = () => {
                                             ))}
                                         </tbody>
                                     </table>
-                                    {products.length === 0 && <div style={{ padding: "3rem", textAlign: "center", color: "var(--text-muted)" }}>No products found. Add your first product!</div>}
+                                    {products.length === 0 && <div style={{ padding: "3rem", textAlign: "center", color: "var(--text-muted)" }}>{t("ecom.noDataAvailable")}</div>}
                                 </div>
                             )}
-                            {/* Product Form Modal */}
                             {showProductForm && (
                                 <div style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.85)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999, padding: "1rem" }}>
-                                    <div style={{ background: "var(--bg-card)", borderRadius: 20, padding: "2rem", maxWidth: 640, width: "100%", border: "1px solid var(--border-light)", maxHeight: "90vh", overflowY: "auto" }}>
+                                    <div style={{ background: "var(--bg-card)", borderRadius: 20, padding: "2rem", maxWidth: 640, width: "100%", maxHeight: "90vh", overflowY: "auto", border: "1px solid var(--border-light)", boxShadow: "0 25px 50px -12px rgba(0,0,0,0.5)" }}>
                                         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1.5rem" }}>
-                                            <h2 style={{ fontSize: "1.3rem", fontWeight: 800, color: "var(--text-main)" }}>{editingProduct ? "Edit Product" : "Add New Product"}</h2>
+                                            <h2 style={{ fontSize: "1.5rem", fontWeight: 800, color: "var(--text-main)" }}>{editingProduct ? t("ecom.productForm.edit") : t("ecom.productForm.create")}</h2>
                                             <button onClick={() => setShowProductForm(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)" }}><X size={20} /></button>
                                         </div>
                                         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-                                            {[{ label: "Product Name *", key: "name", full: true }, { label: "SKU", key: "sku" }, { label: "Price (NPR) *", key: "price", type: "number" }, { label: "Discount Price (NPR)", key: "discount_price", type: "number" }, { label: "Stock Quantity *", key: "stock", type: "number" }].map(f => (
-                                                <div key={f.key} style={f.full ? { gridColumn: "1/-1" } : {}}>
-                                                    <label style={{ display: "block", fontSize: "0.78rem", fontWeight: 700, color: "var(--text-muted)", marginBottom: "0.4rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>{f.label}</label>
-                                                    <input type={f.type || "text"} value={productForm[f.key]} onChange={e => setProductForm(prev => ({ ...prev, [f.key]: e.target.value }))} style={{ width: "100%", height: 40, padding: "0 0.75rem", borderRadius: 8, border: "1px solid var(--border-light)", background: "var(--bg-main)", color: "var(--text-main)", fontSize: "0.9rem" }} />
-                                                </div>
-                                            ))}
                                             <div style={{ gridColumn: "1/-1" }}>
-                                                <label style={{ display: "block", fontSize: "0.78rem", fontWeight: 700, color: "var(--text-muted)", marginBottom: "0.4rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Category *</label>
+                                                <label style={{ display: "block", fontSize: "0.78rem", fontWeight: 700, color: "var(--text-muted)", marginBottom: "0.4rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>{t("ecom.productForm.name")}</label>
+                                                <input value={productForm.name} onChange={e => setProductForm(prev => ({ ...prev, name: e.target.value }))} style={{ width: "100%", height: 40, padding: "0 0.75rem", borderRadius: 8, border: "1px solid var(--border-light)", background: "var(--bg-main)", color: "var(--text-main)", fontSize: "0.9rem" }} />
+                                            </div>
+                                            <div>
+                                                <label style={{ display: "block", fontSize: "0.78rem", fontWeight: 700, color: "var(--text-muted)", marginBottom: "0.4rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>{t("ecom.productForm.price")}</label>
+                                                <input type="number" value={productForm.price} onChange={e => setProductForm(prev => ({ ...prev, price: e.target.value }))} style={{ width: "100%", height: 40, padding: "0 0.75rem", borderRadius: 8, border: "1px solid var(--border-light)", background: "var(--bg-main)", color: "var(--text-main)", fontSize: "0.9rem" }} />
+                                            </div>
+                                            <div>
+                                                <label style={{ display: "block", fontSize: "0.78rem", fontWeight: 700, color: "var(--text-muted)", marginBottom: "0.4rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>{t("ecom.productForm.discountPrice")}</label>
+                                                <input type="number" value={productForm.discountPrice} onChange={e => setProductForm(prev => ({ ...prev, discountPrice: e.target.value }))} style={{ width: "100%", height: 40, padding: "0 0.75rem", borderRadius: 8, border: "1px solid var(--border-light)", background: "var(--bg-main)", color: "var(--text-main)", fontSize: "0.9rem" }} />
+                                            </div>
+                                            <div>
+                                                <label style={{ display: "block", fontSize: "0.78rem", fontWeight: 700, color: "var(--text-muted)", marginBottom: "0.4rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>{t("ecom.productForm.stock")}</label>
+                                                <input type="number" value={productForm.stock} onChange={e => setProductForm(prev => ({ ...prev, stock: e.target.value }))} style={{ width: "100%", height: 40, padding: "0 0.75rem", borderRadius: 8, border: "1px solid var(--border-light)", background: "var(--bg-main)", color: "var(--text-main)", fontSize: "0.9rem" }} />
+                                            </div>
+                                            <div>
+                                                <label style={{ display: "block", fontSize: "0.78rem", fontWeight: 700, color: "var(--text-muted)", marginBottom: "0.4rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>{t("ecom.productForm.sku")}</label>
+                                                <input value={productForm.sku} onChange={e => setProductForm(prev => ({ ...prev, sku: e.target.value }))} style={{ width: "100%", height: 40, padding: "0 0.75rem", borderRadius: 8, border: "1px solid var(--border-light)", background: "var(--bg-main)", color: "var(--text-main)", fontSize: "0.9rem" }} />
+                                            </div>
+                                            <div style={{ gridColumn: "1/-1" }}>
+                                                <label style={{ display: "block", fontSize: "0.78rem", fontWeight: 700, color: "var(--text-muted)", marginBottom: "0.4rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>{t("ecom.productForm.category")}</label>
                                                 <select value={productForm.category} onChange={e => setProductForm(prev => ({ ...prev, category: e.target.value }))} style={{ width: "100%", height: 40, padding: "0 0.75rem", borderRadius: 8, border: "1px solid var(--border-light)", background: "var(--bg-main)", color: "var(--text-main)", fontSize: "0.9rem" }}>
-                                                    <option value="">-- Select Category --</option>
-                                                    {categories.map(c => <option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}
+                                                    <option value="">{t("ecom.productForm.selectCategory")}</option>
+                                                    {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                                                 </select>
                                             </div>
                                             <div style={{ gridColumn: "1/-1" }}>
-                                                <label style={{ display: "block", fontSize: "0.78rem", fontWeight: 700, color: "var(--text-muted)", marginBottom: "0.4rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Description *</label>
+                                                <label style={{ display: "block", fontSize: "0.78rem", fontWeight: 700, color: "var(--text-muted)", marginBottom: "0.4rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>{t("ecom.productForm.description")}</label>
                                                 <textarea value={productForm.description} onChange={e => setProductForm(prev => ({ ...prev, description: e.target.value }))} rows={3} style={{ width: "100%", padding: "0.75rem", borderRadius: 8, border: "1px solid var(--border-light)", background: "var(--bg-main)", color: "var(--text-main)", fontSize: "0.9rem", resize: "vertical" }} />
                                             </div>
                                             <div style={{ gridColumn: "1/-1" }}>
-                                                <label style={{ display: "block", fontSize: "0.78rem", fontWeight: 700, color: "var(--text-muted)", marginBottom: "0.4rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Usage Instructions</label>
-                                                <textarea value={productForm.usage_instructions} onChange={e => setProductForm(prev => ({ ...prev, usage_instructions: e.target.value }))} rows={2} style={{ width: "100%", padding: "0.75rem", borderRadius: 8, border: "1px solid var(--border-light)", background: "var(--bg-main)", color: "var(--text-main)", fontSize: "0.9rem", resize: "vertical" }} />
+                                                <label style={{ display: "block", fontSize: "0.78rem", fontWeight: 700, color: "var(--text-muted)", marginBottom: "0.4rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>{t("ecom.productForm.usage")}</label>
+                                                <textarea value={productForm.usageInstructions} onChange={e => setProductForm(prev => ({ ...prev, usageInstructions: e.target.value }))} rows={2} style={{ width: "100%", padding: "0.75rem", borderRadius: 8, border: "1px solid var(--border-light)", background: "var(--bg-main)", color: "var(--text-main)", fontSize: "0.9rem", resize: "vertical" }} />
                                             </div>
                                             <div style={{ gridColumn: "1/-1" }}>
-                                                <label style={{ display: "block", fontSize: "0.78rem", fontWeight: 700, color: "var(--text-muted)", marginBottom: "0.4rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Tags (comma-separated)</label>
+                                                <label style={{ display: "block", fontSize: "0.78rem", fontWeight: 700, color: "var(--text-muted)", marginBottom: "0.4rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>{t("ecom.productForm.tags")}</label>
                                                 <input value={productForm.tags} onChange={e => setProductForm(prev => ({ ...prev, tags: e.target.value }))} placeholder="e.g. bestseller,organic,premium" style={{ width: "100%", height: 40, padding: "0 0.75rem", borderRadius: 8, border: "1px solid var(--border-light)", background: "var(--bg-main)", color: "var(--text-main)", fontSize: "0.9rem" }} />
                                             </div>
-                                            <div style={{ gridColumn: "1/-1", display: "flex", gap: "1.5rem" }}>
-                                                {[{ key: "is_featured", label: "⭐ Featured Product" }, { key: "is_organic", label: "🌿 Organic" }, { key: "is_active", label: "✅ Active" }].map(f => (
+                                            <div style={{ gridColumn: "1/-1", display: "flex", gap: "1.5rem", flexWrap: "wrap" }}>
+                                                {[{ key: "isFeatured", label: `⭐ ${t("ecom.status.featured")}` }, { key: "isOrganic", label: `🌿 ${t("ecom.status.organic")}` }, { key: "isActive", label: `✅ ${t("ecom.status.active")}` }].map(f => (
                                                     <label key={f.key} style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer", fontWeight: 600, fontSize: "0.9rem", color: "var(--text-main)" }}>
                                                         <input type="checkbox" checked={productForm[f.key]} onChange={e => setProductForm(prev => ({ ...prev, [f.key]: e.target.checked }))} style={{ width: 16, height: 16 }} />
                                                         {f.label}
@@ -1094,17 +1153,21 @@ const AdminPanel = () => {
                                             </div>
                                         </div>
                                         <div style={{ display: "flex", gap: "0.75rem", marginTop: "1.5rem" }}>
-                                            <button onClick={() => setShowProductForm(false)} style={{ flex: 1, padding: "0.75rem", background: "var(--bg-main)", border: "1px solid var(--border-light)", borderRadius: 10, cursor: "pointer", fontWeight: 600, color: "var(--text-muted)" }}>Cancel</button>
+                                            <button onClick={() => setShowProductForm(false)} style={{ flex: 1, padding: "0.75rem", background: "var(--bg-main)", border: "1px solid var(--border-light)", borderRadius: 10, cursor: "pointer", fontWeight: 600, color: "var(--text-muted)" }}>{t("common.cancel")}</button>
                                             <button onClick={async () => {
                                                 try {
                                                     const fd = new FormData();
-                                                    Object.entries(productForm).forEach(([k, v]) => { if (v !== "" && v !== null) fd.append(k, v); });
-                                                    if (editingProduct) { await adminService.adminUpdateProduct(editingProduct.id, fd); showToast("Product updated!"); }
-                                                    else { await adminService.adminCreateProduct(fd); showToast("Product created!"); }
+                                                    Object.entries(productForm).forEach(([k, v]) => {
+                                                        if (v === null || v === undefined || v === "") return;
+                                                        if (typeof v === 'boolean') fd.append(k, v ? 'true' : 'false');
+                                                        else fd.append(k, v);
+                                                    });
+                                                    if (editingProduct) { await adminService.adminUpdateProduct(editingProduct.id, fd); showToast(t("store.productSaved")); }
+                                                    else { await adminService.adminCreateProduct(fd); showToast(t("store.productSaved")); }
                                                     setShowProductForm(false); fetchProducts();
-                                                } catch (e) { setError(e.response?.data?.detail || "Failed to save product."); }
-                                            }} style={{ flex: 1, padding: "0.75rem", background: "linear-gradient(135deg,#3b82f6,#1d4ed8)", color: "#fff", border: "none", borderRadius: 10, cursor: "pointer", fontWeight: 700, fontSize: "0.95rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem" }}>
-                                                <Save size={16} /> {editingProduct ? "Save Changes" : "Create Product"}
+                                                } catch (e) { setError(e.response?.data?.detail || t("common.errorOccurred")); }
+                                            }} style={{ flex: 1, padding: "0.75rem", background: "var(--primary)", color: "#fff", border: "none", borderRadius: 10, cursor: "pointer", fontWeight: 700, fontSize: "0.95rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem" }}>
+                                                <Save size={16} /> {editingProduct ? t("ecom.productForm.save") : t("ecom.productForm.create")}
                                             </button>
                                         </div>
                                     </div>
@@ -1119,45 +1182,55 @@ const AdminPanel = () => {
                             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1.5rem" }}>
                                 <div>
                                     <h1 style={{ fontSize: "1.75rem", fontWeight: 800, color: "var(--text-main)", marginBottom: "0.25rem" }}>{t("admin.tabOrders")}</h1>
-                                    <p style={{ color: "var(--text-muted)", fontSize: "0.9rem" }}>{orders.length} {t("orders.totalOrdersPlural").replace("{{count}}", "")}</p>
+                                    <p style={{ color: "var(--text-muted)", fontSize: "0.9rem" }}>{t("orders.totalOrdersPlural", { count: orders.length })}</p>
                                 </div>
-                                <button onClick={fetchOrders} style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.6rem 1rem", background: "var(--bg-card)", border: "1px solid var(--border-light)", borderRadius: 8, cursor: "pointer", fontSize: "0.85rem", fontWeight: 600, color: "var(--text-muted)" }}>
+                                <button onClick={fetchOrders} style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.6rem 1rem", background: "var(--bg-card)", border: "1px solid var(--border-light)", borderRadius: 8, cursor: "pointer", fontSize: "0.85rem", fontWeight: 600, color: "var(--text-main)" }}>
                                     <RefreshCw size={14} /> {t("admin.refreshBtn")}
                                 </button>
                             </div>
                             <div style={{ position: "relative", marginBottom: "1.5rem" }}>
                                 <Search size={16} style={{ position: "absolute", left: "1rem", top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />
-                                <input placeholder={t("orders.searchPlaceholder")} value={searchQuery} onChange={e => setSearchQuery(e.target.value)} style={{ paddingLeft: "2.75rem", height: 44, borderRadius: 10, width: "100%" }} />
+                                <input placeholder={t("orders.searchPlaceholder")} value={searchQuery} onChange={e => setSearchQuery(e.target.value)} style={{ width: "100%", padding: "0.75rem 1rem 0.75rem 2.75rem", borderRadius: 10, background: "var(--bg-card)", border: "1px solid var(--border-light)", color: "var(--text-main)", outline: "none" }} />
                             </div>
                             {loading ? <LoadingSpinner t={t} /> : (
                                 <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
                                     {orders.filter(o => String(o.id).includes(searchQuery) || o.user_name?.toLowerCase().includes(searchQuery.toLowerCase())).map(o => {
-                                        const statusColors = { pending: { bg: "#fef3c7", color: "#d97706" }, processing: { bg: "#dbeafe", color: "#1d4ed8" }, shipped: { bg: "#ede9fe", color: "#7c3aed" }, delivered: { bg: "#d1fae5", color: "#059669" }, cancelled: { bg: "#fef2f2", color: "#dc2626" } };
-                                        const sc = statusColors[o.status] || { bg: "#f1f5f9", color: "#475569" };
-                                        const payColors = { paid: { bg: "#d1fae5", color: "#059669" }, unpaid: { bg: "#fef2f2", color: "#dc2626" }, refunded: { bg: "#ede9fe", color: "#7c3aed" } };
-                                        const pc = payColors[o.payment_status] || { bg: "#f1f5f9", color: "#475569" };
+                                        const statusColors = {
+                                            pending: { bg: "var(--warning-subtle)", color: "#d97706" },
+                                            processing: { bg: "var(--primary-subtle)", color: "var(--primary)" },
+                                            shipped: { bg: "#ede9fe", color: "#7c3aed" },
+                                            delivered: { bg: "var(--success-subtle)", color: "#059669" },
+                                            cancelled: { bg: "#fef2f2", color: "#dc2626" }
+                                        };
+                                        const sc = statusColors[o.status] || { bg: "var(--bg-main)", color: "var(--text-muted)" };
+                                        const payColors = {
+                                            paid: { bg: "var(--success-subtle)", color: "#059669" },
+                                            unpaid: { bg: "#fef2f2", color: "#dc2626" },
+                                            refunded: { bg: "#ede9fe", color: "#7c3aed" }
+                                        };
+                                        const pc = payColors[o.payment_status] || { bg: "var(--bg-main)", color: "var(--text-muted)" };
                                         return (
                                             <div key={o.id} style={{ background: "var(--bg-card)", borderRadius: 16, border: "1px solid var(--border-light)", overflow: "hidden" }}>
-                                                <div style={{ display: "flex", alignItems: "center", gap: "1rem", padding: "1rem 1.5rem" }}>
+                                                <div style={{ display: "flex", alignItems: "center", gap: "1rem", padding: "1rem 1.5rem", flexWrap: "wrap" }}>
                                                     <div style={{ flex: "0 0 auto" }}>
                                                         <div style={{ fontWeight: 800, fontSize: "1rem", color: "var(--text-main)" }}>#{o.id}</div>
-                                                        <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>{new Date(o.created_at).toLocaleDateString()}</div>
+                                                        <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>{new Date(o.createdAt).toLocaleDateString()}</div>
                                                     </div>
-                                                    <div style={{ flex: 1 }}>
+                                                    <div style={{ flex: 1, minWidth: "150px" }}>
                                                         <div style={{ fontWeight: 700, fontSize: "0.9rem", color: "var(--text-main)" }}>{o.user_name}</div>
-                                                        <div style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}>{o.payment_method?.toUpperCase()} · {o.items?.length || 0} item(s)</div>
+                                                        <div style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}>{o.payment_method?.toUpperCase()} · {o.items?.length || 0} {t("orders.itemsCount")}</div>
                                                     </div>
-                                                    <div style={{ fontWeight: 800, fontSize: "1.1rem", color: "var(--text-main)" }}>₨{Number(o.total_amount).toLocaleString()}</div>
+                                                    <div style={{ fontWeight: 800, fontSize: "1.1rem", color: "var(--text-main)" }}>₨ {Number(o.total_amount).toLocaleString()}</div>
                                                     <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
                                                         <select value={o.status} onChange={async e => {
-                                                            try { await adminService.updateOrderStatus(o.id, { status: e.target.value }); showToast(`Order #${o.id} → ${e.target.value}`); fetchOrders(); } catch { setError("Failed to update order status."); }
-                                                        }} style={{ padding: "0.3rem 0.6rem", borderRadius: 8, border: "none", fontWeight: 700, fontSize: "0.78rem", background: sc.bg, color: sc.color, cursor: "pointer" }}>
-                                                            {["pending", "delivered", "cancelled"].map(s => <option key={s} value={s}>{t(`orders.status.${s}`) || s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
+                                                            try { await adminService.updateOrderStatus(o.id, { status: e.target.value }); showToast(`${t("orders.order")} #${o.id} → ${t(`orders.status.${e.target.value}`)}`); fetchOrders(); } catch { setError(t("orders.errorUpdateStatus")); }
+                                                        }} style={{ padding: "0.3rem 0.6rem", borderRadius: 8, border: "none", fontWeight: 700, fontSize: "0.78rem", background: sc.bg, color: sc.color, cursor: "pointer", outline: "none" }}>
+                                                            {["pending", "processing", "shipped", "delivered", "cancelled"].map(s => <option key={s} value={s}>{t(`orders.status.${s}`)}</option>)}
                                                         </select>
                                                         <select value={o.payment_status} onChange={async e => {
-                                                            try { await adminService.updateOrderStatus(o.id, { payment_status: e.target.value }); showToast(`Payment → ${e.target.value}`); fetchOrders(); } catch { setError("Failed to update payment status."); }
-                                                        }} style={{ padding: "0.3rem 0.6rem", borderRadius: 8, border: "none", fontWeight: 700, fontSize: "0.78rem", background: pc.bg, color: pc.color, cursor: "pointer" }}>
-                                                            {["paid", "refunded"].map(s => <option key={s} value={s}>{t(`orders.payment.${s}`) || s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
+                                                            try { await adminService.updateOrderStatus(o.id, { payment_status: e.target.value }); showToast(`${t("orders.paymentStatus")} → ${t(`orders.payment.${e.target.value}`)}`); fetchOrders(); } catch { setError(t("orders.errorUpdatePayment")); }
+                                                        }} style={{ padding: "0.3rem 0.6rem", borderRadius: 8, border: "none", fontWeight: 700, fontSize: "0.78rem", background: pc.bg, color: pc.color, cursor: "pointer", outline: "none" }}>
+                                                            {["paid", "unpaid", "refunded"].map(s => <option key={s} value={s}>{t(`orders.payment.${s}`)}</option>)}
                                                         </select>
                                                     </div>
                                                     <div style={{ display: "flex", gap: "0.4rem" }}>
@@ -1171,31 +1244,31 @@ const AdminPanel = () => {
                                                 </div>
                                                 {expandedOrder === o.id && (
                                                     <div style={{ borderTop: "1px solid var(--border-light)", background: "var(--bg-main)", padding: "1rem 1.5rem" }}>
-                                                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1rem" }}>
+                                                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1rem", marginBottom: "1rem" }}>
                                                             <div>
-                                                                <div style={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", marginBottom: "0.3rem" }}>Shipping Address</div>
+                                                                <div style={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", marginBottom: "0.3rem" }}>{t("orders.shippingAddress")}</div>
                                                                 <div style={{ fontSize: "0.85rem", color: "var(--text-main)" }}>{o.shipping_address}</div>
                                                                 {o.phone_number && <div style={{ fontSize: "0.82rem", color: "var(--text-muted)", marginTop: "0.25rem" }}>📞 {o.phone_number}</div>}
                                                             </div>
                                                             {o.notes && <div>
-                                                                <div style={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", marginBottom: "0.3rem" }}>Notes</div>
+                                                                <div style={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", marginBottom: "0.3rem" }}>{t("orders.notes")}</div>
                                                                 <div style={{ fontSize: "0.85rem", color: "var(--text-main)" }}>{o.notes}</div>
                                                             </div>}
                                                         </div>
-                                                        <div style={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", marginBottom: "0.5rem" }}>Order Items</div>
+                                                        <div style={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", marginBottom: "0.5rem" }}>{t("orders.orderItems")}</div>
                                                         {o.items?.map(item => (
                                                             <div key={item.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.5rem 0", borderBottom: "1px solid var(--border-light)" }}>
                                                                 <span style={{ fontWeight: 600, fontSize: "0.9rem", color: "var(--text-main)" }}>{item.product_name}</span>
-                                                                <span style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>x{item.quantity} · ₨{Number(item.subtotal).toLocaleString()}</span>
+                                                                <span style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>x{item.quantity} · ₨ {Number(item.subtotal).toLocaleString()}</span>
                                                             </div>
                                                         ))}
-                                                        {o.coupon_code && <div style={{ marginTop: "0.75rem", fontSize: "0.82rem", color: "#059669", fontWeight: 600 }}>🏷️ Coupon: {o.coupon_code} · Discount: ₨{Number(o.discount_amount).toLocaleString()}</div>}
+                                                        {o.coupon_code && <div style={{ marginTop: "0.75rem", fontSize: "0.82rem", color: "#059669", fontWeight: 600 }}>🏷️ {t("orders.couponApplied")}: {o.coupon_code} · {t("checkout.discount")}: ₨ {Number(o.discount_amount).toLocaleString()}</div>}
                                                     </div>
                                                 )}
                                             </div>
                                         );
                                     })}
-                                    {orders.length === 0 && <div style={{ padding: "3rem", textAlign: "center", color: "var(--text-muted)", background: "var(--bg-card)", borderRadius: 16 }}>No orders yet.</div>}
+                                    {orders.length === 0 && <div style={{ padding: "3rem", textAlign: "center", color: "var(--text-muted)", background: "var(--bg-card)", borderRadius: 16 }}>{t("orders.noOrders")}</div>}
                                 </div>
                             )}
                         </div>
@@ -1206,16 +1279,16 @@ const AdminPanel = () => {
                         <div>
                             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1.5rem" }}>
                                 <div>
-                                    <h1 style={{ fontSize: "1.75rem", fontWeight: 800, color: "var(--text-main)", marginBottom: "0.25rem" }}>Coupons</h1>
-                                    <p style={{ color: "var(--text-muted)", fontSize: "0.9rem" }}>{coupons.length} coupons created</p>
+                                    <h1 style={{ fontSize: "1.75rem", fontWeight: 800, color: "var(--text-main)", marginBottom: "0.25rem" }}>{t("admin.tabCoupons")}</h1>
+                                    <p style={{ color: "var(--text-muted)", fontSize: "0.9rem" }}>{coupons.length} {t("ecom.activeCoupons")}</p>
                                 </div>
                                 <div style={{ display: "flex", gap: "0.75rem" }}>
-                                    <button onClick={fetchCoupons} style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.6rem 1rem", background: "var(--bg-card)", border: "1px solid var(--border-light)", borderRadius: 8, cursor: "pointer", fontSize: "0.85rem", fontWeight: 600, color: "var(--text-muted)" }}>
-                                        <RefreshCw size={14} /> Refresh
+                                    <button onClick={fetchCoupons} style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.6rem 1rem", background: "var(--bg-card)", border: "1px solid var(--border-light)", borderRadius: 8, cursor: "pointer", fontSize: "0.85rem", fontWeight: 600, color: "var(--text-main)" }}>
+                                        <RefreshCw size={14} /> {t("admin.refreshBtn")}
                                     </button>
-                                    <button onClick={() => { setEditingCoupon(null); setCouponForm({ code: "", discount_type: "percentage", discount_value: "", min_order_amount: "0", max_uses: "", is_active: true, valid_until: "" }); setShowCouponForm(true); }}
-                                        style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.6rem 1.25rem", background: "linear-gradient(135deg,#8b5cf6,#6d28d9)", color: "#fff", border: "none", borderRadius: 8, cursor: "pointer", fontSize: "0.85rem", fontWeight: 700 }}>
-                                        <Plus size={15} /> New Coupon
+                                    <button onClick={() => { setEditingCoupon(null); setCouponForm({ code: "", discountType: "percentage", discountValue: "", minOrderAmount: "0", maxUses: "", isActive: true, validUntil: "" }); setShowCouponForm(true); }}
+                                        style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.6rem 1.25rem", background: "var(--primary)", color: "#fff", border: "none", borderRadius: 8, cursor: "pointer", fontSize: "0.85rem", fontWeight: 700 }}>
+                                        <Plus size={15} /> {t("ecom.viewAllCoupons")}
                                     </button>
                                 </div>
                             </div>
@@ -1224,7 +1297,7 @@ const AdminPanel = () => {
                                     <table style={{ width: "100%", borderCollapse: "collapse" }}>
                                         <thead>
                                             <tr style={{ background: "var(--bg-main)" }}>
-                                                {["Code", "Type", "Value", "Min Order", "Used / Max", "Valid Until", "Active", "Actions"].map((h, i) => (
+                                                {[t("ecom.tableHeaders.code"), t("ecom.tableHeaders.type"), t("ecom.tableHeaders.value"), t("ecom.tableHeaders.minOrder"), t("ecom.tableHeaders.usage"), t("ecom.tableHeaders.expiry"), t("ecom.tableHeaders.status"), t("ecom.tableHeaders.actions")].map((h, i) => (
                                                     <th key={i} style={{ padding: "0.875rem 1rem", textAlign: "left", fontSize: "0.72rem", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em", borderBottom: "1px solid var(--border-light)" }}>{h}</th>
                                                 ))}
                                             </tr>
@@ -1235,21 +1308,21 @@ const AdminPanel = () => {
                                                     onMouseEnter={e => e.currentTarget.style.background = "var(--bg-main)"}
                                                     onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
                                                     <td style={{ padding: "0.875rem 1rem" }}>
-                                                        <span style={{ fontFamily: "monospace", fontWeight: 800, fontSize: "0.95rem", background: "var(--bg-main)", padding: "0.25rem 0.6rem", borderRadius: 6, color: "#8b5cf6" }}>{c.code}</span>
+                                                        <span style={{ fontFamily: "monospace", fontWeight: 800, fontSize: "0.95rem", background: "var(--bg-main)", padding: "0.25rem 0.6rem", borderRadius: 6, color: "var(--primary)" }}>{c.code}</span>
                                                     </td>
-                                                    <td style={{ padding: "0.875rem 1rem", fontSize: "0.85rem", color: "var(--text-muted)", textTransform: "capitalize" }}>{c.discount_type}</td>
-                                                    <td style={{ padding: "0.875rem 1rem", fontWeight: 700, color: "var(--text-main)" }}>{c.discount_type === "percentage" ? `${c.discount_value}%` : `₨${c.discount_value}`}</td>
-                                                    <td style={{ padding: "0.875rem 1rem", fontSize: "0.85rem", color: "var(--text-muted)" }}>₨{c.min_order_amount}</td>
-                                                    <td style={{ padding: "0.875rem 1rem", fontSize: "0.85rem", color: "var(--text-muted)" }}>{c.used_count} / {c.max_uses || "∞"}</td>
-                                                    <td style={{ padding: "0.875rem 1rem", fontSize: "0.82rem", color: "var(--text-muted)" }}>{c.valid_until ? new Date(c.valid_until).toLocaleDateString() : "No expiry"}</td>
+                                                    <td style={{ padding: "0.875rem 1rem", fontSize: "0.85rem", color: "var(--text-muted)", textTransform: "capitalize" }}>{c.discountType}</td>
+                                                    <td style={{ padding: "0.875rem 1rem", fontWeight: 700, color: "var(--text-main)" }}>{c.discountType === "percentage" ? `${c.discountValue}%` : `₨ ${c.discountValue}`}</td>
+                                                    <td style={{ padding: "0.875rem 1rem", fontSize: "0.85rem", color: "var(--text-muted)" }}>₨ {c.minOrderAmount}</td>
+                                                    <td style={{ padding: "0.875rem 1rem", fontSize: "0.85rem", color: "var(--text-muted)" }}>{c.used_count} / {c.maxUses || "∞"}</td>
+                                                    <td style={{ padding: "0.875rem 1rem", fontSize: "0.82rem", color: "var(--text-muted)" }}>{c.validUntil ? new Date(c.validUntil).toLocaleDateString() : t("common.notAvailable")}</td>
                                                     <td style={{ padding: "0.875rem 1rem" }}>
-                                                        <span style={{ padding: "0.2rem 0.6rem", borderRadius: 99, fontSize: "0.72rem", fontWeight: 700, background: c.is_active ? "#d1fae5" : "#fef2f2", color: c.is_active ? "#059669" : "#dc2626" }}>{c.is_active ? "Active" : "Inactive"}</span>
+                                                        <span style={{ padding: "0.2rem 0.6rem", borderRadius: 99, fontSize: "0.72rem", fontWeight: 700, background: c.isActive ? "var(--success-subtle)" : "#fef2f2", color: c.isActive ? "#059669" : "#dc2626" }}>{c.isActive ? t("ecom.status.active") : t("ecom.status.inactive")}</span>
                                                     </td>
                                                     <td style={{ padding: "0.875rem 1rem" }}>
                                                         <div style={{ display: "flex", gap: "0.4rem" }}>
-                                                            <button onClick={() => { setEditingCoupon(c); setCouponForm({ code: c.code, discount_type: c.discount_type, discount_value: c.discount_value, min_order_amount: c.min_order_amount, max_uses: c.max_uses || "", is_active: c.is_active, valid_until: c.valid_until ? c.valid_until.split("T")[0] : "" }); setShowCouponForm(true); }}
-                                                                style={{ padding: "0.35rem 0.65rem", background: "#ede9fe", color: "#7c3aed", border: "none", borderRadius: 6, cursor: "pointer", display: "flex", alignItems: "center", gap: "0.3rem", fontSize: "0.78rem", fontWeight: 600 }}>
-                                                                <Edit2 size={12} /> Edit
+                                                            <button onClick={() => { setEditingCoupon(c); setCouponForm({ code: c.code, discountType: c.discountType, discountValue: c.discountValue, minOrderAmount: c.minOrderAmount, maxUses: c.maxUses || "", isActive: c.isActive, validUntil: c.validUntil ? c.validUntil.split("T")[0] : "" }); setShowCouponForm(true); }}
+                                                                style={{ padding: "0.35rem 0.65rem", background: "var(--primary-subtle)", color: "var(--primary)", border: "none", borderRadius: 6, cursor: "pointer", display: "flex", alignItems: "center", gap: "0.3rem", fontSize: "0.78rem", fontWeight: 600 }}>
+                                                                <Edit2 size={12} /> {t("ecom.tableHeaders.edit")}
                                                             </button>
                                                             <button onClick={() => setConfirmDelete({ ...c, username: c.code, _type: "coupon" })}
                                                                 style={{ padding: "0.35rem 0.65rem", background: "#fef2f2", color: "#ef4444", border: "none", borderRadius: 6, cursor: "pointer", display: "flex", alignItems: "center", fontSize: "0.78rem", fontWeight: 600 }}>
@@ -1261,51 +1334,70 @@ const AdminPanel = () => {
                                             ))}
                                         </tbody>
                                     </table>
-                                    {coupons.length === 0 && <div style={{ padding: "3rem", textAlign: "center", color: "var(--text-muted)" }}>No coupons yet. Create your first coupon!</div>}
+                                    {coupons.length === 0 && <div style={{ padding: "3rem", textAlign: "center", color: "var(--text-muted)" }}>{t("ecom.noDataAvailable")}</div>}
                                 </div>
                             )}
-                            {/* Coupon Form Modal */}
                             {showCouponForm && (
                                 <div style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.85)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999, padding: "1rem" }}>
-                                    <div style={{ background: "var(--bg-card)", borderRadius: 20, padding: "2rem", maxWidth: 520, width: "100%", border: "1px solid var(--border-light)" }}>
+                                    <div style={{ background: "var(--bg-card)", borderRadius: 20, padding: "2rem", maxWidth: 520, width: "100%", border: "1px solid var(--border-light)", boxShadow: "0 25px 50px -12px rgba(0,0,0,0.5)" }}>
                                         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1.5rem" }}>
-                                            <h2 style={{ fontSize: "1.3rem", fontWeight: 800, color: "var(--text-main)" }}>{editingCoupon ? "Edit Coupon" : "New Coupon"}</h2>
+                                            <h2 style={{ fontSize: "1.3rem", fontWeight: 800, color: "var(--text-main)" }}>{editingCoupon ? t("ecom.couponForm.editTitle") : t("ecom.couponForm.addTitle")}</h2>
                                             <button onClick={() => setShowCouponForm(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)" }}><X size={20} /></button>
                                         </div>
                                         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-                                            {[{ label: "Coupon Code *", key: "code", full: true, placeholder: "e.g. SAVE20" }, { label: "Discount Value *", key: "discount_value", type: "number", placeholder: "e.g. 20" }, { label: "Min Order (NPR)", key: "min_order_amount", type: "number" }, { label: "Max Uses (blank = unlimited)", key: "max_uses", type: "number" }, { label: "Valid Until", key: "valid_until", type: "date" }].map(f => (
-                                                <div key={f.key} style={f.full ? { gridColumn: "1/-1" } : {}}>
-                                                    <label style={{ display: "block", fontSize: "0.78rem", fontWeight: 700, color: "var(--text-muted)", marginBottom: "0.4rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>{f.label}</label>
-                                                    <input type={f.type || "text"} value={couponForm[f.key]} onChange={e => setCouponForm(prev => ({ ...prev, [f.key]: e.target.value }))} placeholder={f.placeholder || ""} style={{ width: "100%", height: 40, padding: "0 0.75rem", borderRadius: 8, border: "1px solid var(--border-light)", background: "var(--bg-main)", color: "var(--text-main)", fontSize: "0.9rem" }} />
-                                                </div>
-                                            ))}
-                                            <div>
-                                                <label style={{ display: "block", fontSize: "0.78rem", fontWeight: 700, color: "var(--text-muted)", marginBottom: "0.4rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Discount Type *</label>
-                                                <select value={couponForm.discount_type} onChange={e => setCouponForm(prev => ({ ...prev, discount_type: e.target.value }))} style={{ width: "100%", height: 40, padding: "0 0.75rem", borderRadius: 8, border: "1px solid var(--border-light)", background: "var(--bg-main)", color: "var(--text-main)", fontSize: "0.9rem" }}>
-                                                    <option value="percentage">Percentage (%)</option>
-                                                    <option value="fixed">Fixed Amount (NPR)</option>
-                                                </select>
+                                            <div style={{ gridColumn: "1/-1" }}>
+                                                <label style={{ display: "block", fontSize: "0.78rem", fontWeight: 700, color: "var(--text-muted)", marginBottom: "0.4rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>{t("ecom.couponForm.code")}</label>
+                                                <input value={couponForm.code} onChange={e => setCouponForm(prev => ({ ...prev, code: e.target.value }))} placeholder={t("ecom.couponForm.codePlaceholder")} style={{ width: "100%", height: 40, padding: "0 0.75rem", borderRadius: 8, border: "1px solid var(--border-light)", background: "var(--bg-main)", color: "var(--text-main)", fontSize: "0.9rem" }} />
                                             </div>
-                                            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", paddingTop: "1.5rem" }}>
+                                            <div>
+                                                <label style={{ display: "block", fontSize: "0.78rem", fontWeight: 700, color: "var(--text-muted)", marginBottom: "0.4rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>{t("ecom.couponForm.value")}</label>
+                                                <input type="number" value={couponForm.discountValue} onChange={e => setCouponForm(prev => ({ ...prev, discountValue: e.target.value }))} placeholder={t("ecom.couponForm.valuePlaceholder")} style={{ width: "100%", height: 40, padding: "0 0.75rem", borderRadius: 8, border: "1px solid var(--border-light)", background: "var(--bg-main)", color: "var(--text-main)", fontSize: "0.9rem" }} />
+                                            </div>
+                                            <div>
+                                                <label style={{ display: "block", fontSize: "0.78rem", fontWeight: 700, color: "var(--text-muted)", marginBottom: "0.4rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>{t("ecom.couponForm.minOrder")}</label>
+                                                <input type="number" value={couponForm.minOrderAmount} onChange={e => setCouponForm(prev => ({ ...prev, minOrderAmount: e.target.value }))} style={{ width: "100%", height: 40, padding: "0 0.75rem", borderRadius: 8, border: "1px solid var(--border-light)", background: "var(--bg-main)", color: "var(--text-main)", fontSize: "0.9rem" }} />
+                                            </div>
+                                            <div>
+                                                <label style={{ display: "block", fontSize: "0.78rem", fontWeight: 700, color: "var(--text-muted)", marginBottom: "0.4rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>{t("ecom.couponForm.maxUses")}</label>
+                                                <input type="number" value={couponForm.maxUses} onChange={e => setCouponForm(prev => ({ ...prev, maxUses: e.target.value }))} style={{ width: "100%", height: 40, padding: "0 0.75rem", borderRadius: 8, border: "1px solid var(--border-light)", background: "var(--bg-main)", color: "var(--text-main)", fontSize: "0.9rem" }} />
+                                            </div>
+                                            <div>
+                                                <label style={{ display: "block", fontSize: "0.78rem", fontWeight: 700, color: "var(--text-muted)", marginBottom: "0.4rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>{t("ecom.couponForm.validUntil")}</label>
+                                                <input type="date" value={couponForm.validUntil} onChange={e => setCouponForm(prev => ({ ...prev, validUntil: e.target.value }))} style={{ width: "100%", height: 40, padding: "0 0.75rem", borderRadius: 8, border: "1px solid var(--border-light)", background: "var(--bg-main)", color: "var(--text-main)", fontSize: "0.9rem" }} />
+                                            </div>
+                                            <div style={{ gridColumn: "1/-1", display: "flex", gap: "1rem" }}>
                                                 <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer", fontWeight: 600, fontSize: "0.9rem", color: "var(--text-main)" }}>
-                                                    <input type="checkbox" checked={couponForm.is_active} onChange={e => setCouponForm(prev => ({ ...prev, is_active: e.target.checked }))} style={{ width: 16, height: 16 }} />
-                                                    Active
+                                                    <input type="checkbox" checked={couponForm.isActive} onChange={e => setCouponForm(prev => ({ ...prev, isActive: e.target.checked }))} style={{ width: 16, height: 16 }} />
+                                                    {t("ecom.status.active")}
                                                 </label>
+                                                <div style={{ display: "flex", gap: "0.5rem" }}>
+                                                    <label style={{ display: "flex", alignItems: "center", gap: "0.25rem", cursor: "pointer", fontSize: "0.85rem", color: "var(--text-main)" }}>
+                                                        <input type="radio" checked={couponForm.discountType === "percentage"} onChange={() => setCouponForm(prev => ({ ...prev, discountType: "percentage" }))} /> {t("ecom.couponForm.percent")}
+                                                    </label>
+                                                    <label style={{ display: "flex", alignItems: "center", gap: "0.25rem", cursor: "pointer", fontSize: "0.85rem", color: "var(--text-main)" }}>
+                                                        <input type="radio" checked={couponForm.discountType === "fixed"} onChange={() => setCouponForm(prev => ({ ...prev, discountType: "fixed" }))} /> {t("common.currency") || "NPR"}
+                                                    </label>
+                                                </div>
                                             </div>
                                         </div>
                                         <div style={{ display: "flex", gap: "0.75rem", marginTop: "1.5rem" }}>
-                                            <button onClick={() => setShowCouponForm(false)} style={{ flex: 1, padding: "0.75rem", background: "var(--bg-main)", border: "1px solid var(--border-light)", borderRadius: 10, cursor: "pointer", fontWeight: 600, color: "var(--text-muted)" }}>Cancel</button>
+                                            <button onClick={() => setShowCouponForm(false)} style={{ flex: 1, padding: "0.75rem", background: "var(--bg-main)", border: "1px solid var(--border-light)", borderRadius: 10, cursor: "pointer", fontWeight: 600, color: "var(--text-muted)" }}>{t("common.cancel")}</button>
                                             <button onClick={async () => {
                                                 try {
-                                                    const payload = { ...couponForm, discount_value: Number(couponForm.discount_value), min_order_amount: Number(couponForm.min_order_amount) || 0 };
-                                                    if (!payload.max_uses) delete payload.max_uses;
-                                                    if (!payload.valid_until) delete payload.valid_until;
-                                                    if (editingCoupon) { await adminService.adminUpdateCoupon(editingCoupon.id, payload); showToast("Coupon updated!"); }
-                                                    else { await adminService.adminCreateCoupon(payload); showToast("Coupon created!"); }
+                                                    // Proactive uniqueness check
+                                                    const codeExists = coupons.some(c => c.code.toUpperCase() === couponForm.code.toUpperCase() && (!editingCoupon || c.id !== editingCoupon.id));
+                                                    if (codeExists) {
+                                                        setError(`Coupon code "${couponForm.code}" already exists.`);
+                                                        return;
+                                                    }
+
+                                                    const data = { ...couponForm, maxUses: couponForm.maxUses || null, validUntil: couponForm.validUntil || null };
+                                                    if (editingCoupon) { await adminService.updateCoupon(editingCoupon.id, data); showToast(t("store.productSaved")); }
+                                                    else { await adminService.createCoupon(data); showToast(t("store.productSaved")); }
                                                     setShowCouponForm(false); fetchCoupons();
-                                                } catch (e) { setError(e.response?.data?.code?.[0] || "Failed to save coupon."); }
-                                            }} style={{ flex: 1, padding: "0.75rem", background: "linear-gradient(135deg,#8b5cf6,#6d28d9)", color: "#fff", border: "none", borderRadius: 10, cursor: "pointer", fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem" }}>
-                                                <Save size={16} /> {editingCoupon ? "Save Changes" : "Create Coupon"}
+                                                } catch (e) { setError(e.response?.data?.detail || t("common.errorOccurred")); }
+                                            }} style={{ flex: 1, padding: "0.75rem", background: "var(--primary)", color: "#fff", border: "none", borderRadius: 10, cursor: "pointer", fontWeight: 700, fontSize: "0.95rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem" }}>
+                                                <Save size={16} /> {editingCoupon ? t("ecom.productForm.save") : t("ecom.productForm.create")}
                                             </button>
                                         </div>
                                     </div>
@@ -1319,54 +1411,59 @@ const AdminPanel = () => {
                         <div>
                             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1.5rem" }}>
                                 <div>
-                                    <h1 style={{ fontSize: "1.75rem", fontWeight: 800, color: "var(--text-main)", marginBottom: "0.25rem" }}>Reviews</h1>
-                                    <p style={{ color: "var(--text-muted)", fontSize: "0.9rem" }}>{reviews.length} total reviews</p>
+                                    <h1 style={{ fontSize: "1.75rem", fontWeight: 800, color: "var(--text-main)", marginBottom: "0.25rem" }}>{t("admin.tabReviews")}</h1>
+                                    <p style={{ color: "var(--text-muted)", fontSize: "0.9rem" }}>{reviews.length} {t("ecom.viewAllReviews")}</p>
                                 </div>
-                                <button onClick={fetchReviews} style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.6rem 1rem", background: "var(--bg-card)", border: "1px solid var(--border-light)", borderRadius: 8, cursor: "pointer", fontSize: "0.85rem", fontWeight: 600, color: "var(--text-muted)" }}>
-                                    <RefreshCw size={14} /> Refresh
+                                <button onClick={fetchReviews} style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.6rem 1rem", background: "var(--bg-card)", border: "1px solid var(--border-light)", borderRadius: 8, cursor: "pointer", fontSize: "0.85rem", fontWeight: 600, color: "var(--text-main)" }}>
+                                    <RefreshCw size={14} /> {t("admin.refreshBtn")}
                                 </button>
-                            </div>
-                            <div style={{ position: "relative", marginBottom: "1.5rem" }}>
-                                <Search size={16} style={{ position: "absolute", left: "1rem", top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />
-                                <input placeholder="Search reviews..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} style={{ paddingLeft: "2.75rem", height: 44, borderRadius: 10, width: "100%" }} />
                             </div>
                             {loading ? <LoadingSpinner t={t} /> : (
                                 <div style={{ background: "var(--bg-card)", borderRadius: 16, border: "1px solid var(--border-light)", overflow: "hidden" }}>
                                     <table style={{ width: "100%", borderCollapse: "collapse" }}>
                                         <thead>
                                             <tr style={{ background: "var(--bg-main)" }}>
-                                                {["Rating", "User", "Product", "Comment", "Date", "Actions"].map((h, i) => (
+                                                {[t("ecom.tableHeaders.product"), t("ecom.tableHeaders.user"), t("ecom.tableHeaders.rating"), t("ecom.tableHeaders.comment"), t("ecom.tableHeaders.date"), t("ecom.tableHeaders.status"), t("ecom.tableHeaders.actions")].map((h, i) => (
                                                     <th key={i} style={{ padding: "0.875rem 1rem", textAlign: "left", fontSize: "0.72rem", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em", borderBottom: "1px solid var(--border-light)" }}>{h}</th>
                                                 ))}
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {reviews.filter(r => r.user_name?.toLowerCase().includes(searchQuery.toLowerCase()) || (r.comment || "").toLowerCase().includes(searchQuery.toLowerCase())).map(r => (
+                                            {reviews.map(r => (
                                                 <tr key={r.id} style={{ borderBottom: "1px solid var(--border-light)" }}
                                                     onMouseEnter={e => e.currentTarget.style.background = "var(--bg-main)"}
                                                     onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                                                    <td style={{ padding: "0.875rem 1rem", fontWeight: 700, color: "var(--text-main)", fontSize: "0.85rem" }}>{r.product_name}</td>
+                                                    <td style={{ padding: "0.875rem 1rem", fontSize: "0.85rem", color: "var(--text-main)" }}>{r.user_name}</td>
                                                     <td style={{ padding: "0.875rem 1rem" }}>
-                                                        <div style={{ display: "flex", gap: "2px" }}>
-                                                            {[1, 2, 3, 4, 5].map(s => <Star key={s} size={14} fill={s <= r.rating ? "#f59e0b" : "none"} color={s <= r.rating ? "#f59e0b" : "#d1d5db"} />)}
+                                                        <div style={{ display: "flex", alignItems: "center", gap: "0.2rem", color: "#f59e0b" }}>
+                                                            <Star size={14} fill="#f59e0b" />
+                                                            <span style={{ fontWeight: 800, fontSize: "0.9rem" }}>{r.rating}</span>
                                                         </div>
                                                     </td>
-                                                    <td style={{ padding: "0.875rem 1rem", fontWeight: 600, fontSize: "0.85rem", color: "var(--text-main)" }}>{r.user_name}</td>
-                                                    <td style={{ padding: "0.875rem 1rem", fontSize: "0.85rem", color: "var(--text-muted)" }}>{r.product}</td>
-                                                    <td style={{ padding: "0.875rem 1rem", fontSize: "0.85rem", color: "var(--text-main)", maxWidth: 240 }}>
-                                                        <div style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.comment || <em style={{ color: "var(--text-muted)" }}>No comment</em>}</div>
-                                                    </td>
-                                                    <td style={{ padding: "0.875rem 1rem", fontSize: "0.8rem", color: "var(--text-muted)" }}>{new Date(r.created_at).toLocaleDateString()}</td>
+                                                    <td style={{ padding: "0.875rem 1rem", fontSize: "0.85rem", color: "var(--text-muted)", maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.comment}</td>
+                                                    <td style={{ padding: "0.875rem 1rem", fontSize: "0.82rem", color: "var(--text-muted)" }}>{new Date(r.createdAt).toLocaleDateString()}</td>
                                                     <td style={{ padding: "0.875rem 1rem" }}>
-                                                        <button onClick={() => setConfirmDelete({ ...r, username: `${r.user_name}'s review`, _type: "review" })}
-                                                            style={{ padding: "0.35rem 0.65rem", background: "#fef2f2", color: "#ef4444", border: "none", borderRadius: 6, cursor: "pointer", display: "flex", alignItems: "center", gap: "0.3rem", fontSize: "0.78rem", fontWeight: 600 }}>
-                                                            <Trash2 size={12} /> Delete
-                                                        </button>
+                                                        <span style={{ padding: "0.2rem 0.6rem", borderRadius: 99, fontSize: "0.72rem", fontWeight: 700, background: r.is_approved ? "var(--success-subtle)" : "#fff7ed", color: r.is_approved ? "#059669" : "#f97316" }}>{r.is_approved ? t("ecom.status.approved") : t("ecom.status.pending")}</span>
+                                                    </td>
+                                                    <td style={{ padding: "0.875rem 1rem" }}>
+                                                        <div style={{ display: "flex", gap: "0.4rem" }}>
+                                                            {!r.is_approved && (
+                                                                <button onClick={async () => {
+                                                                    try { await adminService.approveReview(r.id); showToast(t("ecom.reviewApproved")); fetchReviews(); } catch { setError(t("ecom.errorApproveReview")); }
+                                                                }} style={{ padding: "0.35rem 0.65rem", background: "var(--success-subtle)", color: "#059669", border: "none", borderRadius: 6, cursor: "pointer", fontSize: "0.78rem", fontWeight: 600 }}>{t("ecom.status.approved")}</button>
+                                                            )}
+                                                            <button onClick={() => setConfirmDelete({ ...r, username: `Review on ${r.product_name}`, _type: "review" })}
+                                                                style={{ padding: "0.35rem 0.65rem", background: "#fef2f2", color: "#ef4444", border: "none", borderRadius: 6, cursor: "pointer", fontSize: "0.78rem", fontWeight: 600 }}>
+                                                                <Trash2 size={12} />
+                                                            </button>
+                                                        </div>
                                                     </td>
                                                 </tr>
                                             ))}
                                         </tbody>
                                     </table>
-                                    {reviews.length === 0 && <div style={{ padding: "3rem", textAlign: "center", color: "var(--text-muted)" }}>No reviews yet.</div>}
+                                    {reviews.length === 0 && <div style={{ padding: "3rem", textAlign: "center", color: "var(--text-muted)" }}>{t("ecom.noDataAvailable")}</div>}
                                 </div>
                             )}
                         </div>
@@ -1382,51 +1479,33 @@ const AdminPanel = () => {
                 </div>
             )}
 
-            {/* Delete Confirmation Modal */}
+            {/* ===== DELETE CONFIRMATION MODAL ===== */}
             {confirmDelete && (
-                <div style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.8)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999 }}>
-                    <div style={{ background: "var(--bg-card)", borderRadius: 16, padding: "2rem", maxWidth: 400, width: "90%", border: "1px solid var(--border-light)", boxShadow: "0 25px 50px rgba(0,0,0,0.3)" }}>
-                        <div style={{ textAlign: "center", marginBottom: "1.5rem" }}>
-                            <div style={{ fontSize: "3rem", marginBottom: "0.75rem" }}>⚠️</div>
-                            <h3 style={{ fontSize: "1.2rem", fontWeight: 800, color: "var(--text-main)", marginBottom: "0.5rem" }}>
-                                {confirmDelete._type === "product" ? "Delete Product?" : confirmDelete._type === "coupon" ? "Delete Coupon?" : confirmDelete._type === "review" ? "Delete Review?" : t("admin.deleteUserModalTitle")}
-                            </h3>
-                            <p style={{ color: "var(--text-muted)", fontSize: "0.9rem" }}>
-                                You are about to permanently delete <strong>{confirmDelete.username || confirmDelete.name}</strong>. This action cannot be undone.
-                            </p>
+                <div style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.85)", backdropFilter: "blur(12px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10000, padding: "1.5rem" }}>
+                    <div style={{ background: "var(--bg-card)", borderRadius: 24, padding: "2.5rem", maxWidth: 440, width: "100%", textAlign: "center", border: "1px solid var(--border-light)", boxShadow: "0 25px 50px -12px rgba(0,0,0,0.5)" }}>
+                        <div style={{ width: 64, height: 64, borderRadius: "50%", background: "#fef2f2", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 1.5rem" }}>
+                            <AlertTriangle size={32} color="#ef4444" />
                         </div>
+                        <h2 style={{ fontSize: "1.5rem", fontWeight: 800, color: "var(--text-main)", marginBottom: "0.75rem" }}>{t("common.areYouSure")}</h2>
+                        <p style={{ color: "var(--text-muted)", fontSize: "0.95rem", lineHeight: 1.6, marginBottom: "2rem" }}>
+                            {t("admin.deleteConfirmMsg").replace("{{name}}", confirmDelete.username || confirmDelete.name || `#${confirmDelete.id}`)}
+                        </p>
                         <div style={{ display: "flex", gap: "0.75rem" }}>
-                            <button onClick={() => setConfirmDelete(null)} style={{ flex: 1, padding: "0.75rem", background: "var(--bg-main)", border: "1px solid var(--border-light)", borderRadius: 8, cursor: "pointer", fontWeight: 600, color: "var(--text-muted)" }}>
-                                Cancel
+                            <button onClick={() => setConfirmDelete(null)} style={{ flex: 1, padding: "1rem", borderRadius: 12, border: "1px solid var(--border-light)", background: "var(--bg-main)", color: "var(--text-muted)", fontWeight: 700, cursor: "pointer", transition: "all 0.2s" }}>
+                                {t("common.cancel")}
                             </button>
                             <button onClick={async () => {
                                 try {
-                                    if (confirmDelete._type === "product") {
-                                        await adminService.adminDeleteProduct(confirmDelete.id);
-                                        showToast("Product deleted.");
-                                        setConfirmDelete(null);
-                                        fetchProducts();
-                                    } else if (confirmDelete._type === "coupon") {
-                                        await adminService.adminDeleteCoupon(confirmDelete.id);
-                                        showToast("Coupon deleted.");
-                                        setConfirmDelete(null);
-                                        fetchCoupons();
-                                    } else if (confirmDelete._type === "review") {
-                                        await adminService.adminDeleteReview(confirmDelete.id);
-                                        showToast("Review deleted.");
-                                        setConfirmDelete(null);
-                                        fetchReviews();
-                                    } else if (confirmDelete._type === "order") {
-                                        await adminService.adminDeleteOrder(confirmDelete.id);
-                                        showToast("Order deleted.");
-                                        setConfirmDelete(null);
-                                        fetchOrders();
-                                    } else {
-                                        await handleDeleteUser(confirmDelete.id);
-                                    }
-                                } catch (e) { setError("Delete failed. Please try again."); }
-                            }} style={{ flex: 1, padding: "0.75rem", background: "#ef4444", border: "none", borderRadius: 8, cursor: "pointer", fontWeight: 700, color: "#fff" }}>
-                                Delete Permanently
+                                    const { id, _type } = confirmDelete;
+                                    if (_type === "review") { await adminService.adminDeleteReview(id); showToast(t("ecom.reviewDeleted")); fetchReviews(); }
+                                    else if (_type === "coupon") { await adminService.adminDeleteCoupon(id); showToast(t("ecom.couponDeleted")); fetchCoupons(); }
+                                    else if (_type === "order") { await adminService.adminDeleteOrder(id); showToast(t("ecom.orderDeleted")); fetchOrders(); }
+                                    else if (_type === "product") { await adminService.adminDeleteProduct(id); showToast(t("ecom.productDeleted")); fetchProducts(); }
+                                    else { await handleDeleteUser(id); }
+                                    setConfirmDelete(null);
+                                } catch (e) { setError(t("common.errorOccurred")); }
+                            }} style={{ flex: 1, padding: "1rem", borderRadius: 12, border: "none", background: "#ef4444", color: "#fff", fontWeight: 700, cursor: "pointer", transition: "all 0.2s", boxShadow: "0 4px 12px rgba(239,68,68,0.3)" }}>
+                                {t("common.delete")}
                             </button>
                         </div>
                     </div>
@@ -1486,5 +1565,22 @@ const LoadingSpinner = ({ t }) => (
         {t ? t("admin.loading") : "Loading..."}
     </div>
 );
+
+const StatusBadge = ({ diseased, healthy, scope, nonleaf, category, t }) => {
+    let config = { icon: <CheckCircle size={14} />, label: t("history.badgeHealthy") || "Healthy", color: "#10b981", bg: "var(--success-subtle)" };
+
+    // Support both old boolean props and new category prop
+    const cat = category || (diseased ? 'diseased' : scope ? 'out_of_scope' : nonleaf ? 'non_plant' : 'healthy');
+
+    if (cat === 'diseased' || cat === 'infected' || diseased) config = { icon: <AlertTriangle size={14} />, label: t("history.badgeDiseased") || "Diseased", color: "#ef4444", bg: "#fef2f2" };
+    else if (cat === 'out_of_scope' || cat === 'outside_scope' || scope) config = { icon: <ShieldCheck size={14} />, label: t("history.badgeOutsideScope") || "Outside Scope", color: "#f59e0b", bg: "#fff7ed" };
+    else if (cat === 'non_plant' || cat === 'non_leaf' || nonleaf) config = { icon: <XCircle size={14} />, label: t("history.badgeNonPlant") || "Non-Plant Image", color: "#64748b", bg: "#f1f5f9" };
+
+    return (
+        <div style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem", padding: "0.25rem 0.65rem", borderRadius: 99, background: config.bg, color: config.color, fontSize: "0.72rem", fontWeight: 800 }}>
+            {config.icon} {config.label}
+        </div>
+    );
+};
 
 export default AdminPanel;

@@ -12,6 +12,7 @@ const Wishlist = () => {
   const { addToCart } = useCart();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [addedIds, setAddedIds] = useState({});
 
   useEffect(() => {
@@ -19,15 +20,18 @@ const Wishlist = () => {
     loadWishlist();
   }, [navigate]);
 
-  const loadWishlist = async () => {
+  const loadWishlist = async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
+      else setRefreshing(true);
       const res = await eCommerceService.getWishlist();
       setItems(res.data.results || res.data);
+      if (!silent) setLoading(false);
+      setRefreshing(false);
     } catch (err) {
       console.error("Failed to load wishlist:", err);
-    } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 

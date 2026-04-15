@@ -8,12 +8,13 @@ import { chatService } from "../services/api";
 import { useLanguage } from "../context/LanguageContext";
 import {
     MessageSquare, Send, Plus, Bot, User, Clock,
-    Leaf, ChevronRight, Loader, AlertCircle, Sparkles, ShoppingCart
+    Leaf, ChevronRight, Loader, AlertCircle, Sparkles, ShoppingCart,
+    Trash2, Edit2
 } from "lucide-react";
 import { getDiseaseEntry, buildChatProductResponse, getRelevantProducts } from "../data/diseaseProductMap";
 import { eCommerceService } from "../services/api";
 
-const POLL_INTERVAL = 3000; // ms
+const POLL_INTERVAL = 1500; // ms
 
 // ── Disease-product query interceptor ─────────────────────────────────────────
 // Patterns: "what product for X", "medicine for X", "how to treat X", "product needed for X"
@@ -76,7 +77,7 @@ const renderMarkdown = (text) => {
 const TypewriterText = ({ text, animate, hasMarkdown }) => {
     const [displayed, setDisplayed] = useState(animate ? "" : text);
     const index = useRef(0);
-    const scrolled = useRef(false);
+    const chunkCountRef = useRef(0);
 
     useEffect(() => {
         if (!animate) {
@@ -84,20 +85,22 @@ const TypewriterText = ({ text, animate, hasMarkdown }) => {
             return;
         }
         index.current = 0;
+        chunkCountRef.current = 0;
+        const chunk = Math.max(1, Math.floor(text.length / 60));
+
         const tick = () => {
             if (index.current < text.length) {
-                // Determine speed (faster for longer texts)
-                const chunk = Math.max(1, Math.floor(text.length / 60));
                 setDisplayed(text.substring(0, index.current + chunk));
                 index.current += chunk;
-                
-                // Auto-scroll while typing
-                if (!scrolled.current && Math.random() > 0.8) {
+                chunkCountRef.current += 1;
+                // Scroll to bottom every 8 chunks (deterministic, no random)
+                if (chunkCountRef.current % 8 === 0) {
                     window.dispatchEvent(new CustomEvent('scroll-chat-to-bottom'));
                 }
                 setTimeout(tick, 15);
             } else {
                 setDisplayed(text);
+                window.dispatchEvent(new CustomEvent('scroll-chat-to-bottom'));
             }
         };
         setTimeout(tick, 100);
@@ -110,50 +113,57 @@ const TypewriterText = ({ text, animate, hasMarkdown }) => {
 };
 
 const MessageBubble = ({ msg, isUser }) => {
+    const { t } = useLanguage();
     const hasMarkdown = !isUser && (msg.content.includes("**") || msg.content.includes("•") || msg.content.includes("#") || msg.content.includes("|"));
     const formatTime = (iso) => new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-    
+
     // Animate only if AI message and recently created
     const isNew = !isUser && (Date.now() - new Date(msg.created_at || Date.now()).getTime() < 10000);
 
     return (
-        <div style={{ display: "flex", justifyContent: isUser ? "flex-end" : "flex-start", gap: "0.75rem", alignItems: "flex-start", marginBottom: "0.25rem" }}>
+        <div style={{
+            display: "flex",
+            justifyContent: isUser ? "flex-end" : "flex-start",
+            gap: "0.75rem",
+            alignItems: "flex-start",
+            marginBottom: "1rem",
+            padding: isUser ? "0 0 0 15%" : "0 15% 0 0"
+        }}>
             {!isUser && (
                 <div style={{
-                    width: 34, height: 34, borderRadius: "50%", background: "linear-gradient(135deg,#065f46,#10b981)",
+                    width: 32, height: 32, borderRadius: "50%", background: "linear-gradient(135deg,#065f46,#10b981)",
                     display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 4,
-                    boxShadow: "0 2px 8px rgba(6,95,70,0.3)"
+                    boxShadow: "0 2px 6px rgba(0,0,0,0.1)"
                 }}>
-                    <Bot size={17} color="#fff" />
+                    <Bot size={16} color="#fff" />
                 </div>
             )}
-            <div style={{ maxWidth: "75%", minWidth: 80 }}>
+            <div style={{ maxWidth: "100%", display: "flex", flexDirection: "column", alignItems: isUser ? "flex-end" : "flex-start" }}>
                 <div style={{
-                    padding: "0.875rem 1.125rem",
-                    borderRadius: isUser ? "18px 18px 4px 18px" : "4px 18px 18px 18px",
-                    background: isUser ? "var(--primary)" : "var(--bg-card)",
+                    padding: "0.85rem 1.15rem",
+                    borderRadius: isUser ? "20px 20px 4px 20px" : "20px 20px 20px 4px",
+                    background: isUser ? "var(--primary)" : "var(--bg-surface-l2)",
                     color: isUser ? "#fff" : "var(--text-main)",
                     border: isUser ? "none" : "1px solid var(--border-light)",
-                    boxShadow: "var(--shadow-sm)",
-                    fontSize: "0.88rem", lineHeight: 1.7, fontWeight: 500,
+                    boxShadow: isUser ? "0 4px 12px rgba(6,95,70,0.15)" : "none",
+                    fontSize: "0.9rem", lineHeight: 1.6, fontWeight: 500,
                 }}>
                     <TypewriterText text={msg.content} animate={isNew} hasMarkdown={hasMarkdown} />
                 </div>
                 <p style={{
-                    margin: "0.3rem 0.25rem 0", fontSize: "0.68rem", color: "var(--text-muted)",
-                    textAlign: isUser ? "right" : "left",
-                    display: "flex", alignItems: "center", gap: "0.25rem",
-                    justifyContent: isUser ? "flex-end" : "flex-start"
+                    margin: "0.35rem 0.25rem 0", fontSize: "0.65rem", color: "var(--text-muted)",
+                    display: "flex", alignItems: "center", gap: "0.3rem",
+                    fontWeight: 600
                 }}>
-                    {!isUser && <span style={{ fontWeight: 700, color: "var(--primary)", fontSize: "0.7rem" }}>🤖 AI Expert • </span>}
-                    <Clock size={9} /> {formatTime(msg.created_at || new Date().toISOString())}
+                    {!isUser && <span>{t("chat.plantAdvisor")}</span>}
+                    <Clock size={10} style={{ opacity: 0.7 }} /> {formatTime(msg.created_at || new Date().toISOString())}
                 </p>
             </div>
             {isUser && (
                 <div style={{
-                    width: 34, height: 34, borderRadius: "50%", background: "var(--bg-surface-2)",
+                    width: 32, height: 32, borderRadius: "50%", background: "var(--bg-card)",
                     display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 4,
-                    border: "1px solid var(--border-light)"
+                    border: "1px solid var(--border-light)", boxShadow: "0 2px 6px rgba(0,0,0,0.05)"
                 }}>
                     <User size={16} style={{ color: "var(--text-muted)" }} />
                 </div>
@@ -173,11 +183,14 @@ const Chat = () => {
     const [sending, setSending] = useState(false);
     const [waitingAI, setWaitingAI] = useState(false);
     const [error, setError] = useState(null);
-    const messagesEndRef = useRef(null);
+    const [renamingRoomId, setRenamingRoomId] = useState(null);
+    const [newName, setNewName] = useState("");
+
     const pollRef = useRef(null);
+    const messagesEndRef = useRef(null);
     const lastMessageCount = useRef(0);
 
-    const isAdmin = sessionStorage.getItem("is_staff") === "true" || sessionStorage.getItem("is_superuser") === "true";
+    const isAdmin = sessionStorage.getItem("isStaff") === "true" || sessionStorage.getItem("isSuperuser") === "true";
 
     // ── load rooms ──────────────────────────────────────────────────────────────
     const loadRooms = useCallback(async () => {
@@ -185,11 +198,11 @@ const Chat = () => {
             const { data } = await chatService.getRooms();
             setRooms(Array.isArray(data) ? data : (data.results || []));
         } catch {
-            setError("Failed to load conversations.");
+            setError(t("chat.loadRoomsError"));
         } finally {
             setLoadingRooms(false);
         }
-    }, []);
+    }, [t]);
 
     const loadMessages = useCallback(async (roomId) => {
         try {
@@ -199,11 +212,11 @@ const Chat = () => {
             setMessages(msgs);
             lastMessageCount.current = msgs.length;
         } catch {
-            setError("Failed to load messages.");
+            setError(t("chat.loadError"));
         } finally {
             setLoadingMessages(false);
         }
-    }, []);
+    }, [t]);
 
     // poll — detects new AI reply
     const pollMessages = useCallback(async (roomId) => {
@@ -229,7 +242,14 @@ const Chat = () => {
     }, [activeRoom, loadMessages, pollMessages]);
 
     useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        const scrollToBottom = () => {
+            messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        };
+        // Scroll on message change
+        scrollToBottom();
+        // Fallback for slower render
+        const timer = setTimeout(scrollToBottom, 50);
+        return () => clearTimeout(timer);
     }, [messages, waitingAI]);
 
     useEffect(() => {
@@ -241,7 +261,7 @@ const Chat = () => {
     // ── actions ─────────────────────────────────────────────────────────────────
     const createNewRoom = async (firstMessage = null) => {
         try {
-            const title = `Conversation ${new Date().toLocaleDateString("en-GB")}`;
+            const title = `Conversation ${new Date().toLocaleDateString()}`;
             const { data } = await chatService.createRoom({ title });
             setRooms(prev => [data, ...prev]);
             setActiveRoom(data);
@@ -252,7 +272,7 @@ const Chat = () => {
                 setTimeout(() => sendMessageToRoom(data.id, firstMessage), 1200);
             }
         } catch {
-            setError("Failed to create conversation.");
+            setError(t("chat.createRoomError"));
         }
     };
 
@@ -281,7 +301,7 @@ const Chat = () => {
             setWaitingAI(false);
             setSending(false);
             // Still send to backend silently so it's stored in history
-            chatService.sendMessage(roomId, text).catch(() => {});
+            chatService.sendMessage(roomId, text).catch(() => { });
             return;
         }
         // ── Normal AI path ──────────────────────────────────────────────────
@@ -297,9 +317,38 @@ const Chat = () => {
         } catch {
             setMessages(prev => prev.filter(m => m.id !== optimistic.id));
             setWaitingAI(false);
-            setError("Failed to send message.");
+            setError(t("chat.sendError"));
         } finally {
             setSending(false);
+        }
+    };
+
+    const deleteRoom = async (roomId) => {
+        if (!window.confirm(t("chat.confirmDeleteDesc"))) return;
+        try {
+            await chatService.deleteRoom(roomId);
+            setRooms(prev => prev.filter(r => r.id !== roomId));
+            if (activeRoom?.id === roomId) {
+                setActiveRoom(null);
+                setMessages([]);
+            }
+        } catch {
+            setError(t("chat.deleteError") || "Failed to delete conversation.");
+        }
+    };
+
+    const renameRoom = async (roomId) => {
+        if (!newName.trim()) return;
+        try {
+            const { data } = await chatService.updateRoom(roomId, { title: newName.trim() });
+            setRooms(prev => prev.map(r => r.id === roomId ? { ...r, title: data.title } : r));
+            if (activeRoom?.id === roomId) {
+                setActiveRoom(prev => ({ ...prev, title: data.title }));
+            }
+            setRenamingRoomId(null);
+            setNewName("");
+        } catch {
+            setError(t("chat.renameError") || "Failed to rename conversation.");
         }
     };
 
@@ -320,20 +369,14 @@ const Chat = () => {
 
     const formatDate = (iso) => {
         const d = new Date(iso); const today = new Date();
-        if (d.toDateString() === today.toDateString()) return "Today";
+        if (d.toDateString() === today.toDateString()) return t("common.today") || "Today";
         const y = new Date(today); y.setDate(today.getDate() - 1);
-        if (d.toDateString() === y.toDateString()) return "Yesterday";
+        if (d.toDateString() === y.toDateString()) return t("common.yesterday") || "Yesterday";
         return d.toLocaleDateString();
     };
 
-    const SUGGESTIONS = [
-        "What product is needed for apple black rot?",
-        "What product is needed for tomato late blight?",
-        "How do I treat potato early blight?",
-        "What fertilizer should I use for tomatoes?",
-        "How to control aphids organically?",
-        "Best organic fertilizer for rice paddy?",
-    ];
+    const SUGGESTIONS = t("chat.suggestions") || [];
+    const QUICK_REPLIES = t("chat.quickReplies") || [];
 
     // ── render ───────────────────────────────────────────────────────────────────
     return (
@@ -351,9 +394,9 @@ const Chat = () => {
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.35rem" }}>
                             <h2 style={{ fontSize: "1rem", fontWeight: 900, margin: 0, color: "var(--text-main)", display: "flex", alignItems: "center", gap: "0.4rem" }}>
                                 <MessageSquare size={16} style={{ color: "var(--primary)" }} />
-                                Conversations
+                                {t("chat.conversations")}
                             </h2>
-                            <button onClick={() => createNewRoom()} title="New Conversation" style={{
+                            <button onClick={() => createNewRoom()} title={t("chat.newConv")} style={{
                                 width: 32, height: 32, borderRadius: 8, border: "none", cursor: "pointer",
                                 background: "var(--primary)", color: "#fff",
                                 display: "flex", alignItems: "center", justifyContent: "center",
@@ -363,7 +406,7 @@ const Chat = () => {
                             </button>
                         </div>
                         <p style={{ fontSize: "0.72rem", color: "var(--text-muted)", margin: 0 }}>
-                            Ask plant health questions — AI responds instantly
+                            {t("chat.askExpert")}
                         </p>
                     </div>
 
@@ -375,37 +418,68 @@ const Chat = () => {
                         ) : rooms.length === 0 ? (
                             <div style={{ padding: "2rem 1rem", textAlign: "center" }}>
                                 <MessageSquare size={28} style={{ color: "var(--text-muted)", marginBottom: "0.75rem", opacity: 0.4 }} />
-                                <p style={{ color: "var(--text-muted)", fontSize: "0.82rem", marginBottom: "1rem" }}>No conversations yet</p>
+                                <p style={{ color: "var(--text-muted)", fontSize: "0.82rem", marginBottom: "1rem" }}>{t("chat.noConv")}</p>
                                 <button onClick={() => createNewRoom()} className="btn-primary" style={{ fontSize: "0.82rem", padding: "0.55rem 1rem" }}>
-                                    <Plus size={14} /> Start Chat
+                                    <Plus size={14} /> {t("chat.startChat")}
                                 </button>
                             </div>
                         ) : (
                             rooms.map(room => (
                                 <div key={room.id} onClick={() => setActiveRoom(room)} style={{
-                                    padding: "0.8rem 1rem", borderRadius: 10, cursor: "pointer",
-                                    marginBottom: "0.2rem", transition: "all 0.15s",
-                                    background: activeRoom?.id === room.id ? "var(--primary)" : "transparent",
+                                    padding: "0.8rem 1rem", borderRadius: 12, cursor: "pointer",
+                                    marginBottom: "0.4rem", transition: "all 0.2s",
+                                    position: "relative",
+                                    background: activeRoom?.id === room.id ? "var(--primary)" : "var(--bg-card)",
                                     color: activeRoom?.id === room.id ? "#fff" : "var(--text-main)",
+                                    border: "1px solid var(--border-light)",
+                                    boxShadow: activeRoom?.id === room.id ? "0 4px 12px rgba(6,95,70,0.2)" : "none",
                                 }}
-                                    onMouseEnter={e => { if (activeRoom?.id !== room.id) e.currentTarget.style.background = "var(--bg-surface-2)"; }}
-                                    onMouseLeave={e => { if (activeRoom?.id !== room.id) e.currentTarget.style.background = "transparent"; }}>
-                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                                        <p style={{ margin: 0, fontWeight: 700, fontSize: "0.85rem", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                                            {room.title || `Chat #${room.id}`}
-                                        </p>
-                                        <ChevronRight size={13} style={{ flexShrink: 0, opacity: 0.5 }} />
+                                    onMouseEnter={e => { if (activeRoom?.id !== room.id) e.currentTarget.style.borderColor = "var(--primary)"; }}
+                                    onMouseLeave={e => { if (activeRoom?.id !== room.id) e.currentTarget.style.borderColor = "var(--border-light)"; }}>
+                                    
+                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.25rem" }}>
+                                        {renamingRoomId === room.id ? (
+                                            <div style={{ display: "flex", gap: "0.3rem", width: "100%" }} onClick={e => e.stopPropagation()}>
+                                                <input 
+                                                    autoFocus
+                                                    value={newName} 
+                                                    onChange={e => setNewName(e.target.value)}
+                                                    onKeyDown={e => { if (e.key === "Enter") renameRoom(room.id); if (e.key === "Escape") setRenamingRoomId(null); }}
+                                                    style={{ flex: 1, fontSize: "0.8rem", padding: "0.25rem", borderRadius: 4, border: "1px solid var(--primary)", outline: "none" }}
+                                                />
+                                            </div>
+                                        ) : (
+                                            <p style={{ margin: 0, fontWeight: 700, fontSize: "0.85rem", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                                {room.title || `Chat #${room.id}`}
+                                            </p>
+                                        )}
+
+                                        <div style={{ display: "flex", gap: "0.35rem", opacity: activeRoom?.id === room.id ? 1 : 0.6 }} onClick={e => e.stopPropagation()}>
+                                            {renamingRoomId === room.id ? (
+                                                <button onClick={() => renameRoom(room.id)} style={{ background: "none", border: "none", color: "#fff", cursor: "pointer", padding: 0 }}>
+                                                    <Send size={12} />
+                                                </button>
+                                            ) : (
+                                                <>
+                                                    <button onClick={() => { setRenamingRoomId(room.id); setNewName(room.title); }} title={t("chat.renameRoom")} style={{ background: "none", border: "none", color: "inherit", cursor: "pointer", padding: 0, opacity: 0.7 }}>
+                                                        <Edit2 size={13} />
+                                                    </button>
+                                                    <button onClick={() => deleteRoom(room.id)} title={t("chat.deleteRoom")} style={{ background: "none", border: "none", color: "inherit", cursor: "pointer", padding: 0, opacity: 0.7 }}>
+                                                        <Trash2 size={13} />
+                                                    </button>
+                                                </>
+                                            )}
+                                        </div>
                                     </div>
+
                                     {room.last_message && (
-                                        <p style={{ margin: "0.2rem 0 0", fontSize: "0.72rem", opacity: 0.7, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                                            {room.last_message.content?.replace(/\*\*/g, "").substring(0, 60)}...
+                                        <p style={{ margin: "0.15rem 0 0", fontSize: "0.72rem", opacity: 0.8, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                                            {room.last_message.content?.replace(/\*\*/g, "").substring(0, 45)}...
                                         </p>
                                     )}
-                                    {room.updated_at && (
-                                        <p style={{ margin: "0.15rem 0 0", fontSize: "0.67rem", opacity: 0.5, display: "flex", alignItems: "center", gap: "0.2rem" }}>
-                                            <Clock size={9} /> {formatDate(room.updated_at)}
-                                        </p>
-                                    )}
+                                    <p style={{ margin: "0.3rem 0 0", fontSize: "0.65rem", opacity: 0.6, fontWeight: 600 }}>
+                                        {formatDate(room.updated_at || room.created_at)}
+                                    </p>
                                 </div>
                             ))
                         )}
@@ -426,15 +500,15 @@ const Chat = () => {
                             }}>
                                 <Sparkles size={36} color="#fff" />
                             </div>
-                            <h2 style={{ fontSize: "1.6rem", fontWeight: 900, color: "var(--text-main)", marginBottom: "0.5rem" }}>
-                                AI Plant Health Expert
+                            <h2 style={{ fontSize: "1.8rem", fontWeight: 900, color: "var(--text-main)", marginBottom: "0.5rem" }}>
+                                {t("chat.howHelp")}
                             </h2>
                             <p style={{ color: "var(--text-muted)", maxWidth: 440, lineHeight: 1.7, marginBottom: "2rem", fontSize: "0.9rem" }}>
-                                Get instant expert advice on plant diseases, fertilizers, pest control, and soil improvement — powered by agricultural knowledge.
+                                {t("chat.howHelpDesc")}
                             </p>
 
                             <p style={{ fontWeight: 800, fontSize: "0.78rem", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "1rem" }}>
-                                Try asking:
+                                {t("chat.tryAsking")}
                             </p>
                             <div style={{ width: "100%", maxWidth: 520, display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.6rem", marginBottom: "2rem" }}>
                                 {SUGGESTIONS.map((s, i) => (
@@ -458,7 +532,7 @@ const Chat = () => {
                                 <input
                                     value={input} onChange={e => setInput(e.target.value)}
                                     onKeyDown={handleKeyDown}
-                                    placeholder="Or type your question here..."
+                                    placeholder={t("chat.inputPlaceholder")}
                                     style={{
                                         flex: 1, padding: "0.875rem 1.25rem", borderRadius: 14,
                                         border: "1px solid var(--border-light)", background: "var(--bg-card)",
@@ -486,15 +560,15 @@ const Chat = () => {
                                 </div>
                                 <div>
                                     <h3 style={{ margin: 0, fontWeight: 800, fontSize: "0.95rem", color: "var(--text-main)" }}>
-                                        {activeRoom.title || "Plant Health Consultation"}
+                                        {activeRoom.title || t("chat.plantAdvisor")}
                                     </h3>
                                     <p style={{ margin: 0, fontSize: "0.72rem", color: "#10b981", fontWeight: 700 }}>
-                                        {isAdmin ? "👨‍💼 Admin View" : "🤖 AI Expert • Responds instantly"}
+                                        {isAdmin ? t("chat.adminView") : `${t("chat.plantAdvisor")} · ${t("chat.online")}`}
                                     </p>
                                 </div>
                                 <button onClick={() => { setActiveRoom(null); setMessages([]); }}
                                     style={{ marginLeft: "auto", background: "none", border: "1px solid var(--border-light)", borderRadius: 8, padding: "0.4rem 0.8rem", cursor: "pointer", fontSize: "0.78rem", color: "var(--text-muted)", fontWeight: 700 }}>
-                                    ← Back
+                                    {t("chat.back")}
                                 </button>
                             </div>
 
@@ -523,7 +597,7 @@ const Chat = () => {
                                                             animationDelay: `${i * 0.2}s`,
                                                         }} />
                                                     ))}
-                                                    <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginLeft: "0.25rem" }}>AI is analyzing...</span>
+                                                    <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginLeft: "0.25rem" }}>{t("chat.typing")}</span>
                                                 </div>
                                             </div>
                                         )}
@@ -534,7 +608,7 @@ const Chat = () => {
 
                             {/* Quick replies */}
                             <div style={{ padding: "0.5rem 1.5rem 0", display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-                                {["Organic treatment?", "Fertilizer dose?", "Prevention tips?"].map((q, i) => (
+                                {QUICK_REPLIES.map((q, i) => (
                                     <button key={i} onClick={() => sendMessage(q)}
                                         style={{
                                             padding: "0.35rem 0.875rem", borderRadius: 20, border: "1px solid var(--border-light)",
@@ -561,7 +635,7 @@ const Chat = () => {
                                 <textarea
                                     value={input} onChange={e => setInput(e.target.value)}
                                     onKeyDown={handleKeyDown}
-                                    placeholder="Ask about plant diseases, fertilizers, pest control..."
+                                    placeholder={t("chat.inputPlaceholder")}
                                     rows={1}
                                     style={{
                                         flex: 1, resize: "none", border: "1px solid var(--border-light)",

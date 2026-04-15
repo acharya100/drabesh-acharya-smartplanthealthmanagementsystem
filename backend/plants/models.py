@@ -27,6 +27,7 @@ class Plant(models.Model):
         ('not_needed', 'Not Needed'),
         ('not_available', 'Not Available / Not in Database'),
         ('outside_scope', 'Outside Scope'),
+        ('non_plant', 'Non-Plant Image'),
     ]
     
     WATER_FREQUENCY_CHOICES = [
@@ -38,6 +39,7 @@ class Plant(models.Model):
         ('not_needed', 'Not Needed'),
         ('not_available', 'Not Available / Not in Database'),
         ('outside_scope', 'Outside Scope'),
+        ('non_plant', 'Non-Plant Image'),
     ]
     
     DIFFICULTY_CHOICES = [
@@ -138,11 +140,21 @@ class Plant(models.Model):
         choices=[
             ('healthy', 'Healthy'), 
             ('unhealthy', 'Unhealthy'), 
-            ('non_leaf', 'Non leaf image'), 
-            ('out_of_scope', 'Out of scope')
+            ('non_plant', 'Non-Plant Image'), 
+            ('out_of_scope', 'Outside Scope')
         ],
         default='healthy',
         help_text="Current health status of the plant"
+    )
+
+    # Classification Flags
+    is_non_plant = models.BooleanField(
+        default=False, 
+        help_text="True if the image was identified as a non-plant object"
+    )
+    is_out_of_scope = models.BooleanField(
+        default=False, 
+        help_text="True if the plant exists but is not in our primary detection dataset"
     )
     
     # Media

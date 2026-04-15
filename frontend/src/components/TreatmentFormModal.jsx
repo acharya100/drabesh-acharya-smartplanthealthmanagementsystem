@@ -1,13 +1,11 @@
-/**
- * Treatment Form Modal Component
- */
-
 import { useState, useEffect } from "react";
 import ReactDOM from "react-dom";
 import { X, Save, AlertTriangle } from "lucide-react";
 import { eCommerceService } from "../services/api";
+import { useLanguage } from "../context/LanguageContext";
 
 const TreatmentFormModal = ({ isOpen, onClose, onSubmit, initialData = null, diseases = [], selectedDiseaseId = null }) => {
+    const { t } = useLanguage();
     const [formData, setFormData] = useState({
         name: "",
         disease: "",
@@ -95,12 +93,12 @@ const TreatmentFormModal = ({ isOpen, onClose, onSubmit, initialData = null, dis
         setError("");
 
         if (!formData.name || !formData.description || !formData.instructions) {
-            setError("Please fill in all required fields.");
+            setError(t("treatForm.errorRequired") || "Please fill in all required fields.");
             return;
         }
 
         if (formData.instructions.length < 20) {
-            setError("Instructions must be at least 20 characters long.");
+            setError(t("treatForm.errorMinChars") || "Instructions must be at least 20 characters long.");
             return;
         }
 
@@ -113,7 +111,7 @@ const TreatmentFormModal = ({ isOpen, onClose, onSubmit, initialData = null, dis
             onClose();
         } catch (err) {
             console.error(err);
-            setError(err.response?.data?.detail || "Failed to save treatment.");
+            setError(err.response?.data?.detail || t("treatForm.errorFailed") || "Failed to save treatment.");
         } finally {
             setLoading(false);
         }
@@ -124,23 +122,26 @@ const TreatmentFormModal = ({ isOpen, onClose, onSubmit, initialData = null, dis
     return ReactDOM.createPortal(
         <div className="modal-overlay" onClick={onClose} style={{
             position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-            backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex',
+            backgroundColor: 'var(--modal-overlay)', display: 'flex',
             alignItems: 'center', justifyContent: 'center', zIndex: 3000
         }}>
             <div
                 className="modal-content animate-slide-up"
                 style={{
                     maxWidth: '600px', width: '90%', maxHeight: '90vh',
-                    overflowY: 'auto', backgroundColor: 'var(--bg-card, white)',
-                    borderRadius: '12px', padding: '0'
+                    overflowY: 'auto', backgroundColor: 'var(--bg-card)',
+                    borderRadius: 'var(--radius-md)', padding: '0',
+                    border: '1px solid var(--border-light)'
                 }}
                 onClick={e => e.stopPropagation()}
             >
                 <div className="modal-header" style={{
-                    padding: '1.5rem', borderBottom: '1px solid var(--border-light, #eee)',
+                    padding: '1.5rem', borderBottom: '1px solid var(--border-light)',
                     display: 'flex', justifyContent: 'space-between', alignItems: 'center'
                 }}>
-                    <h2 style={{ margin: 0, fontSize: '1.5rem' }}>{initialData ? "Edit Treatment" : "Add New Treatment"}</h2>
+                    <h2 style={{ margin: 0, fontSize: '1.5rem', color: 'var(--text-main)', fontWeight: 800 }}>
+                        {initialData ? t("treatForm.editTitle") : t("treatForm.addTitle")}
+                    </h2>
                     <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
                         <X size={24} />
                     </button>
@@ -149,8 +150,9 @@ const TreatmentFormModal = ({ isOpen, onClose, onSubmit, initialData = null, dis
                 <form onSubmit={djangoSubmit} className="modal-body" style={{ padding: '1.5rem' }}>
                     {error && (
                         <div className="error-banner mb-4" style={{
-                            background: '#fee2e2', color: '#dc2626', padding: '0.75rem', marginBottom: '1rem',
-                            borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem'
+                            background: 'var(--danger-subtle)', color: 'var(--danger)', padding: '0.75rem', marginBottom: '1rem',
+                            borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem',
+                            border: '1px solid var(--danger)'
                         }}>
                             <AlertTriangle size={16} />
                             {error}
@@ -159,7 +161,7 @@ const TreatmentFormModal = ({ isOpen, onClose, onSubmit, initialData = null, dis
 
                     <div style={{ marginBottom: '1rem' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                            <label style={{ fontWeight: 600 }}>Disease</label>
+                            <label style={{ fontWeight: 600, color: 'var(--text-main)' }}>{t("treatForm.diseaseLabel")}</label>
                             {!initialData && (
                                 <button
                                     type="button"
@@ -170,9 +172,10 @@ const TreatmentFormModal = ({ isOpen, onClose, onSubmit, initialData = null, dis
                                         color: 'var(--primary)',
                                         cursor: 'pointer',
                                         fontSize: '0.85rem',
+                                        fontWeight: 700,
                                         textDecoration: 'underline'
                                     }}>
-                                    {useCustomDisease ? '← Select Existing' : '+ Add Custom Disease'}
+                                    {useCustomDisease ? t("treatForm.selectExisting") : t("treatForm.addCustom")}
                                 </button>
                             )}
                         </div>
@@ -181,9 +184,9 @@ const TreatmentFormModal = ({ isOpen, onClose, onSubmit, initialData = null, dis
                                 type="text"
                                 value={customDiseaseName}
                                 onChange={(e) => setCustomDiseaseName(e.target.value)}
-                                placeholder="Enter custom disease name..."
+                                placeholder={t("treatForm.customLabel")}
                                 required
-                                style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #ddd' }}
+                                style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-light)', background: 'var(--bg-input)', color: 'var(--text-main)' }}
                             />
                         ) : (
                             <select
@@ -192,9 +195,9 @@ const TreatmentFormModal = ({ isOpen, onClose, onSubmit, initialData = null, dis
                                 onChange={handleChange}
                                 disabled={!!initialData}
                                 required
-                                style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #ddd' }}
+                                style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-light)', background: 'var(--bg-input)', color: 'var(--text-main)' }}
                             >
-                                <option value="">Select a Disease...</option>
+                                <option value="">{t("treatForm.selectDisease")}</option>
                                 {diseases.map(d => (
                                     <option key={d.id} value={d.id}>{d.name}</option>
                                 ))}
@@ -203,37 +206,37 @@ const TreatmentFormModal = ({ isOpen, onClose, onSubmit, initialData = null, dis
                     </div>
 
                     <div style={{ marginBottom: '1rem' }}>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Treatment Name</label>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--text-main)' }}>{t("treatForm.nameLabel")}</label>
                         <input
                             type="text"
                             name="name"
                             value={formData.name}
                             onChange={handleChange}
-                            placeholder="e.g. Neem Oil Application"
+                            placeholder={t("treatForm.namePlaceholder")}
                             required
-                            style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #ddd' }}
+                            style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-light)', background: 'var(--bg-input)', color: 'var(--text-main)' }}
                         />
                     </div>
 
                     <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
                         <div>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Type</label>
+                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--text-main)' }}>{t("treatForm.typeLabel")}</label>
                             <select
                                 name="treatment_type"
                                 value={formData.treatment_type}
                                 onChange={handleChange}
-                                style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #ddd' }}
+                                style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-light)', background: 'var(--bg-input)', color: 'var(--text-main)' }}
                             >
-                                <option value="organic">Organic / Natural</option>
-                                <option value="chemical">Chemical / Synthetic</option>
-                                <option value="cultural">Cultural / Physical</option>
-                                <option value="biological">Biological Control</option>
-                                <option value="mechanical">Mechanical / Physical</option>
+                                <option value="organic">{t("treatForm.types.organic")}</option>
+                                <option value="chemical">{t("treatForm.types.chemical")}</option>
+                                <option value="cultural">{t("treatForm.types.cultural")}</option>
+                                <option value="biological">{t("treatForm.types.biological")}</option>
+                                <option value="mechanical">{t("treatForm.types.mechanical")}</option>
                             </select>
                         </div>
 
                         <div>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Effectiveness (%)</label>
+                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--text-main)' }}>{t("treatForm.effectLabel")}</label>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                                 <input
                                     type="range"
@@ -241,80 +244,80 @@ const TreatmentFormModal = ({ isOpen, onClose, onSubmit, initialData = null, dis
                                     min="0" max="100"
                                     value={formData.effectiveness_rate}
                                     onChange={handleChange}
-                                    style={{ flex: 1 }}
+                                    style={{ flex: 1, accentColor: 'var(--primary)' }}
                                 />
-                                <span style={{ fontWeight: 'bold', width: '3rem' }}>{formData.effectiveness_rate}%</span>
+                                <span style={{ fontWeight: 800, width: '3.5rem', color: 'var(--primary)' }}>{formData.effectiveness_rate}%</span>
                             </div>
                         </div>
                     </div>
 
                     <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
                         <div>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Cost Estimate</label>
+                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--text-main)' }}>{t("treatForm.costLabel")}</label>
                             <input
                                 type="text"
                                 name="cost_estimate"
                                 value={formData.cost_estimate}
                                 onChange={handleChange}
-                                placeholder="e.g. NPR 500 - 1500"
-                                style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #ddd' }}
+                                placeholder={t("treatForm.costPlaceholder")}
+                                style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-light)', background: 'var(--bg-input)', color: 'var(--text-main)' }}
                             />
                         </div>
 
                         <div>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Expected Duration</label>
+                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--text-main)' }}>{t("treatForm.durationLabel")}</label>
                             <input
                                 type="text"
                                 name="expected_duration"
                                 value={formData.expected_duration}
                                 onChange={handleChange}
-                                placeholder="e.g. 1 week"
-                                style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #ddd' }}
+                                placeholder={t("treatForm.durationPlaceholder")}
+                                style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-light)', background: 'var(--bg-input)', color: 'var(--text-main)' }}
                             />
                         </div>
                     </div>
 
                     <div style={{ marginBottom: '1rem' }}>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Description</label>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--text-main)' }}>{t("treatForm.descLabel")}</label>
                         <textarea
                             name="description"
                             rows="2"
                             value={formData.description}
                             onChange={handleChange}
-                            placeholder="Brief overview of how this treatment works..."
+                            placeholder={t("treatForm.descPlaceholder")}
                             required
-                            style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #ddd' }}
+                            style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-light)', background: 'var(--bg-input)', color: 'var(--text-main)' }}
                         />
                     </div>
 
                     <div style={{ marginBottom: '1rem' }}>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Detailed Steps (20+ chars)</label>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--text-main)' }}>{t("treatForm.stepsLabel")}</label>
                         <textarea
                             name="instructions"
                             rows="4"
                             value={formData.instructions}
                             onChange={handleChange}
-                            placeholder="1. Mix solution...&#10;2. Spray evenly...&#10;3. Repeat every 7 days..."
+                            placeholder={t("treatForm.stepsPlaceholder")}
                             required
-                            style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #ddd', fontFamily: 'monospace', fontSize: '0.9rem' }}
+                            style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-light)', background: 'var(--bg-input)', color: 'var(--text-main)', fontFamily: 'monospace', fontSize: '0.9rem' }}
                         />
                     </div>
 
                     <div style={{ marginBottom: '1rem' }}>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Products Needed</label>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--text-main)' }}>{t("treatForm.productsNeededLabel")}</label>
                         <input
                             type="text"
                             name="products_needed"
                             value={formData.products_needed}
                             onChange={handleChange}
-                            placeholder="e.g. Neem oil, Spray bottle, Water"
-                            style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #ddd' }}
+                            placeholder={t("treatForm.productsNeededPlaceholder")}
+                            style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-light)', background: 'var(--bg-input)', color: 'var(--text-main)' }}
                         />
                     </div>
 
                     <div style={{ marginBottom: '1.5rem' }}>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Link Marketplace Products (Optional)</label>
-                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.75rem' }}>Select products users can directly purchase for this treatment.</p>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--text-main)' }}>{t("treatForm.linkMarketplaceLabel")}</label>
+                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.75rem' }}>{t("treatForm.linkMarketplaceDesc")}</p>
                         <div className="product-selection-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '0.75rem', maxHeight: '180px', overflowY: 'auto', padding: '1rem', border: '1px solid var(--border-light)', borderRadius: 'var(--radius-sm)', background: 'var(--bg-surface-inner)' }}>
                             {products.map(product => (
                                 <div
@@ -334,22 +337,22 @@ const TreatmentFormModal = ({ isOpen, onClose, onSubmit, initialData = null, dis
                             ))}
                             {products.length === 0 && (
                                 <div style={{ gridColumn: '1 / -1', textAlign: 'center', color: 'var(--text-muted)', padding: '1rem', fontSize: '0.85rem' }}>
-                                    No marketplace products available.
+                                    {t("treatForm.noProducts")}
                                 </div>
                             )}
                         </div>
                     </div>
 
                     <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '1.5rem' }}>
-                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontWeight: 600 }}>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontWeight: 600, color: 'var(--text-main)' }}>
                             <input
                                 type="checkbox"
                                 name="is_preventive"
                                 checked={formData.is_preventive}
                                 onChange={handleChange}
-                                style={{ width: '1.2rem', height: '1.2rem' }}
+                                style={{ width: '1.2rem', height: '1.2rem', accentColor: 'var(--primary)' }}
                             />
-                            Is Preventive Measure?
+                            {t("treatForm.isPreventiveLabel")}
                         </label>
                     </div>
 
@@ -363,11 +366,11 @@ const TreatmentFormModal = ({ isOpen, onClose, onSubmit, initialData = null, dis
                             className="btn-secondary"
                             disabled={loading}
                             style={{
-                                padding: '0.75rem 1.5rem', border: '1px solid #ddd', borderRadius: '8px',
-                                background: 'var(--bg-card)', cursor: 'pointer', fontWeight: 600
+                                padding: '0.75rem 1.5rem', border: '1px solid var(--border-light)', borderRadius: '8px',
+                                background: 'var(--bg-card)', cursor: 'pointer', fontWeight: 600, color: 'var(--text-main)'
                             }}
                         >
-                            Cancel
+                            {t("common.cancel")}
                         </button>
                         <button
                             type="submit"
@@ -375,11 +378,12 @@ const TreatmentFormModal = ({ isOpen, onClose, onSubmit, initialData = null, dis
                             disabled={loading}
                             style={{
                                 padding: '0.75rem 1.5rem', border: 'none', borderRadius: '8px',
-                                background: 'var(--primary, #0fa968)', color: 'white', cursor: 'pointer',
-                                fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem'
+                                background: 'var(--primary)', color: 'white', cursor: 'pointer',
+                                fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.5rem',
+                                boxShadow: 'var(--shadow-sm)'
                             }}
                         >
-                            {loading ? "Saving..." : <><Save size={18} /> Save Treatment</>}
+                            {loading ? t("treatForm.saving") : <><Save size={18} /> {t("treatForm.saveBtn")}</>}
                         </button>
                     </div>
                 </form>

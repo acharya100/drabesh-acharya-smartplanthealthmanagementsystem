@@ -302,3 +302,38 @@ class Treatment(models.Model):
         # Split by commas or newlines
         products = [p.strip() for p in self.products_needed.replace('\n', ',').split(',') if p.strip()]
         return products
+
+    def get_recommended_product_data(self):
+        """
+        Returns the single most relevant product mapping/object for this treatment.
+        """
+        from ecommerce.models import DiseaseProductMapping
+        
+        # 1. Check explicit mappings
+        mappings = DiseaseProductMapping.objects.filter(
+            disease_name__iexact=self.disease.name
+        ).select_related('product').order_by('priority')
+        
+        if mappings.exists():
+            # Match treatment type compatibility
+            organic_types = ['organic', 'biological', 'cultural']
+            is_organic = self.treatment_type in organic_types
+            
+            for m in mappings:
+                if m.product and is_organic == m.product.is_organic:
+                    return m.product, m.notes or f"Highest rated {self.get_treatment_type_display().lower()} solution for {self.disease.name}."
+            
+            # Fallback to first mapping
+            m = mappings.first()
+            if m and m.product:
+                return m.product, m.notes or f"Top recommendation for {self.disease.name} recovery."
+            
+        # 2. Check related_products M2M
+        related = self.related_products.filter(is_active=True)
+        if related.exists():
+            organic_types = ['organic', 'biological']
+            if self.treatment_type in organic_types and related.filter(is_organic=True).exists():
+                return related.filter(is_organic=True).first(), f"Selected organic alternative for {self.name}."
+            return related.first(), f"Reliable treatment option for {self.disease.name}."
+            
+        return None, ""

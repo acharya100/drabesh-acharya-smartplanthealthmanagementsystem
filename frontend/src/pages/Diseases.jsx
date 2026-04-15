@@ -14,10 +14,12 @@ const Diseases = () => {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
     const [severityFilter, setSeverityFilter] = useState("");
+    const [refreshing, setRefreshing] = useState(false);
     const [showFilters, setShowFilters] = useState(false);
     const [showAddModal, setShowAddModal] = useState(false);
     const [showViewModal, setShowViewModal] = useState(false);
     const [selectedDiseaseDetail, setSelectedDiseaseDetail] = useState(null);
+    const [fetchingDetail, setFetchingDetail] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [plants, setPlants] = useState([]);
     const [newDisease, setNewDisease] = useState({
@@ -36,9 +38,10 @@ const Diseases = () => {
         loadDiseases();
     }, [severityFilter]);
 
-    const loadDiseases = async () => {
+    const loadDiseases = async (silent = false) => {
         try {
-            setLoading(true);
+            if (!silent) setLoading(true);
+            else setRefreshing(true);
             const params = {
                 search: searchTerm,
                 severity_level: severityFilter
@@ -50,10 +53,12 @@ const Diseases = () => {
             const { data: plantData } = await (await import('../services/api')).plantService.getAll();
             setPlants(plantData.results || plantData);
 
-            setLoading(false);
+            if (!silent) setLoading(false);
+            setRefreshing(false);
         } catch (error) {
             console.error("Error loading diseases:", error);
             setLoading(false);
+            setRefreshing(false);
         }
     };
 
@@ -76,7 +81,7 @@ const Diseases = () => {
 
     const handleViewDetails = async (disease) => {
         try {
-            setLoading(true);
+            setFetchingDetail(true);
             const { data } = await diseaseService.getById(disease.id);
             setSelectedDiseaseDetail(data);
             setShowViewModal(true);
@@ -84,16 +89,15 @@ const Diseases = () => {
             console.error("Error fetching disease details:", error);
             alert("Failed to load disease details.");
         } finally {
-            setLoading(false);
+            setFetchingDetail(false);
         }
     };
 
     const handleDelete = async (id) => {
         if (window.confirm("Are you sure you want to delete this disease record? This cannot be undone.")) {
             try {
-                setLoading(true);
                 await diseaseService.delete(id);
-                await loadDiseases();
+                await loadDiseases(true); // Silent reload
             } catch (error) {
                 console.error("Error deleting disease:", error);
                 alert("Failed to delete disease record. Check your permissions.");
@@ -113,7 +117,7 @@ const Diseases = () => {
             }
             setShowAddModal(false);
             resetForm();
-            loadDiseases();
+            loadDiseases(true); // Silent reload
         } catch (error) {
             console.error("Error saving disease:", error);
             setLoading(false);

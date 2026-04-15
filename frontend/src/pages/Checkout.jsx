@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { eCommerceService } from "../services/api";
@@ -42,21 +42,37 @@ const Checkout = () => {
   const directBuyProduct = location.state?.directBuyProduct;
 
   // Use direct product if provided natively by the 'Buy Now' redirection, else fallback to standard cart
-  const checkoutItems = directBuyProduct 
-    ? [{ ...directBuyProduct, quantity: 1, price: directBuyProduct.effective_price || directBuyProduct.price }] 
+  const checkoutItems = directBuyProduct
+    ? [{ ...directBuyProduct, quantity: 1, price: directBuyProduct.effective_price || directBuyProduct.price }]
     : cartItems;
 
-  const checkoutTotal = directBuyProduct 
-    ? parseFloat(directBuyProduct.effective_price || directBuyProduct.price) 
+  const checkoutTotal = directBuyProduct
+    ? parseFloat(directBuyProduct.effective_price || directBuyProduct.price)
     : totalPrice;
 
+  // Guard: only redirect on initial mount when cart is genuinely empty.
+  // Using a ref prevents the redirect from firing again after an order is placed
+  // (which clears the cart via clearCart()) or when the user presses browser back.
+  const hasCheckedCart = useRef(false);
   useEffect(() => {
     if (!sessionStorage.getItem("access_token")) { navigate("/"); return; }
-    if (checkoutItems.length === 0 && !placedOrder && step < 4) { navigate("/cart"); }
-  }, [navigate, checkoutItems, placedOrder, step]);
+    if (!hasCheckedCart.current) {
+      hasCheckedCart.current = true;
+      if (checkoutItems.length === 0 && !placedOrder) {
+        navigate("/cart");
+      }
+    }
+    // If using Buy Now, jump to shipping step if no address is set yet
+    if (directBuyProduct && !address && !selectedAddress) {
+      setStep(0); // Start from step 0 (Cart Review) so shipping info is captured
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const discountAmount = couponInfo ? parseFloat(couponInfo.discount_amount) : 0;
   const finalTotal = checkoutTotal - discountAmount;
+
+
 
   const handleValidateCoupon = async () => {
     if (!couponCode.trim()) return;
@@ -83,6 +99,7 @@ const Checkout = () => {
     const shippingAddress = selectedAddress ? selectedAddress.full_address : address;
     if (!shippingAddress?.trim()) {
       setError("Please provide a shipping address.");
+      setStep(1); // Auto-redirect to shipping step
       return;
     }
     // Validate email must match the logged-in user
@@ -108,7 +125,8 @@ const Checkout = () => {
       clearCart();
       setStep(4);
     } catch (err) {
-      setError(err.response?.data?.detail || "Failed to place order. Please try again.");
+      const errMsg = err.response?.data?.detail || err.response?.data?.shipping_address?.[0] || "Failed to place order. Please try again.";
+      setError(errMsg);
     } finally {
       setIsPlacingOrder(false);
     }
@@ -148,10 +166,10 @@ const Checkout = () => {
             </div>
           </div>
 
-          <div style={{ background: "#e0f2fe", border: "1px solid #bae6fd", borderRadius: "16px", padding: "1.5rem", textAlign: "left", marginBottom: "2rem" }}>
-            <h4 style={{ color: "#0284c7", fontWeight: 800, margin: "0 0 0.5rem" }}>🔔 Notifications Sent</h4>
-            {email?.trim() && <p style={{ margin: "0 0 0.25rem", color: "#0369a1", fontSize: "0.9rem" }}>• Email receipt sent to: <strong>{email}</strong></p>}
-            {(selectedAddress ? selectedAddress.phone : phone)?.trim() && <p style={{ margin: "0", color: "#0369a1", fontSize: "0.9rem" }}>• SMS tracking link sent to: <strong>{selectedAddress ? selectedAddress.phone : phone}</strong></p>}
+          <div style={{ background: "var(--info-subtle)", border: "1px solid var(--info)", borderRadius: "16px", padding: "1.5rem", textAlign: "left", marginBottom: "2rem" }}>
+            <h4 style={{ color: "var(--info)", fontWeight: 800, margin: "0 0 0.5rem" }}>🔔 Notifications Sent</h4>
+            {email?.trim() && <p style={{ margin: "0 0 0.25rem", color: "var(--info)", fontSize: "0.9rem", opacity: 0.9 }}>• Email receipt sent to: <strong>{email}</strong></p>}
+            {(selectedAddress ? selectedAddress.phone : phone)?.trim() && <p style={{ margin: "0", color: "var(--info)", fontSize: "0.9rem", opacity: 0.9 }}>• SMS tracking link sent to: <strong>{selectedAddress ? selectedAddress.phone : phone}</strong></p>}
           </div>
 
           <div style={{ display: "flex", gap: "1rem" }}>
@@ -241,12 +259,18 @@ const Checkout = () => {
                     <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.3rem' }}>Must match your registered account email.</p>
                   </div>
                 </div>
+                {error && <p style={{ color: "#ef4444", marginTop: "1rem", display: "flex", alignItems: "center", gap: "0.5rem", fontWeight: 700 }}><AlertTriangle size={16} />{error}</p>}
                 <div style={{ display: "flex", gap: "1rem", marginTop: "1.5rem" }}>
                   <button onClick={() => setStep(0)} className="btn-secondary" style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}><ArrowLeft size={16} /> {t("common.back") || "Back"}</button>
                   <button
                     onClick={() => {
                       const shippingAddr = selectedAddress ? selectedAddress.full_address : address;
-                      if (!shippingAddr?.trim()) { setError("Please provide a shipping address."); return; }
+                      if (!shippingAddr?.trim()) {
+                        const msg = "Please provide a shipping address.";
+                        setError(msg);
+                        alert(msg);
+                        return;
+                      }
                       const sessionEmail = sessionStorage.getItem("email") || "";
                       if (!email.trim()) { setEmailError("Email is required for checkout."); return; }
                       if (sessionEmail && email.trim().toLowerCase() !== sessionEmail.toLowerCase()) {
@@ -268,13 +292,13 @@ const Checkout = () => {
               <div>
                 <h2 style={{ fontWeight: 800, marginBottom: "1.5rem" }}>{t("store.applyCoupon")}</h2>
                 {couponInfo ? (
-                  <div style={{ padding: "1.5rem", background: "#f0fdf4", border: "1px solid #86efac", borderRadius: "16px", marginBottom: "1.5rem" }}>
+                  <div style={{ padding: "1.5rem", background: "var(--success-subtle)", border: "1px solid var(--success)", borderRadius: "16px", marginBottom: "1.5rem" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                       <div>
-                        <p style={{ fontWeight: 800, color: "#166534", margin: 0 }}>✓ Coupon Applied: {couponInfo.code}</p>
-                        <p style={{ color: "#166534", margin: "0.3rem 0 0", fontSize: "0.9rem" }}>You saved NPR {parseFloat(couponInfo.discount_amount).toLocaleString()}!</p>
+                        <p style={{ fontWeight: 800, color: "var(--success)", margin: 0 }}>✓ Coupon Applied: {couponInfo.code}</p>
+                        <p style={{ color: "var(--success)", margin: "0.3rem 0 0", fontSize: "0.9rem", opacity: 0.9 }}>You saved NPR {parseFloat(couponInfo.discount_amount).toLocaleString()}!</p>
                       </div>
-                      <button onClick={handleRemoveCoupon} style={{ background: "none", border: "none", cursor: "pointer", color: "#ef4444", fontWeight: 700, fontSize: "0.875rem" }}>Remove</button>
+                      <button onClick={handleRemoveCoupon} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--danger)", fontWeight: 700, fontSize: "0.875rem" }}>Remove</button>
                     </div>
                   </div>
                 ) : (

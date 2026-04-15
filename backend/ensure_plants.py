@@ -1,6 +1,10 @@
 
 import os
+import sys
 import django
+
+# Add the current directory to sys.path to resolve internal apps
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings')
 django.setup()
@@ -34,9 +38,10 @@ def ensure_plants():
         plants = Plant.objects.filter(name=name)
         if plants.exists():
             plant = plants.first()
-            print(f"Exists: {name} (ID: {plant.id})")
-            if plants.count() > 1:
-                print(f"  Warning: Found {plants.count()} instances of {name}. Keeping ID {plant.id}")
+            if plant:
+                print(f"Exists: {name} (ID: {plant.id})")
+                if plants.count() > 1:
+                    print(f"  Warning: Found {plants.count()} instances of {name}. Keeping ID {plant.id}")
         else:
             plant = Plant.objects.create(
                 user=user,

@@ -8,6 +8,7 @@ import Navbar from "../components/Navbar";
 import { plantService, predictionService } from "../services/api";
 import { Search, Filter, Plus, Thermometer, Droplets, Sun, Info, Trash2 } from "lucide-react";
 import { useLanguage } from "../context/LanguageContext";
+import { toSnake } from "../utils/caseTransformer";
 
 const Plants = () => {
   const { t } = useLanguage();
@@ -33,16 +34,17 @@ const Plants = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [newPlant, setNewPlant] = useState({
     name: "",
-    scientific_name: "",
+    scientificName: "",
     family: "",
     description: "",
-    sunlight_requirement: "partial_sun",
-    water_frequency: "weekly",
-    difficulty_level: "beginner",
-    health_status: "healthy"
+    sunlightRequirement: "partial_sun",
+    waterFrequency: "weekly",
+    difficultyLevel: "beginner",
+    healthStatus: "healthy"
   });
   const [plantImage, setPlantImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   // Sync activeTab with URL filter parameter
   useEffect(() => {
@@ -57,27 +59,31 @@ const Plants = () => {
     loadPlants();
   }, [filters, activeTab, location]);
 
-  const loadPlants = async () => {
+  const loadPlants = async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
+      else setRefreshing(true);
       const queryParams = new URLSearchParams(location.search);
       const params = {
         search: searchTerm,
-        sunlight_requirement: filters.sunlight,
-        water_frequency: filters.water,
-        difficulty_level: filters.difficulty
+        sunlightRequirement: filters.sunlight,
+        waterFrequency: filters.water,
+        difficultyLevel: filters.difficulty
       };
 
       if (activeTab && activeTab !== 'all') {
-        params.health_status = activeTab;
+        params.healthStatus = activeTab;
       }
 
       const { data } = await plantService.getAll(params);
       setPlants(data.results || data);
-      setLoading(false);
+
+      if (!silent) setLoading(false);
+      setRefreshing(false);
     } catch (error) {
       console.error("Error loading plants:", error);
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
@@ -131,44 +137,47 @@ const Plants = () => {
       const { data } = await predictionService.identify(formData);
 
       if (data.success) {
-        const isNonPlant = data.data.is_plant_image === false;
-        const isOutOfScope = data.data.is_out_of_scope === true;
         const rawName = data.data.name || '';
-        const rawSci = data.data.scientific_name || '';
+        const rawSci = data.data.scientificName || data.data.scientific_name || '';
+        const isNonPlant = data.data.is_non_plant || data.data.isNonPlant || data.data.type === 'non_plant';
+        const isOutOfScope = data.data.is_out_of_scope || data.data.isOutOfScope || data.data.type === 'out_of_scope';
+        const isPlantImage = data.data.is_plant_image ?? data.data.isPlantImage ?? true; // Default to true if missing
 
         // Non-plant image
-        if (isNonPlant || !data.data.is_plant_image) {
+        if (isNonPlant || isPlantImage === false) {
           setNewPlant(prev => ({
             ...prev,
-            name: 'Non-Leaf Image',
-            scientific_name: 'N/A',
-            health_status: 'non_leaf',
-            sunlight_requirement: 'outside_scope',
-            water_frequency: 'outside_scope',
-            description: 'This image does not contain a recognizable plant leaf.'
+            name: "Non-Plant Image",
+            scientificName: "Non-Plant Image",
+            healthStatus: 'non_plant',
+            sunlightRequirement: 'non_plant',
+            waterFrequency: 'non_plant',
+            description: t("plants.nonPlantImageDesc") || 'The uploaded image is not a plant.'
           }));
         }
         // Outside scope image
         else if (isOutOfScope || data.data.disease_name === 'Outside Scope') {
           setNewPlant(prev => ({
             ...prev,
-            name: 'Outside Scope',
-            scientific_name: 'N/A',
-            health_status: 'out_of_scope',
-            sunlight_requirement: 'outside_scope',
-            water_frequency: 'outside_scope',
-            description: 'This species is not currently supported by our disease detection models.'
+            name: "Outside Scope",
+            scientificName: "Out of Scope",
+            healthStatus: 'out_of_scope',
+            sunlightRequirement: 'outside_scope',
+            waterFrequency: 'outside_scope',
+            description: t("plants.outsideScopeDesc") || 'The plant species is not currently supported.'
           }));
         }
         // Valid plant
         else {
+          const isHealthy = data.data.is_healthy ?? data.data.isHealthy ?? true;
           setNewPlant(prev => ({
             ...prev,
             name: rawName,
-            scientific_name: rawSci,
-            sunlight_requirement: data.data.suggestions?.sunlight?.toLowerCase().replace(' ', '_') || 'partial_sun',
-            water_frequency: data.data.suggestions?.water?.toLowerCase() || 'weekly',
-            difficulty_level: data.data.suggestions?.difficulty?.toLowerCase() || 'beginner',
+            scientificName: rawSci,
+            sunlightRequirement: data.data.suggestions?.sunlight?.toLowerCase().replace(' ', '_') || 'partial_sun',
+            waterFrequency: data.data.suggestions?.water?.toLowerCase() || 'weekly',
+            difficultyLevel: data.data.suggestions?.difficulty?.toLowerCase() || 'beginner',
+            healthStatus: isHealthy ? 'healthy' : 'unhealthy',
             description: ''
           }));
         }
@@ -186,13 +195,13 @@ const Plants = () => {
     setIsEditing(true);
     setNewPlant({
       name: plant.name,
-      scientific_name: plant.scientific_name || "",
+      scientificName: plant.scientificName || "",
       family: plant.family || "",
       description: plant.description || "",
-      sunlight_requirement: plant.sunlight_requirement,
-      water_frequency: plant.water_frequency,
-      difficulty_level: plant.difficulty_level,
-      health_status: plant.health_status || 'healthy'
+      sunlightRequirement: plant.sunlightRequirement,
+      waterFrequency: plant.waterFrequency,
+      difficultyLevel: plant.difficultyLevel,
+      healthStatus: plant.healthStatus || 'healthy'
     });
     setImagePreview(plant.image);
     setShowAddModal(true);
@@ -206,13 +215,11 @@ const Plants = () => {
   const handleDelete = async (id) => {
     if (window.confirm(t("plants.deleteConfirm") || "Are you sure you want to delete this plant? This action cannot be undone.")) {
       try {
-        setLoading(true);
         await plantService.delete(id);
-        await loadPlants();
+        await loadPlants(true); // Silent reload
       } catch (error) {
         console.error("Error deleting plant:", error);
         alert(t("plants.deleteFailed") || "Failed to delete plant. Check your permissions or network connection.");
-        setLoading(false);
       }
     }
   };
@@ -220,21 +227,25 @@ const Plants = () => {
   const handleSubmitNewPlant = async (e) => {
     e.preventDefault();
 
-    const isNonLeaf = newPlant.health_status === 'non_leaf';
-    const isOutScope = newPlant.health_status === 'out_of_scope';
+    const isNonPlant = newPlant.healthStatus === 'non_plant';
+    const isOutScope = newPlant.healthStatus === 'out_of_scope';
 
     // Auto-correct labels before saving
     const finalPlant = { ...newPlant };
-    if (isNonLeaf) {
+    if (isNonPlant) {
       finalPlant.name = 'Non-Plant Image';
-      finalPlant.scientific_name = 'Non-Plant Image';
-      finalPlant.sunlight_requirement = 'not_needed';
-      finalPlant.water_frequency = 'not_needed';
+      finalPlant.scientificName = 'Non-Plant Image';
+      finalPlant.sunlightRequirement = 'non_plant';
+      finalPlant.waterFrequency = 'non_plant';
+      finalPlant.is_non_plant = true;
+      finalPlant.is_out_of_scope = false;
     } else if (isOutScope) {
       finalPlant.name = 'Out of Scope';
-      finalPlant.scientific_name = 'Out of Scope';
-      finalPlant.sunlight_requirement = 'outside_scope';
-      finalPlant.water_frequency = 'outside_scope';
+      finalPlant.scientificName = 'Out of Scope';
+      finalPlant.sunlightRequirement = 'outside_scope';
+      finalPlant.waterFrequency = 'outside_scope';
+      finalPlant.is_non_plant = false;
+      finalPlant.is_out_of_scope = true;
     } else if (!finalPlant.name.trim()) {
       alert(t("plants.saveFailedInfo") || "Please provide a valid Plant Name before saving.");
       return;
@@ -243,9 +254,13 @@ const Plants = () => {
     try {
       setLoading(true);
       const formData = new FormData();
-      Object.keys(finalPlant).forEach(key => {
-        if (finalPlant[key] !== null && finalPlant[key] !== undefined && finalPlant[key] !== '') {
-          formData.append(key, finalPlant[key]);
+      
+      // Transform camelCase state to snake_case for the Django backend
+      const snakePlant = toSnake(finalPlant);
+      
+      Object.keys(snakePlant).forEach(key => {
+        if (snakePlant[key] !== null && snakePlant[key] !== undefined && snakePlant[key] !== '') {
+          formData.append(key, snakePlant[key]);
         }
       });
       if (plantImage && typeof plantImage !== 'string') {
@@ -260,7 +275,7 @@ const Plants = () => {
 
       setShowAddModal(false);
       resetForm();
-      loadPlants();
+      loadPlants(true); // Silent reload
     } catch (error) {
       console.error("Error saving plant:", error);
       setLoading(false);
@@ -272,13 +287,13 @@ const Plants = () => {
   const resetForm = () => {
     setNewPlant({
       name: "",
-      scientific_name: "",
+      scientificName: "",
       family: "",
       description: "",
-      sunlight_requirement: "partial_sun",
-      water_frequency: "weekly",
-      difficulty_level: "beginner",
-      health_status: "healthy"
+      sunlightRequirement: "partial_sun",
+      waterFrequency: "weekly",
+      difficultyLevel: "beginner",
+      healthStatus: "healthy"
     });
     setPlantImage(null);
     setImagePreview(null);
@@ -309,8 +324,8 @@ const Plants = () => {
           <button className={`btn-secondary ${activeTab === 'all' ? 'active' : ''}`} onClick={() => setActiveTab('all')} style={{ background: activeTab === 'all' ? 'var(--primary)' : 'transparent', color: activeTab === 'all' ? 'white' : 'var(--text-main)', border: activeTab === 'all' ? 'none' : '1px solid var(--border-light)' }}>{t("history.filterAll") || "All"}</button>
           <button className={`btn-secondary ${activeTab === 'healthy' ? 'active' : ''}`} onClick={() => setActiveTab('healthy')} style={{ background: activeTab === 'healthy' ? '#15803d' : 'transparent', color: activeTab === 'healthy' ? 'white' : 'var(--text-main)', border: activeTab === 'healthy' ? 'none' : '1px solid var(--border-light)' }}>{t("dashboard.statHealthyPlants") || "Healthy Plants"}</button>
           <button className={`btn-secondary ${activeTab === 'unhealthy' ? 'active' : ''}`} onClick={() => setActiveTab('unhealthy')} style={{ background: activeTab === 'unhealthy' ? '#dc2626' : 'transparent', color: activeTab === 'unhealthy' ? 'white' : 'var(--text-main)', border: activeTab === 'unhealthy' ? 'none' : '1px solid var(--border-light)' }}>{t("dashboard.statUnhealthyPlants") || "Unhealthy Plants"}</button>
-          <button className={`btn-secondary ${activeTab === 'out_of_scope' ? 'active' : ''}`} onClick={() => setActiveTab('out_of_scope')} style={{ background: activeTab === 'out_of_scope' ? '#d97706' : 'transparent', color: activeTab === 'out_of_scope' ? 'white' : 'var(--text-main)', border: activeTab === 'out_of_scope' ? 'none' : '1px solid var(--border-light)' }}>{t("dashboard.statOutOfScope") || "Out of Scope"}</button>
-          <button className={`btn-secondary ${activeTab === 'non_leaf' ? 'active' : ''}`} onClick={() => setActiveTab('non_leaf')} style={{ background: activeTab === 'non_leaf' ? '#64748b' : 'transparent', color: activeTab === 'non_leaf' ? 'white' : 'var(--text-main)', border: activeTab === 'non_leaf' ? 'none' : '1px solid var(--border-light)' }}>{t("dashboard.statNonPlant") || "Non-Plant Images"}</button>
+          <button className={`btn-secondary ${activeTab === 'out_of_scope' ? 'active' : ''}`} onClick={() => setActiveTab('out_of_scope')} style={{ background: activeTab === 'out_of_scope' ? '#d97706' : 'transparent', color: activeTab === 'out_of_scope' ? 'white' : 'var(--text-main)', border: activeTab === 'out_of_scope' ? 'none' : '1px solid var(--border-light)' }}>{t("dashboard.statOutOfScope") || "Outside Scope"}</button>
+          <button className={`btn-secondary ${activeTab === 'non_plant' ? 'active' : ''}`} onClick={() => setActiveTab('non_plant')} style={{ background: activeTab === 'non_plant' ? '#64748b' : 'transparent', color: activeTab === 'non_plant' ? 'white' : 'var(--text-main)', border: activeTab === 'non_plant' ? 'none' : '1px solid var(--border-light)' }}>{t("dashboard.statNonPlant") || "Non-Plant Images"}</button>
         </div>
 
         {/* Search and Filter Section */}
@@ -350,36 +365,36 @@ const Plants = () => {
                   <div className="plant-info">
                     <div className="plant-header">
                       <h3>
-                        {plant.health_status === 'non_leaf' ? (t("history.badgeNonPlant") || 'Non-Plant Image') :
-                          plant.health_status === 'out_of_scope' ? (t("history.badgeOutsideScope") || 'Out of Scope') :
+                        {plant.healthStatus === 'non_plant' ? (t("history.badgeNonPlant") || 'Non-Plant Image') :
+                          plant.healthStatus === 'out_of_scope' ? (t("history.badgeOutsideScope") || 'Out of Scope') :
                             plant.name}
                       </h3>
                       <span className="scientific-name">
-                        {plant.health_status === 'non_leaf' ? (t("history.badgeNonPlant") || 'Non-Plant Image') :
-                          plant.health_status === 'out_of_scope' ? (t("history.badgeOutsideScope") || 'Out of Scope') :
-                            plant.scientific_name}
+                        {plant.healthStatus === 'non_plant' ? (t("history.badgeNonPlant") || 'Non-Plant Image') :
+                          plant.healthStatus === 'out_of_scope' ? (t("history.badgeOutsideScope") || 'Out of Scope') :
+                            plant.scientificName}
                       </span>
                     </div>
 
                     <div className="plant-specs">
                       <div className="spec-item"><Sun size={16} />
-                        {plant.health_status === 'non_leaf' ? (t("common.notNeeded") || 'Not Needed') :
-                          plant.health_status === 'out_of_scope' ? (t("common.notAvailable") || 'Not Available') :
+                        {plant.healthStatus === 'non_plant' ? (t("common.notNeeded") || 'Not Needed') :
+                          plant.healthStatus === 'out_of_scope' ? (t("common.notAvailable") || 'Not Available') :
                             plant.sunlight_display}
                       </div>
                       <div className="spec-item"><Droplets size={16} />
-                        {plant.health_status === 'non_leaf' ? (t("common.notNeeded") || 'Not Needed') :
-                          plant.health_status === 'out_of_scope' ? (t("common.notAvailable") || 'Not Available') :
-                            plant.water_frequency_display}
+                        {plant.healthStatus === 'non_plant' ? (t("common.notNeeded") || 'Not Needed') :
+                          plant.healthStatus === 'out_of_scope' ? (t("common.notAvailable") || 'Not Available') :
+                            plant.waterFrequency_display}
                       </div>
                     </div>
 
                     <div className="plant-footer">
                       <div className="plant-badges">
-                        {plant.health_status === 'healthy' && <span className="badge badge-edible">{t("history.badgeHealthy") || "Healthy"}</span>}
-                        {plant.health_status === 'unhealthy' && <span className="badge badge-toxic">{t("history.badgeDiseased") || "Unhealthy"}</span>}
-                        {plant.health_status === 'non_leaf' && <span className="badge" style={{ backgroundColor: 'var(--warning-subtle)', color: '#d97706', fontWeight: 600 }}>{t("history.badgeNonLeaf") || "Non Leaf"}</span>}
-                        {plant.health_status === 'out_of_scope' && <span className="badge" style={{ backgroundColor: 'var(--text-muted)', color: 'white', fontWeight: 600 }}>{t("history.badgeOutsideScope") || "Out of Scope"}</span>}
+                        {plant.healthStatus === 'healthy' && <span className="badge badge-edible">{t("history.badgeHealthy") || "Healthy"}</span>}
+                        {plant.healthStatus === 'unhealthy' && <span className="badge badge-toxic">{t("history.badgeDiseased") || "Unhealthy"}</span>}
+                        {plant.healthStatus === 'non_plant' && <span className="badge" style={{ backgroundColor: 'var(--warning-subtle)', color: '#d97706', fontWeight: 600 }}>{t("history.badgeNonPlant") || "Non-Plant"}</span>}
+                        {plant.healthStatus === 'out_of_scope' && <span className="badge" style={{ backgroundColor: 'var(--text-muted)', color: 'white', fontWeight: 600 }}>{t("history.badgeOutsideScope") || "Out of Scope"}</span>}
                       </div>
                       <div style={{ display: 'flex', gap: '0.5rem', width: '100%', justifyContent: 'flex-end' }}>
                         <button className="btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }} onClick={() => handleEdit(plant)}>
@@ -455,19 +470,19 @@ const Plants = () => {
                         value={newPlant.name}
                         onChange={(e) => setNewPlant({ ...newPlant, name: e.target.value })}
                         placeholder={t("plants.plantNamePlaceholder") || "e.g. Fiddle Leaf Fig"}
-                        readOnly={newPlant.health_status === 'non_leaf' || newPlant.health_status === 'out_of_scope'}
-                        style={{ opacity: (newPlant.health_status === 'non_leaf' || newPlant.health_status === 'out_of_scope') ? 0.7 : 1 }}
+                        readOnly={newPlant.healthStatus === 'non_plant' || newPlant.healthStatus === 'out_of_scope'}
+                        style={{ opacity: (newPlant.healthStatus === 'non_plant' || newPlant.healthStatus === 'out_of_scope') ? 0.7 : 1 }}
                       />
                     </div>
                     <div className="form-group">
                       <label>{t("plants.scientificName")}</label>
                       <input
                         type="text"
-                        value={newPlant.scientific_name}
-                        onChange={(e) => setNewPlant({ ...newPlant, scientific_name: e.target.value })}
+                        value={newPlant.scientificName}
+                        onChange={(e) => setNewPlant({ ...newPlant, scientificName: e.target.value })}
                         placeholder={t("plants.scientificNamePlaceholder") || "e.g. Ficus lyrata"}
-                        readOnly={newPlant.health_status === 'non_leaf' || newPlant.health_status === 'out_of_scope'}
-                        style={{ opacity: (newPlant.health_status === 'non_leaf' || newPlant.health_status === 'out_of_scope') ? 0.7 : 1 }}
+                        readOnly={newPlant.healthStatus === 'non_plant' || newPlant.healthStatus === 'out_of_scope'}
+                        style={{ opacity: (newPlant.healthStatus === 'non_plant' || newPlant.healthStatus === 'out_of_scope') ? 0.7 : 1 }}
                       />
                     </div>
                   </div>
@@ -482,43 +497,62 @@ const Plants = () => {
                     ></textarea>
                   </div>
 
-                  {/* Sunlight + Water — hidden for non_leaf, 'Not Known' info for out_of_scope */}
-                  {newPlant.health_status === 'non_leaf' ? (
-                    <div style={{ padding: '1rem 1.25rem', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0', color: '#64748b', fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      ℹ️ Sunlight requirement and watering frequency are not applicable for non-plant images.
-                    </div>
-                  ) : newPlant.health_status === 'out_of_scope' ? (
-                    <div style={{ padding: '1rem 1.25rem', background: '#fefce8', borderRadius: '10px', border: '1px solid #fde047', color: '#854d0e', fontSize: '0.875rem', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-                      <div style={{ fontWeight: 700 }}>⚠️ Out of Scope Image</div>
-                      <div>Sunlight Requirement: <strong>Not Available</strong></div>
-                      <div>Watering Frequency: <strong>Not Available</strong></div>
+                  {/* Sunlight + Water — informational box for non_leaf or out_of_scope */}
+                  {(newPlant.healthStatus === 'non_plant' || newPlant.healthStatus === 'out_of_scope') ? (
+                    <div style={{
+                      background: newPlant.healthStatus === 'non_plant' ? 'var(--bg-main)' : '#fefce8',
+                      borderRadius: '12px',
+                      border: `1px solid ${newPlant.healthStatus === 'non_plant' ? 'var(--border-light)' : '#fde047'}`,
+                      color: newPlant.healthStatus === 'non_plant' ? 'var(--text-secondary)' : '#854d0e',
+                      fontSize: '0.88rem',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '0.6rem'
+                    }}>
+                      <div style={{ fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em', fontSize: '0.75rem', marginBottom: '0.25rem' }}>
+                        {newPlant.healthStatus === 'non_plant' ? (
+                          <><Plus size={16} style={{ transform: 'rotate(45deg)' }} /> {t("plants.nonPlantImageHeading") || "Non-Plant Image"}</>
+                        ) : (
+                          <><Info size={16} /> {t("plants.outsideScopeHeading") || "Outside Scope Image"}</>
+                        )}
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid currentColor', paddingBottom: '0.4rem', opacity: 0.8 }}>
+                        <span>{t("plants.sunlightLabel") || "Sunlight"}:</span>
+                        <span style={{ fontWeight: 700 }}>{newPlant.healthStatus === 'non_plant' ? (t("common.notNeeded") || "Not Needed") : (t("common.notAvailable") || "Not Available")}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', opacity: 0.8 }}>
+                        <span>{t("plants.wateringLabel") || "Watering"}:</span>
+                        <span style={{ fontWeight: 700 }}>{newPlant.healthStatus === 'non_plant' ? (t("common.notNeeded") || "Not Needed") : (t("common.notAvailable") || "Not Available")}</span>
+                      </div>
                     </div>
                   ) : (
                     <div className="form-group-row">
                       <div className="form-group">
                         <label>{t("plants.sunlightReq")}</label>
                         <select
-                          value={newPlant.sunlight_requirement}
-                          onChange={(e) => setNewPlant({ ...newPlant, sunlight_requirement: e.target.value })}
+                          value={newPlant.sunlightRequirement}
+                          onChange={(e) => setNewPlant({ ...newPlant, sunlightRequirement: e.target.value })}
                         >
                           <option value="full_sun">{t("plants.sunFull") || "Full Sun"}</option>
                           <option value="partial_sun">{t("plants.sunPartialSun") || "Partial Sun"}</option>
                           <option value="partial_shade">{t("plants.sunPartialShade") || "Partial Shade"}</option>
                           <option value="full_shade">{t("plants.sunFullShade") || "Full Shade"}</option>
                           <option value="outside_scope">{t("plants.outsideScope") || "Outside Scope"}</option>
+                          <option value="non_plant">{t("plants.nonPlantImage") || "Non-Plant Image"}</option>
                         </select>
                       </div>
                       <div className="form-group">
                         <label>{t("plants.waterFreq")}</label>
                         <select
-                          value={newPlant.water_frequency}
-                          onChange={(e) => setNewPlant({ ...newPlant, water_frequency: e.target.value })}
+                          value={newPlant.waterFrequency}
+                          onChange={(e) => setNewPlant({ ...newPlant, waterFrequency: e.target.value })}
                         >
                           <option value="daily">{t("plants.waterDaily") || "Daily"}</option>
                           <option value="every_2_days">{t("plants.waterEvery2Days") || "Every 2 Days"}</option>
                           <option value="weekly">{t("plants.waterWeekly") || "Weekly"}</option>
                           <option value="bi_weekly">{t("plants.waterBiWeekly") || "Every 2 Weeks"}</option>
                           <option value="outside_scope">{t("plants.outsideScope") || "Outside Scope"}</option>
+                          <option value="non_plant">{t("plants.nonPlantImage") || "Non-Plant Image"}</option>
                         </select>
                       </div>
                     </div>
@@ -526,28 +560,28 @@ const Plants = () => {
 
                   <div className="form-checkbox-group" style={{ display: 'flex', gap: '2rem', border: '1px solid var(--border-light)', padding: '1.5rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-surface-inner)', flexWrap: 'wrap' }}>
                     <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 'bold' }}>
-                      <input type="radio" value="healthy" checked={newPlant.health_status === 'healthy'}
-                        onChange={() => setNewPlant({ ...newPlant, health_status: 'healthy' })}
+                      <input type="radio" value="healthy" checked={newPlant.healthStatus === 'healthy'}
+                        onChange={() => setNewPlant({ ...newPlant, healthStatus: 'healthy' })}
                         style={{ width: '20px', height: '20px' }} />
-                      Healthy
+                      {t("history.badgeHealthy") || "Healthy"}
                     </label>
                     <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 'bold' }}>
-                      <input type="radio" value="unhealthy" checked={newPlant.health_status === 'unhealthy'}
-                        onChange={() => setNewPlant({ ...newPlant, health_status: 'unhealthy' })}
+                      <input type="radio" value="unhealthy" checked={newPlant.healthStatus === 'unhealthy'}
+                        onChange={() => setNewPlant({ ...newPlant, healthStatus: 'unhealthy' })}
                         style={{ width: '20px', height: '20px' }} />
-                      Unhealthy
+                      {t("history.badgeDiseased") || "Unhealthy"}
                     </label>
                     <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 'bold' }}>
-                      <input type="radio" value="non_leaf" checked={newPlant.health_status === 'non_leaf'}
-                        onChange={() => setNewPlant({ ...newPlant, health_status: 'non_leaf', name: 'Non-Leaf Image', scientific_name: 'N/A', sunlight_requirement: 'outside_scope', water_frequency: 'outside_scope' })}
+                      <input type="radio" value="non_plant" checked={newPlant.healthStatus === 'non_plant'}
+                        onChange={() => setNewPlant({ ...newPlant, healthStatus: 'non_plant', name: 'Non-Plant Image', scientificName: 'Non-Plant Image', sunlightRequirement: 'non_plant', waterFrequency: 'non_plant' })}
                         style={{ width: '20px', height: '20px' }} />
-                      Non-Leaf Image
+                      {t("history.badgeNonPlant") || "Non-Plant Image"}
                     </label>
                     <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 'bold' }}>
-                      <input type="radio" value="out_of_scope" checked={newPlant.health_status === 'out_of_scope'}
-                        onChange={() => setNewPlant({ ...newPlant, health_status: 'out_of_scope', name: 'Outside Scope', scientific_name: 'N/A', sunlight_requirement: 'outside_scope', water_frequency: 'outside_scope' })}
+                      <input type="radio" value="out_of_scope" checked={newPlant.healthStatus === 'out_of_scope'}
+                        onChange={() => setNewPlant({ ...newPlant, healthStatus: 'out_of_scope', name: 'Out of Scope', scientificName: 'Out of Scope', sunlightRequirement: 'outside_scope', waterFrequency: 'outside_scope' })}
                         style={{ width: '20px', height: '20px' }} />
-                      Outside Scope
+                      {t("history.badgeOutsideScope") || "Out of Scope"}
                     </label>
                   </div>
                 </div>
@@ -585,11 +619,11 @@ const Plants = () => {
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                         <span style={{ fontWeight: 700 }}>{t("plants.wateringLabel")}</span>
-                        <span>{selectedPlant.water_frequency_display}</span>
+                        <span>{selectedPlant.waterFrequency_display}</span>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                         <span style={{ fontWeight: 700 }}>{t("plants.difficultyLabel")}</span>
-                        <span>{selectedPlant.difficulty_level_display}</span>
+                        <span>{selectedPlant.difficultyLevel_display}</span>
                       </div>
                     </div>
                   </div>
@@ -597,7 +631,7 @@ const Plants = () => {
                 <div className="form-right">
                   <div style={{ marginBottom: '2rem' }}>
                     <h1 style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>{selectedPlant.name}</h1>
-                    <p className="scientific-name" style={{ fontSize: '1.2rem' }}>{selectedPlant.scientific_name}</p>
+                    <p className="scientific-name" style={{ fontSize: '1.2rem' }}>{selectedPlant.scientificName}</p>
                   </div>
 
                   <div style={{ marginBottom: '2rem' }}>
@@ -606,10 +640,10 @@ const Plants = () => {
                   </div>
 
                   <div style={{ display: 'flex', gap: '1rem' }}>
-                    {selectedPlant.health_status === 'healthy' && <span className="badge badge-edible" style={{ padding: '0.6rem 1.2rem' }}>Healthy</span>}
-                    {selectedPlant.health_status === 'unhealthy' && <span className="badge badge-toxic" style={{ padding: '0.6rem 1.2rem' }}>Unhealthy</span>}
-                    {selectedPlant.health_status === 'non_leaf' && <span className="badge" style={{ padding: '0.6rem 1.2rem', backgroundColor: 'var(--warning-subtle)', color: '#d97706', fontWeight: 600 }}>Non Leaf</span>}
-                    {selectedPlant.health_status === 'out_of_scope' && <span className="badge" style={{ padding: '0.6rem 1.2rem', backgroundColor: 'var(--text-muted)', color: 'white', fontWeight: 600 }}>Out of Scope</span>}
+                    {selectedPlant.healthStatus === 'healthy' && <span className="badge badge-edible" style={{ padding: '0.6rem 1.2rem' }}>{t("history.badgeHealthy") || "Healthy"}</span>}
+                    {selectedPlant.healthStatus === 'unhealthy' && <span className="badge badge-toxic" style={{ padding: '0.6rem 1.2rem' }}>{t("history.badgeDiseased") || "Unhealthy"}</span>}
+                    {selectedPlant.healthStatus === 'non_plant' && <span className="badge" style={{ padding: '0.6rem 1.2rem', backgroundColor: 'var(--warning-subtle)', color: '#d97706', fontWeight: 600 }}>{t("history.badgeNonPlant") || "Non-Plant Image"}</span>}
+                    {selectedPlant.healthStatus === 'out_of_scope' && <span className="badge" style={{ padding: '0.6rem 1.2rem', backgroundColor: 'var(--text-muted)', color: 'white', fontWeight: 600 }}>{t("history.badgeOutsideScope") || "Out of Scope"}</span>}
                   </div>
                 </div>
               </div>

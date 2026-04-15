@@ -9,8 +9,8 @@ import { treatmentService, diseaseService, plantService } from "../services/api"
 import {
   Search, ShieldCheck, Package,
   ChevronRight, Sprout, AlertTriangle,
-  CheckCircle, Droplets, Thermometer,
-  Plus, Edit2, Trash2
+  CheckCircle, Plus, Edit2, Trash2,
+  Sparkles
 } from "lucide-react";
 import TreatmentFormModal from "../components/TreatmentFormModal";
 import { useLanguage } from "../context/LanguageContext";
@@ -26,6 +26,7 @@ const Treatment = () => {
   const [loadingPlants, setLoadingPlants] = useState(true);
   const [customDiseases, setCustomDiseases] = useState([]);
   const [loadingCustom, setLoadingCustom] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   // Modal State
   const [showAddModal, setShowAddModal] = useState(false); // Controls TreatmentFormModal
@@ -60,15 +61,19 @@ const Treatment = () => {
     }
   }, [selectedPlant]);
 
-  const loadAllDiseases = async () => {
+  const loadAllDiseases = async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
+      else setRefreshing(true);
       const { data } = await diseaseService.getAll();
       setDiseases(data.results || data);
-      setLoading(false);
+
+      if (!silent) setLoading(false);
+      setRefreshing(false);
     } catch (error) {
       console.error("Error loading diseases:", error);
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
@@ -80,10 +85,9 @@ const Treatment = () => {
       const results = data.results || data;
       setPlants(results);
 
-      // Select the first plant by default if available
-      if (results.length > 0) {
-        setSelectedPlant(results[0]);
-      }
+      // By default, no specific plant is selected (shows "All")
+      setSelectedPlant(null);
+
       setLoadingPlants(false);
     } catch (error) {
       console.error("Error loading plants:", error);
@@ -91,16 +95,20 @@ const Treatment = () => {
     }
   };
 
-  const loadDiseases = async (plantId) => {
+  const loadDiseases = async (plantId, silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
+      else setRefreshing(true);
       // Filter diseases by affected_plants ID
       const { data } = await diseaseService.getAll({ affected_plants: plantId });
       setDiseases(data.results || data);
-      setLoading(false);
+
+      if (!silent) setLoading(false);
+      setRefreshing(false);
     } catch (error) {
       console.error("Error loading diseases:", error);
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
@@ -165,7 +173,7 @@ const Treatment = () => {
   const handleCreateTreatment = async (formData) => {
     await treatmentService.create(formData);
     // Refresh diseases to show update (or just close)
-    if (selectedPlant) loadDiseases(selectedPlant.id);
+    if (selectedPlant) loadDiseases(selectedPlant.id, true); // silent
   };
 
   const handleUpdateTreatment = async (formData) => {
@@ -173,7 +181,7 @@ const Treatment = () => {
     // Refresh displayed treatment
     const { data } = await treatmentService.getById(editingTreatment.id);
     setSelectedTreatment({ ...data, disease_name: selectedTreatment.disease_name });
-    if (selectedPlant) loadDiseases(selectedPlant.id);
+    if (selectedPlant) loadDiseases(selectedPlant.id, true); // silent
   };
 
   const handleDeleteTreatment = async () => {
@@ -181,7 +189,7 @@ const Treatment = () => {
     try {
       await treatmentService.delete(selectedTreatment.id);
       setSelectedTreatment(null);
-      if (selectedPlant) loadDiseases(selectedPlant.id);
+      if (selectedPlant) loadDiseases(selectedPlant.id, true); // silent
     } catch (error) {
       alert(t("treatment.deleteFailed") || "Failed to delete treatment.");
     }
@@ -227,6 +235,25 @@ const Treatment = () => {
               <div style={{ textAlign: 'center', padding: '2rem' }}>Loading...</div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <button
+                  onClick={() => { setSelectedPlant(null); setSelectedTreatment(null); }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '1rem',
+                    borderRadius: '8px',
+                    background: selectedPlant === null ? 'var(--primary-subtle)' : 'transparent',
+                    color: selectedPlant === null ? 'var(--primary)' : 'var(--text-secondary)',
+                    border: selectedPlant === null ? '1px solid var(--primary)' : '1px solid transparent',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    fontWeight: selectedPlant === null ? 600 : 400
+                  }}
+                >
+                  <span>All Plants</span>
+                  <ChevronRight size={16} style={{ opacity: selectedPlant === null ? 1 : 0.3 }} />
+                </button>
                 {plants.map(plant => (
                   <button
                     key={plant.id}
@@ -441,48 +468,126 @@ const Treatment = () => {
                               {selectedTreatment.products_needed || 'No immediate first aid materials specified.'}
                             </div>
 
-                            {/* MARKETPLACE PRODUCTS */}
-                            <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--primary)' }}>
-                              <Package size={18} /> Required Marketplace Products
-                            </h3>
-                            <div style={{ padding: '1.25rem', background: 'var(--bg-surface-inner)', border: '1px solid var(--border-light)', borderRadius: '8px' }}>
-                              {selectedTreatment.related_products && selectedTreatment.related_products.length > 0 ? (
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                                  {selectedTreatment.related_products.map(product => (
-                                    <div
-                                      key={product.id}
-                                      style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'space-between',
-                                        padding: '0.75rem 1rem',
-                                        background: 'var(--bg-card)',
-                                        border: '1px solid var(--border-light)',
-                                        borderRadius: '8px',
-                                        boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
-                                      }}
-                                    >
-                                      <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                        <span style={{ fontWeight: 800, color: 'var(--text-primary)', fontSize: '0.9rem' }}>{product.name}</span>
-                                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>NPR {parseFloat(product.price).toLocaleString()}</span>
+                            {/* MARKETPLACE PRODUCTS - REDESIGNED FOR SINGLE CHOICE */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                              <Package size={20} className="text-primary" />
+                              <h3 style={{ fontSize: '1.1rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
+                                Expert Recommendation
+                              </h3>
+                            </div>
+
+                            <div style={{ padding: '0', background: 'transparent', borderRadius: '12px' }}>
+                              {selectedTreatment.recommended_product ? (
+                                <div className="recommendation-card" style={{
+                                  background: 'var(--bg-card)',
+                                  border: '1px solid var(--primary)',
+                                  borderRadius: '12px',
+                                  overflow: 'hidden',
+                                  boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+                                  position: 'relative'
+                                }}>
+                                  {/* Featured Badge */}
+                                  <div style={{
+                                    position: 'absolute', top: '0', right: '0',
+                                    background: 'var(--primary)', color: 'white',
+                                    padding: '0.4rem 1rem', fontSize: '0.7rem',
+                                    fontWeight: 900, textTransform: 'uppercase',
+                                    borderBottomLeftRadius: '12px',
+                                    zIndex: 1
+                                  }}>
+                                    Top Choice
+                                  </div>
+
+                                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                    {/* Product Content */}
+                                    <div style={{ padding: '1.5rem', display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
+                                      {selectedTreatment.recommended_product.product.image ? (
+                                        <img
+                                          src={selectedTreatment.recommended_product.product.image}
+                                          alt={selectedTreatment.recommended_product.product.name}
+                                          style={{ width: '100px', height: '100px', objectFit: 'contain', borderRadius: '8px', background: '#f8fafc' }}
+                                        />
+                                      ) : (
+                                        <div style={{ width: '100px', height: '100px', background: 'var(--bg-main)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                          <Package size={40} style={{ opacity: 0.2 }} />
+                                        </div>
+                                      )}
+                                      <div style={{ flex: 1 }}>
+                                        <div style={{ fontSize: '0.7rem', color: 'var(--primary)', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.25rem' }}>
+                                          {selectedTreatment.recommended_product.treatment_type}
+                                        </div>
+                                        <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '1.25rem', fontWeight: 800 }}>
+                                          {selectedTreatment.recommended_product.product.name}
+                                        </h4>
+                                        <div style={{ fontSize: '1.2rem', fontWeight: 900, color: 'var(--text-primary)' }}>
+                                          NPR {parseFloat(selectedTreatment.recommended_product.product.price).toLocaleString()}
+                                        </div>
+                                      </div>
+                                    </div>
+
+                                    {/* AI Reasoning Section */}
+                                    <div style={{
+                                      padding: '1.25rem 1.5rem',
+                                      background: 'var(--primary-subtle)',
+                                      borderTop: '1px solid var(--primary)',
+                                      borderBottom: '1px solid var(--border-light)'
+                                    }}>
+                                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                                        <Sparkles size={16} className="text-primary" />
+                                        <span style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--primary)', textTransform: 'uppercase' }}>Why this product?</span>
+                                      </div>
+                                      <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                                        {selectedTreatment.recommended_product.reason}
+                                      </p>
+                                    </div>
+
+                                    {/* Usage & CTA */}
+                                    <div style={{ padding: '1.25rem 1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-surface-inner)' }}>
+                                      <div style={{ flex: 1, marginRight: '1rem' }}>
+                                        <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)', display: 'block', textTransform: 'uppercase' }}>Usage</span>
+                                        <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '300px' }}>
+                                          {selectedTreatment.recommended_product.product.usage_instructions || 'Follow package instructions.'}
+                                        </p>
                                       </div>
                                       <button
                                         onClick={(e) => {
                                           e.stopPropagation();
-                                          navigate('/checkout', { state: { directBuyProduct: product } });
+                                          navigate('/checkout', { state: { directBuyProduct: selectedTreatment.recommended_product.product } });
                                         }}
                                         className="btn-primary"
-                                        style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', padding: '0.4rem 0.8rem', fontSize: '0.75rem', borderRadius: '6px' }}
+                                        style={{
+                                          padding: '0.8rem 1.5rem',
+                                          fontSize: '0.9rem',
+                                          fontWeight: 700,
+                                          borderRadius: '8px',
+                                          display: 'flex',
+                                          alignItems: 'center',
+                                          gap: '0.5rem',
+                                          boxShadow: '0 4px 12px rgba(var(--primary-rgb), 0.2)'
+                                        }}
                                       >
-                                        Buy Now <ChevronRight size={14} />
+                                        Buy Now <ChevronRight size={18} />
                                       </button>
                                     </div>
-                                  ))}
+                                  </div>
                                 </div>
                               ) : (
-                                <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.85rem', fontStyle: 'italic' }}>
-                                  No specific treatment products are linked for this disease. Please check our marketplace for general plant care products.
-                                </p>
+                                <div style={{
+                                  padding: '2rem',
+                                  textAlign: 'center',
+                                  background: 'var(--bg-surface-inner)',
+                                  borderRadius: '12px',
+                                  border: '1px dashed var(--border-light)'
+                                }}>
+                                  <Package size={32} style={{ margin: '0 auto 1rem', opacity: 0.3 }} />
+                                  <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+                                    No specific treatment products are currently linked.
+                                    <br />
+                                    <span style={{ color: 'var(--primary)', cursor: 'pointer', fontWeight: 600 }} onClick={() => navigate('/store')}>
+                                      Browse general marketplace →
+                                    </span>
+                                  </p>
+                                </div>
                               )}
                             </div>
                           </div>
@@ -530,25 +635,6 @@ const Treatment = () => {
                 </div>
               ) : diseases.length > 0 ? (
                 <div className="diseases-grid">
-                  {/* HEALTHY CARD (Only if plant selected) */}
-                  {selectedPlant && (
-                    <div className="disease-card-v2" style={{ borderLeft: '4px solid var(--success)' }}>
-                      <div className="disease-header-info" style={{ padding: '2rem' }}>
-                        <div className="disease-title-row">
-                          <h3>{t("treatment.healthyPlantTitle")} {selectedPlant.name}</h3>
-                          <div className="badge badge-edible">{t("treatment.stable")}</div>
-                        </div>
-                        <p style={{ marginTop: '1rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
-                          {t("treatment.noSigns")}
-                        </p>
-                      </div>
-                      <div className="disease-card-footer" style={{ padding: '1.5rem', background: 'var(--bg-card)', borderTop: '1px solid var(--border-light)' }}>
-                        <span style={{ fontSize: '0.85rem', color: 'var(--success)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <CheckCircle size={16} /> {t("treatment.optimalCondition")}
-                        </span>
-                      </div>
-                    </div>
-                  )}
 
                   {/* DISEASE CARDS */}
                   {diseases.map(disease => (

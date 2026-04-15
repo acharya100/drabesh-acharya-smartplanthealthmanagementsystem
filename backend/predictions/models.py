@@ -41,7 +41,7 @@ class Prediction(models.Model):
         ('treated',      'Mark as Treated'),
         ('healthy',      'Healthy (No Treatment Needed)'),
         ('non_plant',    'Non-Plant Image'),
-        ('out_of_scope', 'Out of Scope'),
+        ('out_of_scope', 'Outside Scope'),
     ]
     treatment_status = models.CharField(
         max_length=20,
@@ -64,6 +64,8 @@ class Prediction(models.Model):
 
     is_healthy     = models.BooleanField(default=False)
     is_plant_image = models.BooleanField(default=True, help_text="False if image is not a plant leaf")
+    is_non_plant   = models.BooleanField(default=False)
+    is_out_of_scope = models.BooleanField(default=False)
     created_at     = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

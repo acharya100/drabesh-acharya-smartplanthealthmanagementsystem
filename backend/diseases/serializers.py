@@ -34,9 +34,8 @@ class TreatmentListSerializer(serializers.ModelSerializer):
             'is_highly_effective',
             'is_preventive',
             'cost_estimate',
-            'related_products',
         ]
-        read_only_fields = ['id', 'related_products']
+        read_only_fields = ['id']
 
 
 class TreatmentDetailSerializer(serializers.ModelSerializer):
@@ -54,11 +53,11 @@ class TreatmentDetailSerializer(serializers.ModelSerializer):
     instruction_steps = serializers.SerializerMethodField()
     products_list = serializers.SerializerMethodField()
     
+    # New Single Recommendation Logic
+    recommended_product = serializers.SerializerMethodField()
+    
     # Disease name for context
     disease_name = serializers.CharField(source='disease.name', read_only=True)
-    
-    # Related products from the store
-    related_products = ProductSerializer(many=True, read_only=True)
     
     class Meta:
         model = Treatment
@@ -82,7 +81,7 @@ class TreatmentDetailSerializer(serializers.ModelSerializer):
             'precautions',
             'cost_estimate',
             'is_preventive',
-            'related_products',
+            'recommended_product',
             'created_at',
             'updated_at',
         ]
@@ -95,6 +94,17 @@ class TreatmentDetailSerializer(serializers.ModelSerializer):
     def get_products_list(self, obj):
        
         return obj.get_products_list()
+
+    def get_recommended_product(self, obj):
+        from ecommerce.serializers import ProductMiniSerializer
+        product, reason = obj.get_recommended_product_data()
+        if not product:
+            return None
+        return {
+            "product": ProductMiniSerializer(product, context=self.context).data,
+            "reason": reason,
+            "treatment_type": obj.get_treatment_type_display()
+        }
 
 
 class DiseaseListSerializer(serializers.ModelSerializer):
@@ -249,15 +259,15 @@ class DiseaseCreateUpdateSerializer(serializers.ModelSerializer):
         
         return value.strip()
     
-    def validate(self, data):
+    def validate(self, attrs):
        
         # Ensure contagious diseases have spread rate information
-        if data.get('is_contagious') and not data.get('spread_rate'):
+        if attrs.get('is_contagious') and not attrs.get('spread_rate'):
             raise serializers.ValidationError({
                 'spread_rate': 'Spread rate should be specified for contagious diseases'
             })
         
-        return data
+        return attrs
 
 
 class TreatmentCreateUpdateSerializer(serializers.ModelSerializer):
@@ -321,13 +331,13 @@ class TreatmentCreateUpdateSerializer(serializers.ModelSerializer):
         
         return value.strip()
     
-    def validate(self, data):
+    def validate(self, attrs):
         """Ensure either disease or custom_disease_name is provided."""
-        if not data.get('disease') and not data.get('custom_disease_name'):
+        if not attrs.get('disease') and not attrs.get('custom_disease_name'):
             raise serializers.ValidationError(
                 "Either select an existing disease or provide a custom disease name."
             )
-        return data
+        return attrs
     
     def create(self, validated_data):
         """Handle custom disease creation if custom_disease_name is provided."""

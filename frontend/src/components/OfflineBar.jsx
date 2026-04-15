@@ -1,26 +1,16 @@
+import { useOfflineSync } from "../context/OfflineSyncContext";
+import { WifiOff, Cloud, RefreshCcw } from "lucide-react";
+
 /**
- * OfflineBar — Standalone offline notification bar
- * Sits directly below the navbar. Does NOT overlap the header.
- * Does NOT reuse or modify any existing alert/notification components.
+ * OfflineBar — Refined Professional Version
  */
-import { useEffect, useState } from "react";
-import { WifiOff } from "lucide-react";
-
 const OfflineBar = () => {
-  const [isOffline, setIsOffline] = useState(!navigator.onLine);
+  const { isOnline, isSyncing, queueCount, triggerSync } = useOfflineSync();
 
-  useEffect(() => {
-    const goOnline  = () => setIsOffline(false);
-    const goOffline = () => setIsOffline(true);
-    window.addEventListener("online",  goOnline);
-    window.addEventListener("offline", goOffline);
-    return () => {
-      window.removeEventListener("online",  goOnline);
-      window.removeEventListener("offline", goOffline);
-    };
-  }, []);
+  if (isOnline && queueCount === 0) return null;
 
-  if (!isOffline) return null;
+  const showSyncing = isSyncing;
+  const showPending = !isOnline && queueCount > 0;
 
   return (
     <div
@@ -28,26 +18,22 @@ const OfflineBar = () => {
       role="alert"
       aria-live="polite"
       style={{
-        /* Sits directly below the fixed navbar */
         position: "fixed",
         top: "var(--nav-height, 80px)",
         left: 0,
         width: "100%",
-        zIndex: 980,                       /* below navbar (usually 1000+) */
-        backgroundColor: "#fee2e2",
-        borderBottom: "1px solid #fca5a5",
-        boxShadow: "0 2px 6px rgba(239,68,68,0.08)",
-        /* Content */
+        zIndex: 980,
+        backgroundColor: !isOnline ? "#fee2e2" : "#ecfdf5",
+        borderBottom: `1px solid ${!isOnline ? "#fca5a5" : "#6ee7b7"}`,
+        boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        gap: "0.5rem",
-        padding: "0.45rem 1rem",
-        color: "#dc2626",
+        gap: "1rem",
+        padding: "0.5rem 1rem",
+        color: !isOnline ? "#dc2626" : "#065f46",
         fontWeight: 600,
         fontSize: "0.85rem",
-        fontFamily: "inherit",
-        /* Smooth enter */
         animation: "offlineBarFadeIn 0.25s ease",
       }}
     >
@@ -57,8 +43,36 @@ const OfflineBar = () => {
           to   { opacity: 1; transform: translateY(0); }
         }
       `}</style>
-      <WifiOff size={15} strokeWidth={2.5} />
-      You are offline
+      
+      {!isOnline ? (
+        <>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            <WifiOff size={15} strokeWidth={2.5} />
+            <span>You are currently offline</span>
+          </div>
+          {queueCount > 0 && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', borderLeft: '1px solid #fca5a5', paddingLeft: '1rem' }}>
+              <Cloud size={14} />
+              <span>{queueCount} changes waiting to sync</span>
+            </div>
+          )}
+        </>
+      ) : (
+        <>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            <RefreshCcw size={14} className={isSyncing ? "animate-spin" : ""} />
+            <span>{isSyncing ? "Synchronizing your changes..." : "Back online! Syncing completed."}</span>
+          </div>
+          {!isSyncing && queueCount > 0 && (
+            <button 
+              onClick={triggerSync}
+              style={{ padding: '0.2rem 0.6rem', borderRadius: '4px', background: 'var(--primary)', color: 'white', border: 'none', cursor: 'pointer', fontSize: '0.75rem' }}
+            >
+              Sync Now
+            </button>
+          )}
+        </>
+      )}
     </div>
   );
 };

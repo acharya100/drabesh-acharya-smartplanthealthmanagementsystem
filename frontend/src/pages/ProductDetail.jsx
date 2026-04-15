@@ -243,9 +243,13 @@ const ProductDetail = () => {
                   <Heart size={22} fill={wishlisted ? "#ef4444" : "none"} color={wishlisted ? "#ef4444" : "var(--text-muted)"} />
                 </button>
               </div>
-              <Link to="/checkout" className="btn-secondary" style={{ textAlign: "center", display: "flex", justifyContent: "center", alignItems: "center", gap: "0.5rem", height: "48px" }}>
+              <button
+                onClick={() => navigate("/checkout", { state: { directBuyProduct: { ...product, quantity } } })}
+                className="btn-secondary"
+                style={{ textAlign: "center", display: "flex", justifyContent: "center", alignItems: "center", gap: "0.5rem", height: "48px", width: "100%", cursor: "pointer", border: "none" }}
+              >
                 <ShoppingBag size={18} /> Buy Now — Go to Checkout
-              </Link>
+              </button>
             </div>
           </div>
         </div>

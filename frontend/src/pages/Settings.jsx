@@ -10,7 +10,7 @@ import { useTheme } from "../context/ThemeContext";
  * User Settings & Preferences
  */
 const Settings = () => {
-    const { t } = useLanguage();
+    const { t, language, setLanguage } = useLanguage();
     const { theme, toggleTheme } = useTheme();
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
@@ -19,9 +19,9 @@ const Settings = () => {
         email: ""
     });
     const [passwords, setPasswords] = useState({
-        old_password: "",
-        new_password: "",
-        confirm_password: ""
+        oldPassword: "",
+        newPassword: "",
+        confirmPassword: ""
     });
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
@@ -66,7 +66,7 @@ const Settings = () => {
 
     const handlePasswordChange = async (e) => {
         e.preventDefault();
-        if (passwords.new_password !== passwords.confirm_password) {
+        if (passwords.newPassword !== passwords.confirmPassword) {
             setError(t("settings.passwordsNoMatch") || "New passwords do not match.");
             return;
         }
@@ -75,11 +75,11 @@ const Settings = () => {
         setSuccess("");
         try {
             await authService.changePassword({
-                old_password: passwords.old_password,
-                new_password: passwords.new_password
+                oldPassword: passwords.oldPassword,
+                newPassword: passwords.newPassword
             });
             setSuccess(t("settings.passwordChanged") || "Password changed successfully!");
-            setPasswords({ old_password: "", new_password: "", confirm_password: "" });
+            setPasswords({ oldPassword: "", newPassword: "", confirmPassword: "" });
         } catch (err) {
             setError(err.response?.data?.error || t("settings.passwordChangeFailed") || "Failed to change password.");
         } finally {
@@ -87,17 +87,26 @@ const Settings = () => {
         }
     };
 
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [deletePassword, setDeletePassword] = useState("");
+
     const handleDeleteAccount = async () => {
-        if (window.confirm(t("settings.deleteAccountConfirm") || "CRITICAL: Are you sure you want to delete your account? This will permanently remove all your data, plants, and history. This action cannot be undone.")) {
-            try {
-                setLoading(true);
-                await authService.deleteAccount();
-                sessionStorage.clear();
-                navigate("/");
-            } catch (err) {
-                setError(t("settings.deleteAccountFailed") || "Failed to delete account. Please try again later.");
-                setLoading(false);
-            }
+        if (!deletePassword) {
+            setError(t("common.passwordRequired") || "Password is required to confirm deletion.");
+            return;
+        }
+        
+        try {
+            setLoading(true);
+            setError("");
+            await authService.deleteAccount(deletePassword);
+            sessionStorage.clear();
+            navigate("/");
+        } catch (err) {
+            setError(err.response?.data?.error || t("settings.deleteAccountFailed") || "Failed to delete account. Incorrect password or server error.");
+            setLoading(false);
+            setShowDeleteModal(false);
+            setDeletePassword("");
         }
     };
 
@@ -129,6 +138,47 @@ const Settings = () => {
                 <div className="settings-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: '3rem' }}>
                     {/* Left Column: Preferences */}
                     <div className="settings-section">
+                        {/* Language Toggle Card */}
+                        <div className="settings-card" style={{ background: 'var(--bg-card)', padding: '2rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-light)', boxShadow: 'var(--shadow-sm)', marginBottom: '2rem' }}>
+                            <h3 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                🌐 {t("settings.langSection") || "Language / भाषा"}
+                            </h3>
+                            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
+                                {t("settings.displayDesc")}
+                            </p>
+                            <div style={{ display: 'flex', gap: '0.75rem' }}>
+                                <button
+                                    onClick={() => setLanguage('en')}
+                                    style={{
+                                        flex: 1, height: '46px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+                                        background: language === 'en' ? 'var(--primary)' : 'var(--bg-card)',
+                                        color: language === 'en' ? 'white' : 'var(--text-muted)',
+                                        border: language === 'en' ? '2px solid var(--primary)' : '2px solid var(--border-light)',
+                                        borderRadius: 'var(--radius-sm)', fontWeight: 700, fontSize: '0.9rem',
+                                        cursor: 'pointer', transition: 'all 0.2s'
+                                    }}
+                                    id="settings-lang-en-btn"
+                                >
+                                    🇬🇧 English
+                                </button>
+                                <button
+                                    onClick={() => setLanguage('ne')}
+                                    style={{
+                                        flex: 1, height: '46px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+                                        background: language === 'ne' ? 'var(--primary)' : 'var(--bg-card)',
+                                        color: language === 'ne' ? 'white' : 'var(--text-muted)',
+                                        border: language === 'ne' ? '2px solid var(--primary)' : '2px solid var(--border-light)',
+                                        borderRadius: 'var(--radius-sm)', fontWeight: 700, fontSize: '0.9rem',
+                                        cursor: 'pointer', transition: 'all 0.2s'
+                                    }}
+                                    id="settings-lang-ne-btn"
+                                >
+                                    🇳🇵 नेपाली
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Display/Theme Card */}
                         <div className="settings-card" style={{ background: 'var(--bg-card)', padding: '2rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-light)', boxShadow: 'var(--shadow-sm)', marginBottom: '2rem' }}>
                             <h3 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                                 <Sun size={24} className="text-primary" /> {t("settings.displayPref")}
@@ -156,7 +206,7 @@ const Settings = () => {
                             <button
                                 className="btn-secondary"
                                 style={{ width: '100%', color: '#dc2626', borderColor: '#dc2626' }}
-                                onClick={handleDeleteAccount}
+                                onClick={() => setShowDeleteModal(true)}
                             >
                                 {t("settings.deleteAccount")}
                             </button>
@@ -213,8 +263,8 @@ const Settings = () => {
                                     <label>{t("settings.currentPassword")}</label>
                                     <input
                                         type="password"
-                                        value={passwords.old_password}
-                                        onChange={(e) => setPasswords({ ...passwords, old_password: e.target.value })}
+                                        value={passwords.oldPassword}
+                                        onChange={(e) => setPasswords({ ...passwords, oldPassword: e.target.value })}
                                         required
                                     />
                                 </div>
@@ -223,8 +273,8 @@ const Settings = () => {
                                         <label>{t("settings.newPassword")}</label>
                                         <input
                                             type="password"
-                                            value={passwords.new_password}
-                                            onChange={(e) => setPasswords({ ...passwords, new_password: e.target.value })}
+                                            value={passwords.newPassword}
+                                            onChange={(e) => setPasswords({ ...passwords, newPassword: e.target.value })}
                                             required
                                         />
                                     </div>
@@ -232,8 +282,8 @@ const Settings = () => {
                                         <label>{t("settings.confirmPassword")}</label>
                                         <input
                                             type="password"
-                                            value={passwords.confirm_password}
-                                            onChange={(e) => setPasswords({ ...passwords, confirm_password: e.target.value })}
+                                            value={passwords.confirmPassword}
+                                            onChange={(e) => setPasswords({ ...passwords, confirmPassword: e.target.value })}
                                             required
                                         />
                                     </div>
@@ -246,6 +296,54 @@ const Settings = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Account Deletion Modal */}
+            {showDeleteModal && (
+                <div className="modal-overlay" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div className="modal-content animate-slide-up" style={{ maxWidth: '450px', width: '90%', background: 'var(--bg-card)', padding: '2.5rem', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-xl)', border: '1px solid var(--border-light)' }}>
+                        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+                            <div style={{ background: 'var(--danger-subtle)', color: 'var(--danger)', width: '64px', height: '64px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
+                                <AlertTriangle size={32} />
+                            </div>
+                            <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '1rem' }}>{t("common.areYouSure") || "Final Confirmation"}</h2>
+                            <p style={{ color: 'var(--text-muted)', lineHeight: '1.6' }}>
+                                {t("settings.deleteAccountConfirm") || "This action is irreversible. Please enter your account password to permanently delete your data."}
+                            </p>
+                        </div>
+
+                        <div className="form-group">
+                            <label>{t("common.password") || "Your Password"}</label>
+                            <input
+                                type="password"
+                                value={deletePassword}
+                                onChange={(e) => setDeletePassword(e.target.value)}
+                                placeholder="Enter password to confirm"
+                                autoFocus
+                                style={{ borderColor: 'var(--danger)' }}
+                            />
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem' }}>
+                            <button 
+                                className="btn-secondary" 
+                                style={{ flex: 1 }} 
+                                onClick={() => { setShowDeleteModal(false); setDeletePassword(""); }}
+                                disabled={loading}
+                            >
+                                {t("common.cancel") || "Go Back"}
+                            </button>
+                            <button 
+                                className="btn-primary" 
+                                style={{ flex: 1, background: 'var(--danger)', border: 'none' }} 
+                                onClick={handleDeleteAccount}
+                                disabled={loading || !deletePassword}
+                            >
+                                {loading ? t("settings.deleting") || "Deleting..." : t("common.delete") || "Delete Account"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

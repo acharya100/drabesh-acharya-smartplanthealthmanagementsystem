@@ -22,6 +22,7 @@ class SoilAnalysis(models.Model):
     potassium = models.FloatField(help_text="Potassium content (kg/ha)")
     ph_level = models.FloatField(help_text="Soil pH (0-14)")
     moisture = models.FloatField(help_text="Moisture percentage (0-100)")
+    organic_matter = models.FloatField(null=True, blank=True, help_text="Organic matter percentage (0-15%)")
     soil_type = models.CharField(max_length=20, choices=SOIL_TYPE_CHOICES, default='loamy')
     
     # Results stored as JSON

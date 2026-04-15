@@ -25,6 +25,7 @@ const Ecommerce = () => {
     const [products, setProducts] = useState([]);
     const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
     const [search, setSearch] = useState("");
     const [selectedCategory, setSelectedCategory] = useState("all");
     const [sortBy, setSortBy] = useState("newest");
@@ -44,19 +45,23 @@ const Ecommerce = () => {
 
     useEffect(() => { loadData(); loadWishlist(); }, []);
 
-    const loadData = async () => {
+    const loadData = async (silent = false) => {
         try {
-            setLoading(true);
+            if (!silent) setLoading(true);
+            else setRefreshing(true);
             const [prodRes, catRes] = await Promise.all([
                 eCommerceService.getProducts(),
                 eCommerceService.getCategories()
             ]);
             setProducts(prodRes.data.results || prodRes.data);
             setCategories(catRes.data.results || catRes.data);
+            
+            if (!silent) setLoading(false);
+            setRefreshing(false);
         } catch (error) {
             console.error("Error loading shop data:", error);
-        } finally {
             setLoading(false);
+            setRefreshing(false);
         }
     };
 
@@ -132,7 +137,7 @@ const Ecommerce = () => {
             }
             showToast(t("store.productSaved"), "success");
             setShowProductForm(false);
-            loadData();
+            loadData(true); // silent
         } catch (err) {
             showToast(err.response?.data?.detail || "Failed to save product.", "error");
         } finally {
@@ -147,7 +152,7 @@ const Ecommerce = () => {
             await api.delete(`/ecommerce/products/${deleteTarget.id}/`);
             showToast(t("store.productDeleted"), "success");
             setDeleteTarget(null);
-            loadData();
+            loadData(true); // silent
         } catch (err) {
             showToast("Failed to delete product.", "error");
         } finally {

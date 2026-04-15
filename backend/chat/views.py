@@ -2,6 +2,7 @@ import time
 from rest_framework import viewsets, status, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from typing import Any
 from .models import ChatRoom, ChatMessage
 from .serializers import ChatRoomSerializer, ChatRoomDetailSerializer, ChatMessageSerializer
 from .plant_ai import get_ai_response
@@ -12,28 +13,30 @@ class ChatRoomViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = ChatRoomSerializer
 
-    def get_queryset(self):
+    def get_queryset(self): # type: ignore[reportIncompatibleMethodOverride]
         if self.request.user.is_staff:
             return ChatRoom.objects.all().prefetch_related('messages')
         return ChatRoom.objects.filter(user=self.request.user).prefetch_related('messages')
 
-    def get_serializer_class(self):
+    def get_serializer_class(self): # type: ignore[reportIncompatibleMethodOverride]
         if self.action == 'retrieve':
             return ChatRoomDetailSerializer
         return ChatRoomSerializer
 
     def perform_create(self, serializer):
         room = serializer.save(user=self.request.user)
-        # Auto-greet new conversations
+        
         ChatMessage.objects.create(
             room=room,
             sender=None,
             sender_type='expert',
             content=(
-                "Hello! I am your AI Expert Assistant trained in botany and plant pathology. "
-                "How can I help you care for your plants today?"
+                "Hi there! How can I help you today?\n\n"
+                "I can answer questions about plant diseases, soil health, fertilizers, pest control, "
+                "and how to use any part of this system. Just ask."
             ),
         )
+
 
     @action(detail=True, methods=['get'])
     def messages(self, request, pk=None):

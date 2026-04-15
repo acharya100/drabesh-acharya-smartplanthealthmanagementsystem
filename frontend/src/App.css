@@ -15,6 +15,7 @@
   --accent: #f5e8c1;
   /* Soft Cream */
   --success: #10b981;
+  --success-subtle: #d1fae5;
   --danger: #ef4444;
   --danger-subtle: #fee2e2;
   --warning: #f59e0b;
@@ -27,8 +28,12 @@
   --bg-main: #f8fafc;
   /* High-end Neutral Background */
   --bg-card: #ffffff;
+  --bg-input: #f9fafb;
   --text-main: #0f172a;
+  --text-primary: #0f172a;
+  --text-secondary: #374151;
   --text-muted: #64748b;
+  --text-light: #9ca3af;
   --border-light: #e2e8f0;
   --border-focus: #1a4d2e;
 
@@ -55,6 +60,7 @@
   --bg-surface-1: var(--bg-card);
   --bg-surface-2: var(--bg-main);
   --bg-surface-inner: var(--bg-main);
+  --modal-overlay: rgba(15, 23, 42, 0.7);
 }
 
 [data-theme='dark'] {
@@ -65,6 +71,7 @@
   --secondary: #e2e8f0;
   --accent: #1e293b;
   --danger-subtle: rgba(239, 68, 68, 0.12);
+  --success-subtle: rgba(16, 185, 129, 0.12);
   --warning-subtle: rgba(245, 158, 11, 0.12);
   --info: #38bdf8;
   --info-subtle: rgba(14, 165, 233, 0.12);
@@ -72,8 +79,12 @@
   /* Deep Black / Obsidian Foundation */
   --bg-main: #01040a; /* True Obsidian */
   --bg-card: #0d1117; /* GitHub Darkish tone */
+  --bg-input: #0f172a;
   --text-main: #f0f6fc;
+  --text-primary: #f0f6fc;
+  --text-secondary: #e2e8f0;
   --text-muted: #8b949e;
+  --text-light: #6b7280;
   --border-light: #21262d;
   --border-focus: #10b981;
 
@@ -89,6 +100,7 @@
   --shadow-lg: 0 20px 48px rgba(0, 0, 0, 0.6);
 
   --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+  --modal-overlay: rgba(0, 0, 0, 0.85);
 }
 
 /* Global Dark Mode Overrides */
@@ -97,8 +109,8 @@
 [data-theme='dark'] textarea,
 [data-theme='dark'] .upload-container-v2,
 [data-theme='dark'] .camera-zone {
-  background: #0f172a;
-  color: #f8fafc;
+  background: var(--bg-input);
+  color: var(--text-main);
   border-color: #334155;
 }
 
@@ -115,11 +127,60 @@
 [data-theme='dark'] h1,
 [data-theme='dark'] h2,
 [data-theme='dark'] h3 {
-  color: #f8fafc;
+  color: var(--text-main);
+}
+
+[data-theme='dark'] p,
+[data-theme='dark'] span,
+[data-theme='dark'] label {
+  color: inherit;
 }
 
 [data-theme='dark'] .subtitle {
-  color: #94a3b8;
+  color: var(--text-muted);
+}
+
+/* Modal dark mode override - ensure all modals use theme vars */
+[data-theme='dark'] .modal-content {
+  background: var(--bg-card);
+  border-color: var(--border-light);
+  color: var(--text-main);
+}
+
+[data-theme='dark'] .modal-header {
+  background: var(--bg-card);
+  border-color: var(--border-light);
+}
+
+[data-theme='dark'] .modal-footer {
+  background: var(--bg-surface-inner);
+  border-color: var(--border-light);
+}
+
+/* Dropdown menus in dark mode */
+[data-theme='dark'] .dropdown-menu {
+  background: var(--bg-card);
+  border-color: var(--border-light);
+}
+
+[data-theme='dark'] .dropdown-item {
+  color: var(--text-main);
+}
+
+[data-theme='dark'] .dropdown-item:hover {
+  background: var(--primary-subtle);
+}
+
+/* Btn-secondary dark mode */
+[data-theme='dark'] .btn-secondary {
+  background: var(--bg-card);
+  color: var(--text-main);
+  border-color: var(--border-light);
+}
+
+[data-theme='dark'] .btn-secondary:hover {
+  background: var(--bg-surface-2);
+  border-color: var(--text-muted);
 }
 
 /* Surface Utility Classes */
@@ -139,6 +200,31 @@
   background: rgba(15, 23, 42, 0.7);
   backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* --- Utility: Tailwind-like Group Hover --- */
+.group {
+  position: relative;
+}
+
+.group .hover-target {
+  visibility: hidden;
+  opacity: 0;
+  transition: all 0.2s ease;
+}
+
+.group:hover .hover-target,
+.group:hover .group-hover\:visible {
+  visibility: visible;
+  opacity: 1;
+}
+
+.invisible {
+  visibility: hidden;
+}
+
+.opacity-0 {
+  opacity: 0;
 }
 
 
@@ -824,7 +910,7 @@ textarea:focus {
   max-width: 450px;
   max-height: 450px;
   aspect-ratio: 1 / 1;
-  background: #f1f5f9;
+  background: var(--bg-surface-inner);
   border-radius: var(--radius-md);
   overflow: hidden;
   box-shadow: var(--shadow-md);
@@ -833,6 +919,7 @@ textarea:focus {
   align-items: center;
   justify-content: center;
   border: 1px solid var(--border-light);
+  transition: background 0.3s ease;
 }
 
 .preview-image-wrapper img {
@@ -1065,4 +1152,23 @@ textarea:focus {
   border-color: var(--primary);
   color: var(--primary);
   background: var(--primary-subtle);
+}
+
+/* --- Professional Sync & Offline Utilities --- */
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.sync-pulse {
+  animation: sync-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes sync-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .5; }
 }

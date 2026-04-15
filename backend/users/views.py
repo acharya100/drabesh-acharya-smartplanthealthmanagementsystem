@@ -34,7 +34,7 @@ class ForgotPasswordCodeView(APIView):
         
         # Generate 6-digit code
         code = str(random.randint(100000, 999999))
-        cache.set(f"pwd_reset_{identifier}", code, timeout=300) # Valid for 5 minutes
+        cache.set(f"pwd_reset_{identifier}", code, timeout=120) # Valid for 2 minutes
         
         # If user looked up via phone number, simulate an SMS
         if user.phone_number and identifier == user.phone_number:
@@ -63,7 +63,7 @@ class ForgotPasswordCodeView(APIView):
                   <div style="background:#f3f4f6;border-radius:10px;padding:28px;text-align:center;margin-bottom:32px;">
                     <span style="font-size:40px;font-weight:800;letter-spacing:16px;color:#111827;font-family:monospace;">{code}</span>
                   </div>
-                  <p style="margin:0;font-size:14px;color:#9ca3af;">This code expires in 5 minutes.</p>
+                  <p style="margin:0;font-size:14px;color:#9ca3af;">This code expires in 2 minutes.</p>
                 </td></tr>
                 <tr><td style="background:#f9fafb;padding:24px 40px;border-top:1px solid #e5e7eb;">
                   <p style="margin:0;font-size:13px;color:#9ca3af;">&copy; 2026 Smart Plant Health Management System. All rights reserved.</p>
@@ -74,7 +74,7 @@ class ForgotPasswordCodeView(APIView):
         </body>
         </html>
         """
-        plain_message = f'Your password reset code is: {code}\n\nThis code expires in 5 minutes.\n\nIf you did not request this, ignore this email.'
+        plain_message = f'Your password reset code is: {code}\n\nThis code expires in 2 minutes.\n\nIf you did not request this, ignore this email.'
         try:
             send_mail(
                 subject='Reset your password — Smart Plant Health',
@@ -226,6 +226,12 @@ class DeleteAccountView(APIView):
 
     def delete(self, request):
         user = request.user
+        password = request.data.get('password')
+        if not password:
+            return Response({'error': 'Password is required to delete account.'}, status=status.HTTP_400_BAD_REQUEST)
+        if not user.check_password(password):
+            return Response({'error': 'Incorrect password. Account deletion aborted.'}, status=status.HTTP_403_FORBIDDEN)
+        
         user.delete()
         return Response({'message': 'Your account has been permanently removed.'}, status=status.HTTP_204_NO_CONTENT)
 
@@ -285,7 +291,18 @@ class AdminDashboardView(APIView):
         recent_predictions = Prediction.objects.select_related('user', 'predicted_disease').order_by('-created_at')[:10]
         recent_list = []
         for p in recent_predictions:
-            recent_list.append({'id': p.id, 'username': p.user.username, 'disease': p.predicted_disease.name if p.predicted_disease else 'Unknown', 'confidence': float(p.confidence), 'severity': p.severity, 'is_healthy': p.is_healthy, 'created_at': p.created_at.isoformat()})
+            username = p.user.username if p.user else "Anonymous"
+            image_url = p.image.url if p.image else None
+            recent_list.append({
+                'id': p.id, 
+                'username': username, 
+                'image': image_url,
+                'disease': p.predicted_disease.name if p.predicted_disease else 'Unknown', 
+                'confidence': float(p.confidence), 
+                'severity': p.severity, 
+                'is_healthy': p.is_healthy, 
+                'created_at': p.created_at.isoformat()
+            })
         top_users = User.objects.annotate(pred_count=Count('predictions')).order_by('-pred_count')[:5].values('id', 'username', 'email', 'pred_count', 'date_joined')
         return Response({
             'stats': {
@@ -330,7 +347,17 @@ class AdminUserDetailView(APIView):
         predictions = Prediction.objects.filter(user=user).select_related('predicted_disease').order_by('-created_at')
         pred_list = []
         for p in predictions:
-            pred_list.append({'id': p.id, 'disease': p.predicted_disease.name if p.predicted_disease else 'Unknown', 'confidence': float(p.confidence), 'severity': p.severity, 'is_healthy': p.is_healthy, 'created_at': p.created_at.isoformat(), 'image': request.build_absolute_uri(p.image.url) if p.image else None})
+            disease_name = p.predicted_disease.name if p.predicted_disease else 'Unknown'
+            image_url = request.build_absolute_uri(p.image.url) if p.image else None
+            pred_list.append({
+                'id': p.id, 
+                'disease': disease_name, 
+                'confidence': float(p.confidence), 
+                'severity': p.severity, 
+                'is_healthy': p.is_healthy, 
+                'created_at': p.created_at.isoformat(), 
+                'image': image_url
+            })
         return Response({'user': {'id': user.id, 'username': user.username, 'email': user.email, 'is_staff': user.is_staff, 'date_joined': user.date_joined.isoformat(), 'last_login': user.last_login.isoformat() if user.last_login else None}, 'plants': list(plants), 'predictions': pred_list})
 
     def delete(self, request, user_id):
@@ -364,17 +391,43 @@ class AdminAllPredictionsView(APIView):
                 
             pred_list.append({
                 'id': p.id, 
-                'username': p.user.username, 
-                'user_id': p.user.id, 
+                'username': p.user.username if p.user else "Anonymous", 
+                'user_id': p.user.id if p.user else None, 
                 'disease': p.predicted_disease.name if p.predicted_disease else 'Unknown', 
                 'confidence': float(p.confidence), 
                 'severity': p.severity, 
                 'is_healthy': p.is_healthy, 
                 'category': category,
-                'created_at': p.created_at.isoformat(), 
+                'created_at': p.created_at.isoformat() if p.created_at else None, 
                 'image': request.build_absolute_uri(p.image.url) if p.image else None
             })
         return Response(pred_list)
+
+
+class AdminAllPlantsView(APIView):
+    """View all plants in the system (Admin only)"""
+    permission_classes = [IsAdminUser]
+
+    def get(self, request):
+        from plants.models import Plant
+        # Removed .prefetch_related('diseases') as Plant model has no direct 'diseases' relationship field.
+        plants = Plant.objects.select_related('user').order_by('-created_at')
+        plant_list = []
+        for p in plants:
+            plant_list.append({
+                'id': p.id,
+                'name': p.name,
+                'scientific_name': p.scientific_name,
+                'owner': p.user.username if p.user else "Anonymous",
+                'owner_id': p.user.id if p.user else None,
+                'health_status': p.health_status,
+                'is_healthy': p.health_status == 'healthy',
+                'created_at': p.created_at.isoformat(),
+                'image': request.build_absolute_uri(p.image.url) if p.image else None,
+                'sunlight_display': p.get_sunlight_display_verbose(),
+                'water_frequency_display': p.get_water_frequency_display_verbose()
+            })
+        return Response(plant_list)
 
 
 class AdminToggleStaffView(APIView):
@@ -474,7 +527,12 @@ class AdminEcommerceOverviewView(APIView):
                 'total': total_reviews,
                 'avg_rating': round(float(avg_rating), 1),
             },
-            'top_products': list(top_products),
+            'top_products': [
+                {
+                    **item, 
+                    'revenue': float(item['revenue'] or 0)
+                } for item in top_products
+            ],
             'low_stock_products': low_stock_products,
             'monthly_revenue': monthly,
         })

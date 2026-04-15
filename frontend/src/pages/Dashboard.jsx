@@ -5,7 +5,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
-import { Leaf, Activity, ShieldCheck, Plus, Camera, List, Settings as SettingsIcon, Clock, ChevronRight } from "lucide-react";
+import { Leaf, Activity, ShieldCheck, Plus, Camera, List, Clock, ChevronRight, CheckCircle, AlertTriangle, XCircle, ScanLine } from "lucide-react";
 import { useLanguage } from "../context/LanguageContext";
 import * as api from "../services/api";
 
@@ -19,19 +19,21 @@ const Dashboard = () => {
   });
   const [recentPredictions, setRecentPredictions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     fetchDashboardData();
   }, []);
 
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
+      else setRefreshing(true);
       const [statsRes, historyRes] = await Promise.all([
         api.plantService.getStatistics(),
         api.predictionService.getHistory()
       ]);
-
+  
       const statsData = statsRes.data;
       setStats({
         totalPlants: statsData.total_plants,
@@ -40,14 +42,16 @@ const Dashboard = () => {
         outOfScope: statsData.out_of_scope,
         nonPlant: statsData.non_plant_images
       });
-
+  
       const historyData = historyRes.data.results || historyRes.data;
       setRecentPredictions(historyData.slice(0, 4));
-
-      setLoading(false);
+  
+      if (!silent) setLoading(false);
+      setRefreshing(false);
     } catch (error) {
       console.error("Dashboard and history data error:", error);
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
@@ -93,7 +97,7 @@ const Dashboard = () => {
               background: 'var(--bg-surface-1)',
               border: '1px solid var(--border-light)'
             }}>
-              <div className="stat-icon" style={{ background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6' }}><Activity size={28} /></div>
+              <div className="stat-icon" style={{ background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6' }}><Leaf size={28} /></div>
               <div>
                 <h3>{stats.totalPlants || 0}</h3>
                 <p>{t("dashboard.statPlants")}</p>
@@ -104,7 +108,7 @@ const Dashboard = () => {
               background: 'var(--bg-surface-1)',
               border: '1px solid var(--border-light)'
             }}>
-              <div className="stat-icon" style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981' }}><Activity size={28} /></div>
+              <div className="stat-icon" style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981' }}><CheckCircle size={28} /></div>
               <div>
                 <h3>{stats.healthyPlants || 0}</h3>
                 <p>{t("dashboard.statHealthyPlants")}</p>
@@ -115,7 +119,7 @@ const Dashboard = () => {
               background: 'var(--bg-surface-1)',
               border: '1px solid var(--border-light)'
             }}>
-              <div className="stat-icon" style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444' }}><Camera size={28} /></div>
+              <div className="stat-icon" style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444' }}><AlertTriangle size={28} /></div>
               <div>
                 <h3>{stats.unhealthyPlants || 0}</h3>
                 <p>{t("dashboard.statUnhealthyPlants") || "Unhealthy Plants"}</p>
@@ -126,18 +130,18 @@ const Dashboard = () => {
               background: 'var(--bg-surface-1)',
               border: '1px solid var(--border-light)'
             }}>
-              <div className="stat-icon" style={{ background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b' }}><ShieldCheck size={28} /></div>
+              <div className="stat-icon" style={{ background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b' }}><ScanLine size={28} /></div>
               <div>
                 <h3>{stats.outOfScope || 0}</h3>
-                <p>{t("dashboard.statOutOfScope") || "Out of Scope"}</p>
+                <p>{t("dashboard.statOutOfScope") || "Outside Scope"}</p>
               </div>
             </Link>
 
-            <Link to="/plants?filter=non_leaf" className="stat-card professional-card" style={{
+            <Link to="/plants?filter=non_plant" className="stat-card professional-card" style={{
               background: 'var(--bg-surface-1)',
               border: '1px solid var(--border-light)'
             }}>
-              <div className="stat-icon" style={{ background: 'rgba(100, 116, 139, 0.1)', color: '#64748b' }}><Leaf size={28} /></div>
+              <div className="stat-icon" style={{ background: 'rgba(100, 116, 139, 0.1)', color: '#64748b' }}><XCircle size={28} /></div>
               <div>
                 <h3>{stats.nonPlant || 0}</h3>
                 <p>{t("dashboard.statNonPlant") || "Non-Plant Images"}</p>
@@ -185,9 +189,9 @@ const Dashboard = () => {
                 const isNonPlant = item.treatment_status === 'non_plant' || item.is_plant_image === false;
                 const isOutOfScope = item.treatment_status === 'out_of_scope' || item.disease_name === 'Unrecognized';
 
-                const displayName = isNonPlant ? t("history.badgeNonPlant") || 'Non-Plant Image' : isOutOfScope ? t("history.badgeOutsideScope") || 'Out of Scope' : item.disease_name;
-                const displayPlant = isNonPlant ? t("history.badgeNonPlant") || 'Non-Plant Image' : isOutOfScope ? t("history.badgeOutsideScope") || 'Out of Scope' : item.plant_name;
-                const badgeText = isNonPlant ? t("history.badgeNonLeaf") || 'NON LEAF' : isOutOfScope ? t("history.badgeOutsideScope") || 'SCOPE' : item.is_healthy ? t("history.badgeHealthy") || 'HEALTHY' : t("history.badgeDiseased") || 'DISEASED';
+                const displayName = isNonPlant ? t("history.badgeNonPlant") || 'Non-Plant Image' : isOutOfScope ? t("history.badgeOutsideScope") || 'Outside Scope' : item.disease_name;
+                const displayPlant = isNonPlant ? t("history.badgeNonPlant") || 'Non-Plant Image' : isOutOfScope ? t("history.badgeOutsideScope") || 'Outside Scope' : item.plant_name;
+                const badgeText = isNonPlant ? t("history.badgeNonLeaf") || 'NON PLANT' : isOutOfScope ? t("history.badgeOutsideScope") || 'OUTSIDE' : item.is_healthy ? t("history.badgeHealthy") || 'HEALTHY' : t("history.badgeDiseased") || 'DISEASED';
                 const badgeClass = isNonPlant || isOutOfScope ? 'neutral' : item.is_healthy ? 'success' : 'danger';
 
                 return (

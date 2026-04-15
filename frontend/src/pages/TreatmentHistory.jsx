@@ -13,24 +13,23 @@ import TreatmentStatusDropdown from "../components/TreatmentStatusDropdown";
 import SeveritySelector from "../components/SeveritySelector";
 import TreatmentFilterTabs from "../components/TreatmentFilterTabs";
 import { offlineStore } from "../utils/offlineStore";
+import { useOfflineSync } from "../context/OfflineSyncContext";
 
 // ── Shared helpers ──────────────────────────────────────────────────────────
 const getCardTitle = (item, t) => {
     if (item.treatment_status === 'non_plant' || item.is_plant_image === false)
         return t("treatmentFilters.non_plant");
-    if (item.treatment_status === 'out_of_scope' || item.disease_name === 'Unrecognized')
-        return t("treatmentFilters.out_of_scope");
+    if (item.treatment_status === 'out_of_scope' || item.disease_name === 'Unrecognized' || item.disease_name === 'Outside Scope')
+        return t("history.badgeOutsideScope") || "Outside Scope";
     if (item.is_healthy || item.treatment_status === 'healthy')
         return `${item.plant_name || 'Plant'} – ${t("history.badgeHealthy")}`;
     return item.disease_name || 'Unknown Disease';
 };
 
 const SEV_MAP = {
-    low: { bg: '#fef9c3', color: '#854d0e', label: 'Low' },
-    minor: { bg: '#fef9c3', color: '#854d0e', label: 'Minor' },
+    minor:    { bg: '#fef9c3', color: '#854d0e', label: 'Minor' },
     moderate: { bg: '#ffedd5', color: '#c2410c', label: 'Moderate' },
-    high: { bg: '#fee2e2', color: '#dc2626', label: 'Severe' },
-    severe: { bg: '#fee2e2', color: '#dc2626', label: 'Severe' },
+    severe:   { bg: '#fee2e2', color: '#dc2626', label: 'Severe' },
     critical: { bg: '#fef2f2', color: '#991b1b', label: 'Critical' },
 };
 
@@ -46,15 +45,17 @@ const SeverityBadge = ({ severity }) => {
     );
 };
 
-const COST_MAP = { low: 250, minor: 250, moderate: 350, high: 450, severe: 450, critical: 450 };
-const getCost = (severity) => COST_MAP[severity?.toLowerCase()] || 250;
+const COST_MAP = { minor: 300, moderate: 350, severe: 400, critical: 400 };
+const getCost = (severity) => COST_MAP[severity?.toLowerCase()] || 300;
 
 const TreatmentHistory = () => {
     const { t } = useLanguage();
+    const { isOnline, enqueueAction } = useOfflineSync();
     const [historyItems, setHistoryItems] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState("all");
     const [totalCost, setTotalCost] = useState(0);
+    const [refreshing, setRefreshing] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [editingPrediction, setEditingPrediction] = useState(null);
 
@@ -62,17 +63,21 @@ const TreatmentHistory = () => {
         loadTreatmentHistory();
     }, []);
 
-    const loadTreatmentHistory = async () => {
+    const loadTreatmentHistory = async (silent = false) => {
         try {
-            setLoading(true);
+            if (!silent) setLoading(true);
+            else setRefreshing(true);
+            
+            let reconciledHistory = [];
+
+            // Always attempt local backend — Django runs on localhost and is accessible
+            // even when navigator.onLine is false (that only indicates external internet)
             const { data } = await predictionService.getHistory();
             const history = data.results || data;
-
             // Filter records that are part of treatment history
             const validHistory = history.filter(p => ['untreated', 'in_progress', 'treated', 'healthy', 'non_plant', 'out_of_scope'].includes(p.treatment_status));
-
-            // Apply offline updates (local overrides)
-            const reconciledHistory = offlineStore.applyOfflineUpdates(validHistory);
+            // Apply offline updates (local overrides from queue)
+            reconciledHistory = offlineStore.applyOfflineUpdates(validHistory);
 
             setHistoryItems(reconciledHistory);
 
@@ -80,39 +85,48 @@ const TreatmentHistory = () => {
             let total = 0;
             reconciledHistory.filter(p => !['treated', 'healthy', 'non_plant', 'out_of_scope'].includes(p.treatment_status) && !p.is_healthy).forEach(item => {
                 const sev = item.severity?.toLowerCase();
-                let cost = 250;
+                let cost = 300;
                 if (sev === 'moderate') cost = 350;
-                if (sev === 'severe' || sev === 'high' || sev === 'critical') cost = 450;
+                if (sev === 'severe' || sev === 'high' || sev === 'critical') cost = 400;
                 total += cost;
             });
             setTotalCost(total);
 
-            setLoading(false);
+            if (!silent) setLoading(false);
+            setRefreshing(false);
         } catch (error) {
             console.error("Error loading treatment history:", error);
+            // If fetch fails but we have queue, try to at least show current state
+            setHistoryItems(prev => offlineStore.applyOfflineUpdates(prev));
             setLoading(false);
+            setRefreshing(false);
         }
     };
 
     const updateStatus = async (id, newStatus) => {
+        // Always try local backend first; catch block handles server-down gracefully
         try {
             await predictionService.update(id, { treatment_status: newStatus });
-            loadTreatmentHistory();
+            loadTreatmentHistory(true);
         } catch (error) {
             console.error("Error updating treatment status:", error);
+            enqueueAction('UPDATE_PRED', id, { treatment_status: newStatus });
+            loadTreatmentHistory(true);
         }
     };
 
     const updateSeverity = async (id, newSeverity) => {
+        const newCost = COST_MAP[newSeverity.toLowerCase()] || 300;
+        const payload = { severity: newSeverity, estimated_cost: newCost };
+
+        // Always try local backend; catch block enqueues on failure
         try {
-            await predictionService.update(id, { severity: newSeverity });
-            // Optimistic update in local state
-            setHistoryItems(prev => prev.map(item =>
-                item.id === id ? { ...item, severity: newSeverity } : item
-            ));
-            loadTreatmentHistory(); // Reload to get fresh cost total
+            await predictionService.update(id, payload);
+            loadTreatmentHistory(true); // Silent reload
         } catch (error) {
             console.error("Error updating severity:", error);
+            enqueueAction('UPDATE_PRED', id, payload);
+            loadTreatmentHistory(true);
         }
     };
 
@@ -123,28 +137,38 @@ const TreatmentHistory = () => {
 
     const handleDelete = async (id) => {
         if (window.confirm(t("history.deleteConfirm") || "Delete this record?")) {
+            // Always try local backend; catch block enqueues on failure
             try {
                 await predictionService.delete(id);
-                loadTreatmentHistory();
+                loadTreatmentHistory(true); // Silent reload
             } catch (e) {
                 console.error(e);
+                enqueueAction('DELETE_PRED', id, {});
+                loadTreatmentHistory(true);
             }
         }
     };
 
     const handleUpdatePrediction = async (e) => {
         e.preventDefault();
+        const autoCost = editingPrediction.is_healthy ? 0 : (COST_MAP[editingPrediction.severity?.toLowerCase()] || 300);
+        const payload = {
+            is_healthy: editingPrediction.is_healthy,
+            severity: editingPrediction.severity,
+            treatment_status: editingPrediction.treatment_status,
+            estimated_cost: parseFloat(editingPrediction.estimated_cost) || autoCost
+        };
+
+        // Always try local backend first; enqueue if it fails
         try {
-            await predictionService.update(editingPrediction.id, {
-                is_healthy: editingPrediction.is_healthy,
-                severity: editingPrediction.severity,
-                treatment_status: editingPrediction.treatment_status,
-                estimated_cost: editingPrediction.estimated_cost
-            });
+            await predictionService.update(editingPrediction.id, payload);
             setShowEditModal(false);
-            loadTreatmentHistory();
+            loadTreatmentHistory(true); // Silent reload
         } catch (error) {
             console.error("Error updating prediction:", error);
+            enqueueAction('UPDATE_PRED', editingPrediction.id, payload);
+            setShowEditModal(false);
+            loadTreatmentHistory(true);
         }
     };
 
@@ -276,7 +300,7 @@ const TreatmentHistory = () => {
                                         <label>Estimated Price (NPR)</label>
                                         <input
                                             type="number"
-                                            value={editingPrediction.estimated_cost || (editingPrediction.severity === 'moderate' ? 350 : (editingPrediction.severity === 'severe' ? 450 : 250))}
+                                            value={editingPrediction.estimated_cost || (editingPrediction.severity === 'moderate' ? 350 : (editingPrediction.severity === 'severe' ? 400 : 300))}
                                             onChange={(e) => setEditingPrediction({ ...editingPrediction, estimated_cost: e.target.value })}
                                             className="form-control"
                                         />
@@ -322,12 +346,13 @@ const TreatmentCard = ({ item, t, formatDate, onUpdateStatus, onUpdateSeverity, 
     const isOutOfScope = item.treatment_status === 'out_of_scope' || item.disease_name === 'Unrecognized';
     const isSpecialCase = isNonPlant || isOutOfScope;
 
-    // Cost display
+    // Cost display - respect manual override if it exists
     let estimatedCost;
     if (isHealthyStatus || isSpecialCase) {
         estimatedCost = null; // don't show cost
     } else {
-        estimatedCost = `NPR ${getCost(item.severity).toLocaleString()}`;
+        const costValue = item.estimated_cost ? item.estimated_cost : getCost(item.severity);
+        estimatedCost = `NPR ${Number(costValue).toLocaleString()}`;
     }
 
     return (
@@ -407,12 +432,12 @@ const TreatmentCard = ({ item, t, formatDate, onUpdateStatus, onUpdateSeverity, 
                         {/* Status badge */}
                         {isNonPlant && (
                             <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', padding: '0.2rem 0.7rem', borderRadius: 100, fontSize: '0.7rem', fontWeight: 800, background: '#f1f5f9', color: '#475569' }}>
-                                <Ban size={11} />Non-Plant
+                                <Ban size={11} />{t("history.badgeNonPlant") || "Non-Plant Image"}
                             </span>
                         )}
                         {isOutOfScope && !isNonPlant && (
                             <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', padding: '0.2rem 0.7rem', borderRadius: 100, fontSize: '0.7rem', fontWeight: 800, background: '#f3e8ff', color: '#6d28d9' }}>
-                                <AlertTriangle size={11} />Out of Scope
+                                <AlertTriangle size={11} />{t("history.badgeOutsideScope") || "Outside Scope"}
                             </span>
                         )}
                         {isHealthyStatus && !isSpecialCase && (

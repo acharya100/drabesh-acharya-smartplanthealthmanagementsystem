@@ -1,3 +1,4 @@
+from typing import Any
 from rest_framework import viewsets, permissions, filters, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
@@ -16,20 +17,20 @@ from .serializers import (
 
 
 class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Category.objects.all()
+    queryset = Category.objects.all().order_by('name')
     serializer_class = CategorySerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
 
 class ProductViewSet(viewsets.ModelViewSet):
-    queryset = Product.objects.filter(is_active=True)
+    queryset = Product.objects.filter(is_active=True).order_by('-created_at')
     serializer_class = ProductSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['name', 'description', 'tags']
     ordering_fields = ['price', 'created_at', 'average_rating', 'name']
 
-    def get_queryset(self):
+    def get_queryset(self): # type: ignore[reportIncompatibleMethodOverride]
         qs = super().get_queryset()
         category = self.request.query_params.get('category')
         is_featured = self.request.query_params.get('featured')
@@ -83,12 +84,12 @@ class OrderViewSet(viewsets.ModelViewSet):
     queryset = Order.objects.all().order_by('-created_at')
     permission_classes = [permissions.IsAuthenticated]
 
-    def get_serializer_class(self):
+    def get_serializer_class(self): # type: ignore[reportIncompatibleMethodOverride]
         if self.action == 'create':
             return OrderCreateSerializer
         return OrderSerializer
 
-    def get_queryset(self):
+    def get_queryset(self): # type: ignore[reportIncompatibleMethodOverride]
         if self.request.user.is_staff:
             return self.queryset
         return self.queryset.filter(user=self.request.user)
@@ -104,21 +105,12 @@ class OrderViewSet(viewsets.ModelViewSet):
             link='/orders'
         )
         
-        # Send an email confirmation for the order
+        # Send a professional HTML email confirmation for the order
         try:
-            from django.core.mail import send_mail
-            from django.conf import settings
-            subject = f"Order #{order.id} Placed Successfully!"
-            body = f"Hello {self.request.user.username},\n\nYour order for NPR {order.total_amount} has been successfully placed.\nWe will process it shortly. Thank you very much!\n\n- Smart Plant Health Management System"
-            send_mail(
-                subject,
-                body,
-                settings.EMAIL_HOST_USER,
-                [self.request.user.email],
-                fail_silently=True,
-            )
+            from .email_utils import send_order_confirmation_email
+            send_order_confirmation_email(order.id)
         except Exception as e:
-            print(f"Failed to send order email to {self.request.user.email}: {e}")
+            print(f"Failed to send professional order email to {self.request.user.email}: {e}")
 
     @action(detail=True, methods=['post'])
     def cancel(self, request, pk=None):
@@ -197,7 +189,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
             return [permissions.IsAuthenticatedOrReadOnly()]
         return super().get_permissions()
 
-    def get_queryset(self):
+    def get_queryset(self): # type: ignore[reportIncompatibleMethodOverride]
         product_id = self.request.query_params.get('product')
         if product_id:
             return self.queryset.filter(product__id=product_id)
@@ -244,7 +236,7 @@ class WishlistViewSet(viewsets.ModelViewSet):
     serializer_class = WishlistSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-    def get_queryset(self):
+    def get_queryset(self): # type: ignore[reportIncompatibleMethodOverride]
         return self.queryset.filter(user=self.request.user).select_related('product')
 
     def perform_create(self, serializer):
@@ -291,8 +283,9 @@ class CouponViewSet(viewsets.ModelViewSet):
         if not serializer.is_valid():
             return Response(serializer.errors, status=400)
 
-        code = serializer.validated_data['code']
-        order_total = serializer.validated_data['order_total']
+        validated_data = serializer.validated_data or {}
+        code = validated_data.get('code')
+        order_total = validated_data.get('order_total')
 
         try:
             coupon = Coupon.objects.get(code__iexact=code)
@@ -324,7 +317,7 @@ class SavedAddressViewSet(viewsets.ModelViewSet):
     serializer_class = SavedAddressSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-    def get_queryset(self):
+    def get_queryset(self): # type: ignore[reportIncompatibleMethodOverride]
         return self.queryset.filter(user=self.request.user).order_by('-is_default', '-created_at')
 
     def perform_create(self, serializer):
@@ -345,7 +338,7 @@ class NotificationViewSet(viewsets.ModelViewSet):
     serializer_class = NotificationSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-    def get_queryset(self):
+    def get_queryset(self): # type: ignore[reportIncompatibleMethodOverride]
         return self.queryset.filter(user=self.request.user)
 
     @action(detail=False, methods=['post'])
@@ -374,7 +367,7 @@ class DiseaseProductMappingViewSet(viewsets.ModelViewSet):
     serializer_class = DiseaseProductMappingSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
-    def get_queryset(self):
+    def get_queryset(self): # type: ignore[reportIncompatibleMethodOverride]
         disease_name = self.request.query_params.get('disease_name')
         if disease_name:
             return self.queryset.filter(
