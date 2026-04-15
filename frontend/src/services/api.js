@@ -6,7 +6,7 @@ import axios from 'axios';
 import { toCamel, toSnake } from '../utils/caseTransformer';
 
 // Base API configuration - points to our Django backend
-const API_URL = 'http://localhost:8000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
 const api = axios.create({
     baseURL: API_URL,
