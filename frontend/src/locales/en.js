@@ -753,6 +753,7 @@ const en = {
         healthScore: "Health Score",
         recommendations: "Expert Recommendations",
         noAnalyses: "No previous analyses yet.",
+        confirmDelete: "Are you sure you want to delete this analysis? This action cannot be undone.",
         optimalReference: "Optimal Reference Values",
         howToTitle: "How to Use Soil Analysis — Step-by-Step Guide",
         howToSubtitle: "Click to {{action}} instructions on collecting soil data and reading results",
