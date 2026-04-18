@@ -312,21 +312,21 @@ const DiseaseDetection = () => {
               {result ? (
                 <div className="result-card-v2 animate-slide-up" style={{ background: 'var(--bg-card)', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--glass-shadow)', overflow: 'hidden', border: '1px solid var(--border-light)' }}>
 
-                  {/* ────────────────────────────────────────────────────────
+                  {/* 
                       NON-PLANT IMAGE — clear label, no disease/confidence UI
-                  ──────────────────────────────────────────────────────── */}
+                  */}
                   {result.isNonPlant ? (
                     <div style={{ padding: 0 }}>
                       {/* Header */}
-                      <div style={{ padding: '2rem 2.5rem', background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'flex-start', gap: '1.25rem' }}>
+                      <div style={{ padding: '2rem 2.5rem', background: 'var(--bg-card)', borderBottom: '1px solid var(--border-light)', display: 'flex', alignItems: 'flex-start', gap: '1.25rem' }}>
                         <div style={{ width: 52, height: 52, borderRadius: 14, background: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                           <Plus size={28} color="white" style={{ transform: 'rotate(45deg)' }} />
                         </div>
                         <div>
-                          <div style={{ fontSize: '0.7rem', fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#475569', marginBottom: '0.4rem' }}>
+                          <div style={{ fontSize: '0.7rem', fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>
                             {t("detection.notAPlantBadge") || "NOT A PLANT IMAGE"}
                           </div>
-                          <h2 style={{ fontSize: '1.4rem', fontWeight: 900, color: '#1e293b', margin: 0 }}>
+                          <h2 style={{ fontSize: '1.4rem', fontWeight: 900, color: 'var(--text-main)', margin: 0 }}>
                             {t("plants.nonPlantImage") || "Non-Plant Image"}
                           </h2>
                         </div>
@@ -334,9 +334,9 @@ const DiseaseDetection = () => {
 
                       <div style={{ padding: '2rem 2.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                         {/* Explanation block — Match the Outside Scope style */}
-                        <div style={{ background: '#f8fafc', borderRadius: 12, padding: '1.5rem', border: '1px solid #e2e8f0' }}>
-                          <div style={{ fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#64748b', marginBottom: '0.8rem' }}>AI Diagnostic Insight</div>
-                          <p style={{ color: '#475569', fontSize: '1rem', fontWeight: 600, lineHeight: 1.6, margin: 0 }}>
+                        <div style={{ background: 'var(--bg-main)', borderRadius: 12, padding: '1.5rem', border: '1px solid var(--border-light)' }}>
+                          <div style={{ fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--text-muted)', marginBottom: '0.8rem' }}>AI Diagnostic Insight</div>
+                          <p style={{ color: 'var(--text-secondary)', fontSize: '1rem', fontWeight: 600, lineHeight: 1.6, margin: 0 }}>
                             {result.message || t("plants.nonPlantImageDesc") || 'The uploaded image is not a plant.'}
                           </p>
                         </div>
@@ -520,8 +520,7 @@ const DiseaseDetection = () => {
                                             width: '100%',
                                             justifyContent: 'center',
                                             gap: '0.5rem',
-                                            background: result.treatmentStatus === 'in_progress' ? 'var(--primary)' : 'var(--secondary)',
-                                            opacity: result.treatmentStatus === 'in_progress' ? 0.8 : 1
+                                            opacity: result.treatmentStatus === 'in_progress' ? 0.7 : 1
                                           }}
                                         >
                                           {loading ? <RefreshCw size={18} className="animate-spin" /> : <Activity size={18} />}

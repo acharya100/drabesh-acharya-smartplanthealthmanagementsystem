@@ -970,6 +970,37 @@ const ne = {
         empty: "कुनै सूचना छैन",
         viewAllOrders: "सबै अर्डरहरू हेर्नुस्",
     },
+
+    cart: {
+        title: "तपाईंको किनमेल कार्ट",
+        itemCount_one: "वस्तु कार्टमा",
+        itemCount_many: "वस्तुहरू कार्टमा",
+        clearAll: "सबै हटाउनुस्",
+        emptyTitle: "तपाईंको कार्ट खाली छ",
+        emptyDesc: "हाम्रो पसलमा ब्राउज गर्नुस् र आफ्ना बिरुवाका लागि आवश्यक वस्तुहरू थप्नुस्!",
+        browseStore: "पसल हेर्नुस्",
+        each: "प्रति",
+        orderSummary: "अर्डर सारांश",
+        subtotal: "उप-जम्मा",
+        shipping: "ढुवानी",
+        shippingFree: "निःशुल्क",
+        total: "कुल जम्मा",
+        proceedToCheckout: "भुक्तानीमा जानुस्",
+        freeShipping: "निःशुल्क ढुवानी",
+        secure: "सुरक्षित",
+        bestPrice: "सर्वोत्तम मूल्य",
+        quickDelivery: "छिटो डेलिभरीको ग्यारेन्टी",
+    },
+
+    storeCategories: {
+        "Bio-Control": "जैविक नियन्त्रण",
+        "Fertilizers & Nutrients": "मलखाद र पोषक तत्त्व",
+        "Fungicides": "ढुसीनाशक",
+        "Seeds & Bulbs": "बीउ र बल्ब",
+        "Tools & Equipment": "औजार र उपकरण",
+        "Pesticides": "कीटनाशक",
+        "Organic": "जैविक",
+    },
 };
 
 

@@ -1091,6 +1091,37 @@ const en = {
             mechanical: "Mechanical / Physical"
         }
     },
+
+    cart: {
+        title: "Your Shopping Cart",
+        itemCount_one: "item in cart",
+        itemCount_many: "items in cart",
+        clearAll: "Clear All",
+        emptyTitle: "Your Cart is Empty",
+        emptyDesc: "Browse our store and add some essentials for your plants!",
+        browseStore: "Browse Store",
+        each: "each",
+        orderSummary: "Order Summary",
+        subtotal: "Subtotal",
+        shipping: "Shipping",
+        shippingFree: "Free",
+        total: "Total",
+        proceedToCheckout: "Proceed to Checkout",
+        freeShipping: "Free Shipping",
+        secure: "Secure",
+        bestPrice: "Best Price",
+        quickDelivery: "Quick Delivery Guaranteed",
+    },
+
+    storeCategories: {
+        "Bio-Control": "Bio-Control",
+        "Fertilizers & Nutrients": "Fertilizers & Nutrients",
+        "Fungicides": "Fungicides",
+        "Seeds & Bulbs": "Seeds & Bulbs",
+        "Tools & Equipment": "Tools & Equipment",
+        "Pesticides": "Pesticides",
+        "Organic": "Organic",
+    },
 };
 
 export default en;

@@ -19,7 +19,7 @@ const EMPTY_FORM = {
 };
 
 const Ecommerce = () => {
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
     const navigate = useNavigate();
     const { addToCart, totalItems } = useCart();
     const [products, setProducts] = useState([]);
@@ -55,7 +55,7 @@ const Ecommerce = () => {
             ]);
             setProducts(prodRes.data.results || prodRes.data);
             setCategories(catRes.data.results || catRes.data);
-            
+
             if (!silent) setLoading(false);
             setRefreshing(false);
         } catch (error) {
@@ -176,7 +176,13 @@ const Ecommerce = () => {
 
     const categoriesList = [
         { id: "all", name: t("store.allProductsLabel"), icon: <ShoppingBag size={18} /> },
-        ...categories.map(c => ({ id: c.id.toString(), name: c.name, icon: <Filter size={18} /> }))
+        ...categories.map(c => ({
+            id: c.id.toString(),
+            name: (language === 'ne' && t(`storeCategories.${c.name}`) !== `storeCategories.${c.name}`)
+                ? t(`storeCategories.${c.name}`)
+                : c.name,
+            icon: <Filter size={18} />
+        }))
     ];
 
     const imgUrl = (img) => img

@@ -254,10 +254,10 @@ const Plants = () => {
     try {
       setLoading(true);
       const formData = new FormData();
-      
+
       // Transform camelCase state to snake_case for the Django backend
       const snakePlant = toSnake(finalPlant);
-      
+
       Object.keys(snakePlant).forEach(key => {
         if (snakePlant[key] !== null && snakePlant[key] !== undefined && snakePlant[key] !== '') {
           formData.append(key, snakePlant[key]);

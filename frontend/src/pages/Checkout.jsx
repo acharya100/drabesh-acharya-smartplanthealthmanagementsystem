@@ -365,7 +365,7 @@ const Checkout = () => {
               </div>
               <div style={{ borderTop: "1px solid var(--border-light)", paddingTop: "1rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.875rem" }}>
-                  <span>Subtotal</span><span>NPR {checkoutTotal.toLocaleString()}</span>
+                  <span style={{ color: "var(--text-main)" }}>Subtotal</span><span style={{ color: "var(--text-main)" }}>NPR {checkoutTotal.toLocaleString()}</span>
                 </div>
                 {discountAmount > 0 && (
                   <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.875rem", color: "#22c55e" }}>
@@ -373,10 +373,10 @@ const Checkout = () => {
                   </div>
                 )}
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.875rem" }}>
-                  <span>Shipping</span><span style={{ color: "#22c55e" }}>Free</span>
+                  <span style={{ color: "var(--text-main)" }}>Shipping</span><span style={{ color: "#22c55e" }}>Free</span>
                 </div>
                 <div style={{ display: "flex", justifyContent: "space-between", fontWeight: 800, fontSize: "1.1rem", marginTop: "0.5rem", borderTop: "1px solid var(--border-light)", paddingTop: "0.75rem" }}>
-                  <span>Total</span><span style={{ color: "var(--primary)" }}>NPR {finalTotal.toLocaleString()}</span>
+                  <span style={{ color: "var(--text-main)" }}>Total</span><span style={{ color: "var(--primary)" }}>NPR {finalTotal.toLocaleString()}</span>
                 </div>
               </div>
             </div>
