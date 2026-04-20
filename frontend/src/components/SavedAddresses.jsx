@@ -86,7 +86,7 @@ const SavedAddresses = ({ selectedId, onSelect }) => {
                                     )}
                                 </div>
                                 <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-secondary)' }}>{addr.full_address}</p>
-                                <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>📞 {addr.phone}</p>
+                                <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>     {addr.phone}</p>
                             </div>
                             <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                                 {selectedId?.id === addr.id && <Check size={18} style={{ color: 'var(--primary)' }} />}

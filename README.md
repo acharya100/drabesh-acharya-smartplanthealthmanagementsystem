@@ -53,10 +53,9 @@ The primary goal of this system is to provide a **deterministic, scientific appr
 - **Inference**: PyTorch-based Image Recognition
 - **Static Hosting**: Whitenoise
 
-### Database & Deployment
+### Database
 - **Database**: [PostgreSQL](https://www.postgresql.org/) (Production-ready)
-- **Frontend Hosting**: Vercel
-- **Backend Hosting**: Render
+- **Version Control**: Git / GitHub
 
 ---
 
@@ -114,20 +113,46 @@ npm run dev
 
 ---
 
+---
+
 ## 🖼️ Screenshots
 
-### [PLACEHOLDER] Dashboard Overview
-> Visualizing the central hub for users and agricultural stats.
+### 🛡️ Admin Dashboard
+> System-wide overview showing total users, scans, diseases, and most active users.
 
-### [PLACEHOLDER] AI Detection Interface
-> Capturing the high-precision leaf analysis workflow.
-
-### [PLACEHOLDER] Marketplace & Checkout
-> Showcasing the premium, responsive shopping experience.
+![Admin Dashboard](screenshots/admin_dashboard.png)
 
 ---
 
-## 🔮 Future Improvements
+### 🏠 User Dashboard
+> Personalized overview for farmers showing plant health summary and recent activity.
+
+![User Dashboard](screenshots/user_dashboard.png)
+
+---
+
+### 🌿 Plant Collection
+> Full plant collection with filter tabs for Healthy, Unhealthy, Out-of-Scope, and Non-Plant images.
+
+![Plant Collection](screenshots/plant_collection.png)
+
+---
+
+### 🔬 Disease Detection (AI)
+> Upload interface for AI-powered plant disease diagnosis from leaf images.
+
+![Disease Detection](screenshots/disease_detection.png)
+
+---
+
+### 🛒 Marketplace
+> Integrated online store for purchasing fertilizers, pesticides, and farming tools.
+
+![Marketplace](screenshots/marketplace.png)
+
+---
+
+
 - **Real-time Expert Chat**: Integration with WebSocket for live agricultural advice.
 - **IoT Integration**: Direct feed from soil sensors for live dashboard monitoring.
 - **AR Plant Scouting**: Augmented Reality overlays for localized disease identification in the field.

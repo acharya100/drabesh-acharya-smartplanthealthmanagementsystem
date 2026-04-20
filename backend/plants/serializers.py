@@ -116,7 +116,7 @@ class PlantDetailSerializer(serializers.ModelSerializer):
        
         if value is not None and (value < -50 or value > 60):
             raise serializers.ValidationError(
-                "Minimum temperature must be between -50°C and 60°C"
+                "Minimum temperature must be between -50 degC and 60 degC"
             )
         return value
     
@@ -124,7 +124,7 @@ class PlantDetailSerializer(serializers.ModelSerializer):
       
         if value is not None and (value < -50 or value > 60):
             raise serializers.ValidationError(
-                "Maximum temperature must be between -50°C and 60°C"
+                "Maximum temperature must be between -50 degC and 60 degC"
             )
         return value
     

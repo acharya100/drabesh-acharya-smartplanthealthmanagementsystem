@@ -436,6 +436,10 @@ h3 {
   margin: 0.5rem 0;
 }
 
+.status-pill.healthy { background: var(--primary-subtle); color: var(--primary); }
+.status-pill.infected { background: #fee2e2; color: #dc2626; }
+.status-pill.pending { background: var(--warning-subtle); color: #92400e; }
+
 .logout-btn {
   margin-left: 0.5rem;
   background: transparent;

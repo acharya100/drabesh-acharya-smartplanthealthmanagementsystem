@@ -120,7 +120,7 @@ const DiseaseDetection = () => {
     setLoading(true);
     setError("");
 
-    // Always attempt the local backend — it runs on localhost and is accessible
+    // Always attempt the local backend - it runs on localhost and is accessible
     // even without internet. navigator.onLine checks internet, NOT local server.
     try {
       const formData = new FormData();
@@ -160,22 +160,40 @@ const DiseaseDetection = () => {
       });
     } catch (err) {
       console.error("Detection error:", err);
-      // Fallback: If network fails during request, save for later
+
+      // If the server actually responded, it's NOT a network error.
+      // We should show the specific error from the backend instead of triggering offline mode.
+      if (err.response) {
+        const errorData = err.response.data;
+        let msg = "";
+
+        if (typeof errorData === 'object' && errorData !== null) {
+          // Parse DRF field errors (e.g., {"image": ["The file is too large"]})
+          msg = Object.entries(errorData)
+            .map(([field, errors]) => `${field}: ${Array.isArray(errors) ? errors.join(', ') : errors}`)
+            .join(' | ');
+        }
+
+        setError(msg || t("detection.detectionFailed") || "Analysis failed.");
+        setLoading(false);
+        return;
+      }
+
+      // Fallback: Genuine network failure (server down, no internet, timeout)
       const reader = new FileReader();
       reader.onloadend = () => {
         const fakeId = "offline-" + Date.now();
         enqueueAction('CREATE_PRED', fakeId, { imageBase64: reader.result });
         setResult({
           id: fakeId,
-          isHealthy: false,
-          diseaseName: "Local Diagnostic Mode (Network Error)",
-          confidence: 80.0,
-          severity: "moderate",
-          estimatedCost: 350,
+          isOfflineSaved: true,
+          diseaseName: "Diagnostic Pending (Network Error)",
+          confidence: 0,
+          severity: "normal",
+          estimatedCost: 0,
           diseaseId: null,
           treatmentStatus: "pending",
-          recommendedTreatment: { name: "General Broad-Spectrum Protocol" },
-          message: "Network request failed. We have switched to local diagnostic mode. The precise disease will be automatically verified when your connection improves.",
+          message: "Network request failed. Your scan has been saved locally. The AI will automatically verify this and check for diseases once your connection is restored.",
         });
         setLoading(false);
       };
@@ -313,7 +331,7 @@ const DiseaseDetection = () => {
                 <div className="result-card-v2 animate-slide-up" style={{ background: 'var(--bg-card)', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--glass-shadow)', overflow: 'hidden', border: '1px solid var(--border-light)' }}>
 
                   {/* 
-                      NON-PLANT IMAGE — clear label, no disease/confidence UI
+                      NON-PLANT IMAGE - clear label, no disease/confidence UI
                   */}
                   {result.isNonPlant ? (
                     <div style={{ padding: 0 }}>
@@ -333,7 +351,7 @@ const DiseaseDetection = () => {
                       </div>
 
                       <div style={{ padding: '2rem 2.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                        {/* Explanation block — Match the Outside Scope style */}
+                        {/* Explanation block - Match the Outside Scope style */}
                         <div style={{ background: 'var(--bg-main)', borderRadius: 12, padding: '1.5rem', border: '1px solid var(--border-light)' }}>
                           <div style={{ fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--text-muted)', marginBottom: '0.8rem' }}>AI Diagnostic Insight</div>
                           <p style={{ color: 'var(--text-secondary)', fontSize: '1rem', fontWeight: 600, lineHeight: 1.6, margin: 0 }}>
@@ -444,14 +462,14 @@ const DiseaseDetection = () => {
                       </button>
                     </div>
 
-                    /* ── VALID PLANT RESULT ─────────────────────────────────── */
+                    /* -- VALID PLANT RESULT ----------------------------------- */
                   ) : (
                     <>
                       <div className="result-header animate-slide-up" style={{ padding: '2.5rem', background: 'var(--bg-main)', borderBottom: '1px solid var(--border-light)' }}>
                         {/* Status pills help users quickly see if their plant is okay or not */}
-                        <div className={`status-pill ${result.isHealthy ? 'healthy' : 'infected'}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.4rem 0.8rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', marginBottom: '1.5rem', background: result.isHealthy ? 'var(--primary-subtle)' : '#fee2e2', color: result.isHealthy ? 'var(--primary)' : '#dc2626' }}>
-                          {result.isHealthy ? <CheckCircle size={16} /> : <AlertTriangle size={16} />}
-                          {result.isHealthy ? t("detection.healthyStatus") : t("detection.infectedStatus")}
+                        <div className={`status-pill ${result.isUnverified || result.isOfflineSaved ? 'pending' : (result.isHealthy ? 'healthy' : 'infected')}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.4rem 0.8rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', marginBottom: '1.5rem', background: (result.isUnverified || result.isOfflineSaved) ? 'var(--warning-subtle)' : (result.isHealthy ? 'var(--primary-subtle)' : '#fee2e2'), color: (result.isUnverified || result.isOfflineSaved) ? '#92400e' : (result.isHealthy ? 'var(--primary)' : '#dc2626') }}>
+                          {(result.isUnverified || result.isOfflineSaved) ? <Clock size={16} /> : (result.isHealthy ? <CheckCircle size={16} /> : <AlertTriangle size={16} />)}
+                          {(result.isUnverified || result.isOfflineSaved) ? "Diagnostic Pending" : (result.isHealthy ? t("detection.healthyStatus") : t("detection.infectedStatus"))}
                         </div>
                         <h2 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '2rem' }}>{result.diseaseName}</h2>
                         <div className="confidence-meter">
@@ -467,7 +485,7 @@ const DiseaseDetection = () => {
 
 
                       <div className="result-details" style={{ padding: '2.5rem' }}>
-                        {!result.isHealthy && (
+                        {!result.isHealthy && !result.isUnverified && (
                           <div className="severity-cost-override" style={{ marginBottom: '2.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                             <div>
                               <label className="label" style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', display: 'block', marginBottom: '0.5rem' }}>
@@ -501,7 +519,9 @@ const DiseaseDetection = () => {
                         )}
 
                         <div className="action-steps">
-                          {result.isHealthy ? (
+                          {result.isUnverified ? (
+                            <p style={{ color: 'var(--text-muted)', lineHeight: 1.6 }}>We are waiting for a network connection to provide an accurate AI identification. Your data is safely stored offline.</p>
+                          ) : result.isHealthy ? (
                             <p className="healthy-tip" style={{ color: 'var(--text-muted)', lineHeight: 1.6 }}>{t("detection.healthyTip")}</p>
                           ) : (
                             <>

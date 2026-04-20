@@ -34,7 +34,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='category',
             name='icon',
-            field=models.CharField(blank=True, default='🌿', max_length=10),
+            field=models.CharField(blank=True, default='    ', max_length=10),
         ),
         migrations.AddField(
             model_name='order',

@@ -7,7 +7,7 @@ class Category(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True)
     slug = models.SlugField(unique=True, blank=True)
-    icon = models.CharField(max_length=10, blank=True, default='🌿')  # emoji icon
+    icon = models.CharField(max_length=10, blank=True, default='    ')  # emoji icon
     name_ne = models.CharField(max_length=100, blank=True, null=True)
     description_ne = models.TextField(blank=True, null=True)
 
@@ -224,4 +224,4 @@ class DiseaseProductMapping(models.Model):
         ordering = ['priority']
 
     def __str__(self):
-        return f"{self.disease_name} → {self.product.name}"
+        return f"{self.disease_name} -> {self.product.name}"

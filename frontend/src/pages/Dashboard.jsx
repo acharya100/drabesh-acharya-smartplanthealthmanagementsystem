@@ -33,7 +33,7 @@ const Dashboard = () => {
         api.plantService.getStatistics(),
         api.predictionService.getHistory()
       ]);
-  
+
       const statsData = statsRes.data;
       setStats({
         totalPlants: statsData.total_plants,
@@ -42,10 +42,10 @@ const Dashboard = () => {
         outOfScope: statsData.out_of_scope,
         nonPlant: statsData.non_plant_images
       });
-  
+
       const historyData = historyRes.data.results || historyRes.data;
       setRecentPredictions(historyData.slice(0, 4));
-  
+
       if (!silent) setLoading(false);
       setRefreshing(false);
     } catch (error) {

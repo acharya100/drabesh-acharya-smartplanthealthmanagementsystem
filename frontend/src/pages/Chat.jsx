@@ -16,7 +16,7 @@ import { eCommerceService } from "../services/api";
 
 const POLL_INTERVAL = 1500; // ms
 
-// ── Disease-product query interceptor ─────────────────────────────────────────
+// -- Disease-product query interceptor -----------------------------------------
 // Patterns: "what product for X", "medicine for X", "how to treat X", "product needed for X"
 const PRODUCT_QUERY_RE = /(?:what\s+(?:product|medicine|treatment|fungicide|chemical)[s]?\s+(?:is\s+)?(?:needed\s+)?for|how\s+to\s+treat|treatment\s+for|cure\s+for|product\s+for)\s+([a-z\s]+?)(?:\s*disease|\s*infection|\s*problem|\s*\?|$)/i;
 
@@ -39,7 +39,7 @@ const interceptProductQuery = async (text) => {
     return buildChatProductResponse(diseaseName, relevantProducts);
 };
 
-// ── Lightweight markdown renderer ──────────────────────────────────────────────
+// -- Lightweight markdown renderer ----------------------------------------------
 const renderMarkdown = (text) => {
     if (!text) return "";
     return text
@@ -53,11 +53,11 @@ const renderMarkdown = (text) => {
         .replace(/^### (.+)$/gm, "<h4 style='margin:1em 0 0.4em;font-weight:800;font-size:0.95rem;'>$1</h4>")
         .replace(/^## (.+)$/gm, "<h3 style='margin:1em 0 0.5em;font-weight:900;font-size:1rem;'>$1</h3>")
         .replace(/^# (.+)$/gm, "<h2 style='margin:1em 0 0.5em;font-weight:900;font-size:1.1rem;'>$1</h2>")
-        // Bullet points • and -
-        .replace(/^[•\-] (.+)$/gm, "<li style='margin:0.2em 0;list-style:none;padding-left:0.25em;'>✦ $1</li>")
-        // Checkmarks ✓ ✗
-        .replace(/✓ /g, "<span style='color:#10b981;'>✓ </span>")
-        .replace(/⚠️ /g, "<span style='color:#f59e0b;'>⚠️ </span>")
+        // Bullet points * and -
+        .replace(/^[*\-] (.+)$/gm, "<li style='margin:0.2em 0;list-style:none;padding-left:0.25em;'>    $1</li>")
+        // Checkmarks        
+        .replace(/    /g, "<span style='color:#10b981;'>    </span>")
+        .replace(/       /g, "<span style='color:#f59e0b;'>       </span>")
         // Table rows
         .replace(/\|(.+)\|/g, (match) => {
             const cells = match.split("|").filter(Boolean);
@@ -114,7 +114,7 @@ const TypewriterText = ({ text, animate, hasMarkdown }) => {
 
 const MessageBubble = ({ msg, isUser }) => {
     const { t } = useLanguage();
-    const hasMarkdown = !isUser && (msg.content.includes("**") || msg.content.includes("•") || msg.content.includes("#") || msg.content.includes("|"));
+    const hasMarkdown = !isUser && (msg.content.includes("**") || msg.content.includes("*") || msg.content.includes("#") || msg.content.includes("|"));
     const formatTime = (iso) => new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
     // Animate only if AI message and recently created
@@ -192,7 +192,7 @@ const Chat = () => {
 
     const isAdmin = sessionStorage.getItem("isStaff") === "true" || sessionStorage.getItem("isSuperuser") === "true";
 
-    // ── load rooms ──────────────────────────────────────────────────────────────
+    // -- load rooms --------------------------------------------------------------
     const loadRooms = useCallback(async () => {
         try {
             const { data } = await chatService.getRooms();
@@ -218,7 +218,7 @@ const Chat = () => {
         }
     }, [t]);
 
-    // poll — detects new AI reply
+    // poll - detects new AI reply
     const pollMessages = useCallback(async (roomId) => {
         try {
             const { data } = await chatService.getRoomMessages(roomId);
@@ -258,7 +258,7 @@ const Chat = () => {
         return () => window.removeEventListener('scroll-chat-to-bottom', handleScroll);
     }, []);
 
-    // ── actions ─────────────────────────────────────────────────────────────────
+    // -- actions -----------------------------------------------------------------
     const createNewRoom = async (firstMessage = null) => {
         try {
             const title = `Conversation ${new Date().toLocaleDateString()}`;
@@ -287,10 +287,10 @@ const Chat = () => {
         setMessages(prev => [...prev, optimistic]);
         setWaitingAI(true);
 
-        // ── Client-side interception for disease-product questions ──────────
+        // -- Client-side interception for disease-product questions ----------
         const productReply = await interceptProductQuery(text);
         if (productReply) {
-            // Inject instant structured response — skip the backend AI round-trip
+            // Inject instant structured response - skip the backend AI round-trip
             const instantMsg = {
                 id: `product-${Date.now()}`,
                 sender_type: "bot",
@@ -304,7 +304,7 @@ const Chat = () => {
             chatService.sendMessage(roomId, text).catch(() => { });
             return;
         }
-        // ── Normal AI path ──────────────────────────────────────────────────
+        // -- Normal AI path --------------------------------------------------
 
         try {
             await chatService.sendMessage(roomId, text);
@@ -378,13 +378,13 @@ const Chat = () => {
     const SUGGESTIONS = t("chat.suggestions") || [];
     const QUICK_REPLIES = t("chat.quickReplies") || [];
 
-    // ── render ───────────────────────────────────────────────────────────────────
+    // -- render -------------------------------------------------------------------
     return (
         <div className="page-container">
             <Navbar activePage="chat" />
             <div style={{ display: "flex", height: "calc(100vh - 64px)", overflow: "hidden", background: "var(--bg-main)" }}>
 
-                {/* ── Sidebar ─────────────────────────────────────────────────── */}
+                {/* -- Sidebar --------------------------------------------------- */}
                 <div style={{
                     width: 300, borderRight: "1px solid var(--border-light)",
                     display: "flex", flexDirection: "column",
@@ -436,13 +436,13 @@ const Chat = () => {
                                 }}
                                     onMouseEnter={e => { if (activeRoom?.id !== room.id) e.currentTarget.style.borderColor = "var(--primary)"; }}
                                     onMouseLeave={e => { if (activeRoom?.id !== room.id) e.currentTarget.style.borderColor = "var(--border-light)"; }}>
-                                    
+
                                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.25rem" }}>
                                         {renamingRoomId === room.id ? (
                                             <div style={{ display: "flex", gap: "0.3rem", width: "100%" }} onClick={e => e.stopPropagation()}>
-                                                <input 
+                                                <input
                                                     autoFocus
-                                                    value={newName} 
+                                                    value={newName}
                                                     onChange={e => setNewName(e.target.value)}
                                                     onKeyDown={e => { if (e.key === "Enter") renameRoom(room.id); if (e.key === "Escape") setRenamingRoomId(null); }}
                                                     style={{ flex: 1, fontSize: "0.8rem", padding: "0.25rem", borderRadius: 4, border: "1px solid var(--primary)", outline: "none" }}
@@ -486,7 +486,7 @@ const Chat = () => {
                     </div>
                 </div>
 
-                {/* ── Main Area ───────────────────────────────────────────────── */}
+                {/* -- Main Area ------------------------------------------------- */}
                 <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
 
                     {!activeRoom ? (
@@ -563,7 +563,7 @@ const Chat = () => {
                                         {activeRoom.title || t("chat.plantAdvisor")}
                                     </h3>
                                     <p style={{ margin: 0, fontSize: "0.72rem", color: "#10b981", fontWeight: 700 }}>
-                                        {isAdmin ? t("chat.adminView") : `${t("chat.plantAdvisor")} · ${t("chat.online")}`}
+                                        {isAdmin ? t("chat.adminView") : `${t("chat.plantAdvisor")}    ${t("chat.online")}`}
                                     </p>
                                 </div>
                                 <button onClick={() => { setActiveRoom(null); setMessages([]); }}
@@ -626,7 +626,7 @@ const Chat = () => {
                             {error && (
                                 <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.6rem 1.5rem", background: "#fef2f2", borderTop: "1px solid #fca5a5", color: "#dc2626", fontSize: "0.83rem", fontWeight: 600 }}>
                                     <AlertCircle size={15} /> {error}
-                                    <button onClick={() => setError(null)} style={{ marginLeft: "auto", background: "none", border: "none", cursor: "pointer", color: "#dc2626", fontWeight: 800 }}>✕</button>
+                                    <button onClick={() => setError(null)} style={{ marginLeft: "auto", background: "none", border: "none", cursor: "pointer", color: "#dc2626", fontWeight: 800 }}>   </button>
                                 </div>
                             )}
 

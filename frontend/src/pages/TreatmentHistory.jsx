@@ -15,14 +15,14 @@ import TreatmentFilterTabs from "../components/TreatmentFilterTabs";
 import { offlineStore } from "../utils/offlineStore";
 import { useOfflineSync } from "../context/OfflineSyncContext";
 
-// ── Shared helpers ──────────────────────────────────────────────────────────
+// -- Shared helpers ----------------------------------------------------------
 const getCardTitle = (item, t) => {
     if (item.treatment_status === 'non_plant' || item.is_plant_image === false)
         return t("treatmentFilters.non_plant");
     if (item.treatment_status === 'out_of_scope' || item.disease_name === 'Unrecognized' || item.disease_name === 'Outside Scope')
         return t("history.badgeOutsideScope") || "Outside Scope";
     if (item.is_healthy || item.treatment_status === 'healthy')
-        return `${item.plant_name || 'Plant'} – ${t("history.badgeHealthy")}`;
+        return `${item.plant_name || 'Plant'} - ${t("history.badgeHealthy")}`;
     return item.disease_name || 'Unknown Disease';
 };
 
@@ -70,7 +70,7 @@ const TreatmentHistory = () => {
             
             let reconciledHistory = [];
 
-            // Always attempt local backend — Django runs on localhost and is accessible
+            // Always attempt local backend - Django runs on localhost and is accessible
             // even when navigator.onLine is false (that only indicates external internet)
             const { data } = await predictionService.getHistory();
             const history = data.results || data;
@@ -217,7 +217,7 @@ const TreatmentHistory = () => {
                     )}
                 </div>
 
-                {/* ── NEW: TreatmentFilterTabs component ── */}
+                {/* -- NEW: TreatmentFilterTabs component -- */}
                 <TreatmentFilterTabs activeFilter={filter} onChange={setFilter} />
 
                 {loading ? (
@@ -283,7 +283,7 @@ const TreatmentHistory = () => {
                                     </select>
                                 </div>
 
-                                {/* ── NEW: SeveritySelector component ── */}
+                                {/* -- NEW: SeveritySelector component -- */}
                                 {!editingPrediction.is_healthy && editingPrediction.treatment_status !== 'healthy' && (
                                     <div className="form-group">
                                         <label>{t("history.severityLevel")}</label>
@@ -307,7 +307,7 @@ const TreatmentHistory = () => {
                                     </div>
                                 )}
 
-                                {/* ── NEW: TreatmentStatusDropdown component (edit modal) ── */}
+                                {/* -- NEW: TreatmentStatusDropdown component (edit modal) -- */}
                                 <div className="form-group">
                                     <label>{t("history.treatmentStatusLabel")}</label>
                                     <TreatmentStatusDropdown
@@ -472,7 +472,7 @@ const TreatmentCard = ({ item, t, formatDate, onUpdateStatus, onUpdateSeverity, 
                     }}>
                         {isHealthyStatus ? (
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#15803d', fontWeight: 700 }}>
-                                <CheckCircle size={16} /> No treatment required — plant is healthy.
+                                <CheckCircle size={16} /> No treatment required - plant is healthy.
                             </div>
                         ) : (
                             <>
@@ -511,7 +511,7 @@ const TreatmentCard = ({ item, t, formatDate, onUpdateStatus, onUpdateSeverity, 
                     {t("treatmentHistory.viewProtocol")}
                 </Link>
 
-                {/* Severity dropdown — only for active diseased records */}
+                {/* Severity dropdown - only for active diseased records */}
                 {!isHealthyStatus && !isSpecialCase && (
                     <div style={{ flex: '1 1 auto', position: 'relative' }}>
                         <select

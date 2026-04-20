@@ -131,7 +131,7 @@ class PlantViewSet(viewsets.ModelViewSet):
         out_of_scope_count     = queryset.filter(health_status='out_of_scope').count()
 
         # Also count from Disease Detection history (Predictions) for users who
-        # didn't save their scanned images as plants — ensures dashboard is always accurate
+        # didn't save their scanned images as plants - ensures dashboard is always accurate
         try:
             from predictions.models import Prediction
             det_qs = Prediction.objects.filter(user=user, source='disease_detection')

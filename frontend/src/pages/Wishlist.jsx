@@ -102,7 +102,7 @@ const Wishlist = () => {
                       <span style={{ position: "absolute", top: "0.75rem", left: "0.75rem", background: "#ef4444", color: "white", padding: "0.2rem 0.6rem", borderRadius: "100px", fontSize: "0.7rem", fontWeight: 800 }}>SALE</span>
                     )}
                     {product.is_organic && (
-                      <span style={{ position: "absolute", top: "0.75rem", right: "0.75rem", background: "var(--primary)", color: "white", padding: "0.2rem 0.6rem", borderRadius: "100px", fontSize: "0.7rem", fontWeight: 800 }}>🌿 ORGANIC</span>
+                      <span style={{ position: "absolute", top: "0.75rem", right: "0.75rem", background: "var(--primary)", color: "white", padding: "0.2rem 0.6rem", borderRadius: "100px", fontSize: "0.7rem", fontWeight: 800 }}>     ORGANIC</span>
                     )}
                   </div>
 

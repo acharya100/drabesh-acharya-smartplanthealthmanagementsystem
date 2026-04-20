@@ -8,7 +8,7 @@ from .analyzer import analyze_soil
 
 
 class SoilAnalysisViewSet(mixins.DestroyModelMixin, viewsets.ReadOnlyModelViewSet):
-    """Soil analysis — POST to /analyze/ to run; GET list/detail for history; DELETE to remove."""
+    """Soil analysis - POST to /analyze/ to run; GET list/detail for history; DELETE to remove."""
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = SoilAnalysisSerializer
 
@@ -65,7 +65,7 @@ class SoilAnalysisViewSet(mixins.DestroyModelMixin, viewsets.ReadOnlyModelViewSe
 
     @action(detail=False, methods=['post'])
     def quick_analyze(self, request):
-        """Run analysis WITHOUT saving — for real-time preview."""
+        """Run analysis WITHOUT saving - for real-time preview."""
         input_ser = SoilAnalysisInputSerializer(data=request.data)
         if not input_ser.is_valid():
             return Response(input_ser.errors, status=status.HTTP_400_BAD_REQUEST)

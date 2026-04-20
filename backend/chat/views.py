@@ -9,7 +9,7 @@ from .plant_ai import get_ai_response
 
 
 class ChatRoomViewSet(viewsets.ModelViewSet):
-    """Chat rooms — users see only their own; staff see all."""
+    """Chat rooms - users see only their own; staff see all."""
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = ChatRoomSerializer
 
@@ -87,7 +87,7 @@ class ChatRoomViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def pending(self, request):
-        """For admins — rooms with unanswered user messages."""
+        """For admins - rooms with unanswered user messages."""
         if not request.user.is_staff:
             return Response({'error': 'Admin only.'}, status=403)
         rooms = ChatRoom.objects.filter(

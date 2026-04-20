@@ -167,9 +167,9 @@ const Checkout = () => {
           </div>
 
           <div style={{ background: "var(--info-subtle)", border: "1px solid var(--info)", borderRadius: "16px", padding: "1.5rem", textAlign: "left", marginBottom: "2rem" }}>
-            <h4 style={{ color: "var(--info)", fontWeight: 800, margin: "0 0 0.5rem" }}>🔔 Notifications Sent</h4>
-            {email?.trim() && <p style={{ margin: "0 0 0.25rem", color: "var(--info)", fontSize: "0.9rem", opacity: 0.9 }}>• Email receipt sent to: <strong>{email}</strong></p>}
-            {(selectedAddress ? selectedAddress.phone : phone)?.trim() && <p style={{ margin: "0", color: "var(--info)", fontSize: "0.9rem", opacity: 0.9 }}>• SMS tracking link sent to: <strong>{selectedAddress ? selectedAddress.phone : phone}</strong></p>}
+            <h4 style={{ color: "var(--info)", fontWeight: 800, margin: "0 0 0.5rem" }}>     Notifications Sent</h4>
+            {email?.trim() && <p style={{ margin: "0 0 0.25rem", color: "var(--info)", fontSize: "0.9rem", opacity: 0.9 }}>* Email receipt sent to: <strong>{email}</strong></p>}
+            {(selectedAddress ? selectedAddress.phone : phone)?.trim() && <p style={{ margin: "0", color: "var(--info)", fontSize: "0.9rem", opacity: 0.9 }}>* SMS tracking link sent to: <strong>{selectedAddress ? selectedAddress.phone : phone}</strong></p>}
           </div>
 
           <div style={{ display: "flex", gap: "1rem" }}>
@@ -261,7 +261,7 @@ const Checkout = () => {
                 </div>
                 {error && <p style={{ color: "#ef4444", marginTop: "1rem", display: "flex", alignItems: "center", gap: "0.5rem", fontWeight: 700 }}><AlertTriangle size={16} />{error}</p>}
                 <div style={{ display: "flex", gap: "1rem", marginTop: "1.5rem" }}>
-                  <button onClick={() => setStep(0)} className="btn-secondary" style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}><ArrowLeft size={16} /> {t("common.back") || "Back"}</button>
+                  <button onClick={() => setStep(0)} className="btn-secondary" style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}><ArrowLeft size={16} /> {t("common.back")}</button>
                   <button
                     onClick={() => {
                       const shippingAddr = selectedAddress ? selectedAddress.full_address : address;
@@ -295,7 +295,7 @@ const Checkout = () => {
                   <div style={{ padding: "1.5rem", background: "var(--success-subtle)", border: "1px solid var(--success)", borderRadius: "16px", marginBottom: "1.5rem" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                       <div>
-                        <p style={{ fontWeight: 800, color: "var(--success)", margin: 0 }}>✓ Coupon Applied: {couponInfo.code}</p>
+                        <p style={{ fontWeight: 800, color: "var(--success)", margin: 0 }}>    Coupon Applied: {couponInfo.code}</p>
                         <p style={{ color: "var(--success)", margin: "0.3rem 0 0", fontSize: "0.9rem", opacity: 0.9 }}>You saved NPR {parseFloat(couponInfo.discount_amount).toLocaleString()}!</p>
                       </div>
                       <button onClick={handleRemoveCoupon} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--danger)", fontWeight: 700, fontSize: "0.875rem" }}>Remove</button>
@@ -311,7 +311,7 @@ const Checkout = () => {
                 )}
                 {couponError && <p style={{ color: "#ef4444", fontSize: "0.875rem", display: "flex", alignItems: "center", gap: "0.5rem" }}><AlertTriangle size={16} />{couponError}</p>}
                 <div style={{ display: "flex", gap: "1rem", marginTop: "1.5rem" }}>
-                  <button onClick={() => setStep(1)} className="btn-secondary" style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}><ArrowLeft size={16} /> Back</button>
+                  <button onClick={() => setStep(1)} className="btn-secondary" style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}><ArrowLeft size={16} /> {t("common.back")}</button>
                   <button onClick={() => setStep(3)} className="btn-primary" style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem" }}>Continue <ChevronRight size={18} /></button>
                 </div>
               </div>
@@ -323,7 +323,7 @@ const Checkout = () => {
                 <h2 style={{ fontWeight: 800, marginBottom: "1.5rem" }}>{t("store.paymentMethod")}</h2>
                 <div style={{ display: "flex", flexDirection: "column", gap: "1rem", marginBottom: "1.5rem" }}>
                   {[
-                    { value: "cod", label: t("store.codLabel"), desc: t("orders.payment.cod") || "Pay when your order arrives", icon: "💵" },
+                    { value: "cod", label: t("store.codLabel"), desc: t("orders.payment.cod") || "Pay when your order arrives", icon: "    " },
                   ].map(m => (
                     <label key={m.value} style={{ display: "flex", alignItems: "center", gap: "1rem", padding: "1.25rem", border: `2px solid ${paymentMethod === m.value ? "var(--primary)" : "var(--border-light)"}`, borderRadius: "16px", cursor: "pointer", background: paymentMethod === m.value ? "var(--primary-subtle)" : "var(--bg-card)", transition: "all 0.2s" }}>
                       <input type="radio" name="payment" value={m.value} checked={paymentMethod === m.value} onChange={() => setPaymentMethod(m.value)} style={{ display: "none" }} />
@@ -344,7 +344,7 @@ const Checkout = () => {
                 <div style={{ display: "flex", gap: "1rem" }}>
                   <button onClick={() => setStep(2)} className="btn-secondary" style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}><ArrowLeft size={16} /> {t("orders.cancelBtn")}</button>
                   <button onClick={handlePlaceOrder} disabled={isPlacingOrder} className="btn-primary" style={{ flex: 1, height: "52px", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", background: "var(--secondary)" }}>
-                    {isPlacingOrder ? <><Loader size={18} className="animate-spin" /> {t("admin.loading")}</> : <><CheckCircle size={18} /> {t("store.placeOrderBtn")} — Rs. {finalTotal.toLocaleString()}</>}
+                    {isPlacingOrder ? <><Loader size={18} className="animate-spin" /> {t("admin.loading")}</> : <><CheckCircle size={18} /> {t("store.placeOrderBtn")} - Rs. {finalTotal.toLocaleString()}</>}
                   </button>
                 </div>
               </div>
@@ -358,7 +358,7 @@ const Checkout = () => {
               <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", marginBottom: "1.5rem" }}>
                 {checkoutItems.map((item, i) => (
                   <div key={i} style={{ display: "flex", justifyContent: "space-between", fontSize: "0.875rem" }}>
-                    <span style={{ color: "var(--text-muted)" }}>{item.name} × {item.quantity || 1}</span>
+                    <span style={{ color: "var(--text-muted)" }}>{item.name}    {item.quantity || 1}</span>
                     <span style={{ fontWeight: 700 }}>NPR {(parseFloat(item.price) * (item.quantity || 1)).toLocaleString()}</span>
                   </div>
                 ))}

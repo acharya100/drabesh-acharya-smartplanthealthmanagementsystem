@@ -514,7 +514,7 @@ const en = {
         savedItems: "{{count}} saved item",
         savedItemsPlural: "{{count}} saved items",
         removed: "Removed from Wishlist",
-        addedToCart: "Added to Cart ✓",
+        addedToCart: "Added to Cart    ",
         addToCart: "Add to Cart",
     },
 
@@ -534,7 +534,7 @@ const en = {
         showItems: "Show Items",
         hideItems: "Hide",
         reorder: "Reorder",
-        reordered: "Added to Cart ✓",
+        reordered: "Added to Cart    ",
         cancelOrder: "Cancel Order",
         cancelling: "Cancelling...",
         timeline: {
@@ -614,7 +614,7 @@ const en = {
         productDeleted: "Product deleted successfully.",
         productSaved: "Product saved successfully.",
         addToWishlist: "Add to Wishlist",
-        inWishlist: "In Wishlist ♥",
+        inWishlist: "In Wishlist    ",
         addToCart: "Add to Cart",
         qtyLabel: "Qty",
         continueToShipping: "Continue to Shipping",
@@ -676,16 +676,16 @@ const en = {
         inputPlaceholder: "Or type your question here...",
         online: "Online",
         adminView: "Admin View",
-        back: "← Back",
+        back: "    Back",
         sendError: "Failed to send message.",
         loadError: "Failed to load messages.",
         loadRoomsError: "Failed to load conversations.",
         createRoomError: "Failed to create conversation.",
         suggestions: [
-            "My tomato leaves have brown spots — what's wrong?",
+            "My tomato leaves have brown spots - what's wrong?",
             "How do I use the soil analysis tool?",
             "What does 'Outside Scope' mean in detection?",
-            "My soil pH is 5.5 — what should I do?",
+            "My soil pH is 5.5 - what should I do?",
             "How can I buy products from the marketplace?",
             "How do I track my treatment progress?"
         ],
@@ -734,7 +734,7 @@ const en = {
         recommendedFertilizers: "Recommended Fertilizers",
         browseMarketplace: "Browse Full Store",
         soilHealth: "Soil Health Score",
-        healthScore: "Health score (0–100)",
+        healthScore: "Health score (0-100)",
         deficiencyAlerts: "Deficiency alerts",
         expertAdvice: "Expert advice",
         deficiencies: "Nutrient Deficiencies",
@@ -755,7 +755,7 @@ const en = {
         noAnalyses: "No previous analyses yet.",
         confirmDelete: "Are you sure you want to delete this analysis? This action cannot be undone.",
         optimalReference: "Optimal Reference Values",
-        howToTitle: "How to Use Soil Analysis — Step-by-Step Guide",
+        howToTitle: "How to Use Soil Analysis - Step-by-Step Guide",
         howToSubtitle: "Click to {{action}} instructions on collecting soil data and reading results",
         actionShow: "show",
         actionHide: "hide",
@@ -807,13 +807,13 @@ const en = {
             ph: {
                 title: "pH Level - Nutrient Key",
                 desc: "Controls the solubility of nutrients. In acidic soil (low pH), Phosphorus is locked. In alkaline (high pH), Iron is unavailable.",
-                impact: "Ideal range: 6.5–7.2 for most crops.",
+                impact: "Ideal range: 6.5-7.2 for most crops.",
                 treatment: "Acidic (<6.5): Apply agricultural lime or dolomite (1-3 t/ha). Alkaline (>7.2): Apply elemental sulphur or acidifying fertilizers like Ammonium Sulphate. Add compost to buffer the pH naturally."
             },
             moisture: {
                 title: "Moisture - Life Force",
                 desc: "The medium through which plants absorb nutrients. Proper moisture is vital for microbial activity and mineral transport.",
-                impact: "Ideal range: 45%–70% for most cereals.",
+                impact: "Ideal range: 45%-70% for most cereals.",
                 treatment: "Low: Implement drip irrigation or mulching (straw/plastic) to retain water. High: Improve field drainage with ditches or raised beds to prevent root rot (Hypoxia)."
             },
             organicMatter: {
@@ -827,13 +827,13 @@ const en = {
             title: "Agricultural Advisory Manual",
             subtitle: "Expert guide to soil diagnostics, sampling, and treatment strategies.",
             samplingTitle: "Expert Soil Sampling",
-            samplingDesc: "Collect samples from 6–9 inches deep across several points in your field. Mix thoroughly and allow to air dry. This ensures representativeness for the entire root zone.",
+            samplingDesc: "Collect samples from 6-9 inches deep across several points in your field. Mix thoroughly and allow to air dry. This ensures representativeness for the entire root zone.",
             parametersTitle: "Understanding Parameters",
             parametersDesc: "The system evaluates Nitrogen, Phosphorus, Potassium, pH, and Moisture to determine the physiological state of your soil.",
             recommendTitle: "Intelligent Recommendations",
             recommendDesc: "Our AI Advisor compares your data against global NARC/FAO agricultural benchmarks to identify critical nutrient deficiencies and pH imbalances.",
             step1Title: "Expert Soil Sampling",
-            step1Desc: "Collect soil from 6–9 inches deep across several points in your field. Mix thoroughly and allow to air-dry. This ensures that the diagnostic data represents the entire root zone of your crops.",
+            step1Desc: "Collect soil from 6-9 inches deep across several points in your field. Mix thoroughly and allow to air-dry. This ensures that the diagnostic data represents the entire root zone of your crops.",
             step2Title: "Intelligent Analysis",
             step2Desc: "Input your measured values into the advisor. Our system compares your data against global NARC/FAO agricultural benchmarks to identify critical nutrient deficiencies and pH imbalances.",
             step3Title: "Targeted Correction",
@@ -843,27 +843,27 @@ const en = {
         },
         types: {
             sandy: "Sandy",
-            sandyDesc: "Fast draining, low nutrients — needs frequent feeding",
+            sandyDesc: "Fast draining, low nutrients - needs frequent feeding",
             loamy: "Loamy",
             loamyDesc: "Ideal balance of nutrients and drainage",
             clay: "Clay",
-            clayDesc: "High nutrients, poor drainage — add gypsum",
+            clayDesc: "High nutrients, poor drainage - add gypsum",
             silty: "Silty",
-            siltyDesc: "Fertile but compacts easily — avoid heavy machinery",
+            siltyDesc: "Fertile but compacts easily - avoid heavy machinery",
             peaty: "Peaty",
-            peatyDesc: "Acidic, high organic matter — may need liming",
+            peatyDesc: "Acidic, high organic matter - may need liming",
             chalky: "Chalky",
-            chalkyDesc: "Alkaline, shallow — choose lime-tolerant crops"
+            chalkyDesc: "Alkaline, shallow - choose lime-tolerant crops"
         },
         guideSteps: [
             {
-                icon: "🔬",
+                icon: "    ",
                 title: "Collect Soil Sample",
-                desc: "Take samples from 5–10 spots in your field at 0–20 cm depth. Mix them together in a clean bucket. Let it air-dry before testing.",
+                desc: "Take samples from 5-10 spots in your field at 0-20 cm depth. Mix them together in a clean bucket. Let it air-dry before testing.",
                 tips: ["Sample before planting or after harvest", "Avoid areas near trees, compost bins, or paths", "Take at least 500g of mixed soil"]
             },
             {
-                icon: "📊",
+                icon: "    ",
                 title: "Measure Soil Parameters",
                 desc: "Use a soil testing kit or send samples to a lab (NARC, agriculture office). Measure NPK, pH, and moisture.",
                 tips: [
@@ -875,19 +875,19 @@ const en = {
                 ]
             },
             {
-                icon: "⚙️",
+                icon: "      ",
                 title: "Enter Values in Sliders",
                 desc: "Move each slider to match your measured values. The optimal range is shown in green below each slider.",
                 tips: [
-                    "N slider: 0–600 kg/ha (optimal: 240–280)",
-                    "P slider: 0–300 kg/ha (optimal: 50–100)",
-                    "K slider: 0–600 kg/ha (optimal: 200–300)",
-                    "pH: 3–10 scale (optimal for most crops: 6.0–7.5)",
-                    "Moisture: 0–100% (optimal: 40–65%)"
+                    "N slider: 0-600 kg/ha (optimal: 240-280)",
+                    "P slider: 0-300 kg/ha (optimal: 50-100)",
+                    "K slider: 0-600 kg/ha (optimal: 200-300)",
+                    "pH: 3-10 scale (optimal for most crops: 6.0-7.5)",
+                    "Moisture: 0-100% (optimal: 40-65%)"
                 ]
             },
             {
-                icon: "🌱",
+                icon: "    ",
                 title: "Select Your Soil Type",
                 desc: "Choose the soil type that best matches your field. This affects drainage, nutrient retention, and fertilizer advice.",
                 tips: [
@@ -900,14 +900,14 @@ const en = {
                 ]
             },
             {
-                icon: "🚀",
+                icon: "    ",
                 title: "Click Analyze & Read Results",
-                desc: "Your health score (0–100), deficiencies, and fertilizer recommendations will appear. Recommended products from our store are linked directly.",
+                desc: "Your health score (0-100), deficiencies, and fertilizer recommendations will appear. Recommended products from our store are linked directly.",
                 tips: [
-                    "Score 75–100: Excellent — maintain current practices",
-                    "Score 50–74: Moderate — apply recommended fertilizers",
-                    "Score 0–49: Poor — urgent treatment needed",
-                    "Re-analyze after 4–6 weeks of treatment to track improvement"
+                    "Score 75-100: Excellent - maintain current practices",
+                    "Score 50-74: Moderate - apply recommended fertilizers",
+                    "Score 0-49: Poor - urgent treatment needed",
+                    "Re-analyze after 4-6 weeks of treatment to track improvement"
                 ]
             }
         ]
@@ -1056,7 +1056,7 @@ const en = {
         editTitle: "Edit Treatment",
         addTitle: "Add New Treatment",
         diseaseLabel: "Disease",
-        selectExisting: "← Select Existing",
+        selectExisting: "    Select Existing",
         addCustom: "+ Add Custom Disease",
         customLabel: "Enter custom disease name...",
         selectDisease: "Select a Disease...",
@@ -1121,6 +1121,26 @@ const en = {
         "Tools & Equipment": "Tools & Equipment",
         "Pesticides": "Pesticides",
         "Organic": "Organic",
+    },
+
+    common: {
+        notNeeded: "Not Needed",
+        notAvailable: "Not Available",
+        back: "Back",
+        cancel: "Cancel",
+        delete: "Delete Permanently",
+        areYouSure: "Are you sure?",
+        ok: "OK",
+        errorOccurred: "An error occurred. Please try again.",
+        currency: "NPR",
+        good: "Good",
+        low: "Low",
+        high: "High",
+        password: "Password",
+        confirmPassword: "Confirm Password",
+        passwordRequired: "Password is required to confirm deletion.",
+        optimal: "Optimal Range",
+        safe: "Safe",
     },
 };
 

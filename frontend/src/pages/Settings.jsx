@@ -95,7 +95,7 @@ const Settings = () => {
             setError(t("common.passwordRequired") || "Password is required to confirm deletion.");
             return;
         }
-        
+
         try {
             setLoading(true);
             setError("");
@@ -141,7 +141,7 @@ const Settings = () => {
                         {/* Language Toggle Card */}
                         <div className="settings-card" style={{ background: 'var(--bg-card)', padding: '2rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-light)', boxShadow: 'var(--shadow-sm)', marginBottom: '2rem' }}>
                             <h3 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                                🌐 {t("settings.langSection") || "Language / भाषा"}
+                                {t("settings.langSection") || "Language / नेपाली"}
                             </h3>
                             <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
                                 {t("settings.displayDesc")}
@@ -159,7 +159,7 @@ const Settings = () => {
                                     }}
                                     id="settings-lang-en-btn"
                                 >
-                                    🇬🇧 English
+                                    English
                                 </button>
                                 <button
                                     onClick={() => setLanguage('ne')}
@@ -173,7 +173,7 @@ const Settings = () => {
                                     }}
                                     id="settings-lang-ne-btn"
                                 >
-                                    🇳🇵 नेपाली
+                                    नेपाली (Local)
                                 </button>
                             </div>
                         </div>
@@ -324,17 +324,17 @@ const Settings = () => {
                         </div>
 
                         <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem' }}>
-                            <button 
-                                className="btn-secondary" 
-                                style={{ flex: 1 }} 
+                            <button
+                                className="btn-secondary"
+                                style={{ flex: 1 }}
                                 onClick={() => { setShowDeleteModal(false); setDeletePassword(""); }}
                                 disabled={loading}
                             >
                                 {t("common.cancel") || "Go Back"}
                             </button>
-                            <button 
-                                className="btn-primary" 
-                                style={{ flex: 1, background: 'var(--danger)', border: 'none' }} 
+                            <button
+                                className="btn-primary"
+                                style={{ flex: 1, background: 'var(--danger)', border: 'none' }}
                                 onClick={handleDeleteAccount}
                                 disabled={loading || !deletePassword}
                             >

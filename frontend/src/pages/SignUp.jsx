@@ -26,7 +26,7 @@ const SignUp = () => {
     setError("");
   };
 
-  // ── Form Submit ────────────────────────────────────────────────────
+  // -- Form Submit ----------------------------------------------------
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -91,7 +91,7 @@ const SignUp = () => {
         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'linear-gradient(to bottom, rgba(6,78,59,0.4), rgba(4,47,46,0.9))' }} />
         <div style={{ position: 'relative', zIndex: 1, padding: '4rem', display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', color: 'white' }}>
           <div>
-            <div style={{ fontSize: '3.5rem', marginBottom: '1rem' }}>🌿</div>
+            <div style={{ fontSize: '3.5rem', marginBottom: '1rem' }}>    </div>
             <h1 style={{ fontSize: '2.75rem', fontWeight: 900, lineHeight: 1.1, marginBottom: '1.5rem', letterSpacing: '-0.03em' }}>
               Join the Future of<br />Agriculture
             </h1>
@@ -123,7 +123,7 @@ const SignUp = () => {
           <form onSubmit={handleSubmit}>
             {error && (
               <div style={{ background: 'var(--danger-subtle)', borderLeft: '4px solid var(--danger)', color: 'var(--danger)', padding: '0.875rem 1rem', borderRadius: '8px', fontSize: '0.9rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
-                <span>⚠️</span> {error}
+                <span>      </span> {error}
               </div>
             )}
 

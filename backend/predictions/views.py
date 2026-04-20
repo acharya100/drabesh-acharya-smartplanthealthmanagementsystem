@@ -69,7 +69,7 @@ class PredictionViewSet(viewsets.ModelViewSet):
             image_path = prediction_obj.image.path
             self._log(f"--- Identify Request for {os.path.basename(image_path)} ---")
 
-            # ── STAGE 1: Centralized Gating ──
+            # -- STAGE 1: Centralized Gating --
             # We use the EXACT same validator as the Detection Lab to ensure consistency.
             scope = scope_validator.validate(image_path)
             self._log(f"[identify] Scope verdict: status={scope['status']} type={scope['type']}")
@@ -129,7 +129,7 @@ class PredictionViewSet(viewsets.ModelViewSet):
                     "prediction_id": None
                 })
 
-            # ── STAGE 2: Deep Analysis (Only for valid scope) ──
+            # -- STAGE 2: Deep Analysis (Only for valid scope) --
             # Run the plant-recognizer + disease-detector pipeline
             id_results = identifier.predict(image_path)
             disease_results = detector.predict(image_path, is_plant_hint=True)
@@ -176,7 +176,7 @@ class PredictionViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['post'])
     def detect(self, request):
         """
-        Disease Detection endpoint — two-stage sequential pipeline.
+        Disease Detection endpoint - two-stage sequential pipeline.
 
         Stage 1: ImageScopeValidator (MobileNet)
           - BLOCKS non-plant and out-of-scope images immediately.
@@ -198,6 +198,10 @@ class PredictionViewSet(viewsets.ModelViewSet):
         """
         serializer = PredictionCreateSerializer(data=request.data)
         if not serializer.is_valid():
+            # Debug: Log the exact validation error to terminal
+            print(f"--- [detect] 400 Bad Request ---")
+            print(f"Path: {request.path}")
+            print(f"Errors: {serializer.errors}")
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         prediction_obj = serializer.save(
@@ -207,14 +211,14 @@ class PredictionViewSet(viewsets.ModelViewSet):
         try:
             image_path = prediction_obj.image.path
 
-            # ── STAGE 1: Scope validation (runs BEFORE disease model) ──────────
+            # -- STAGE 1: Scope validation (runs BEFORE disease model) ----------
             scope = scope_validator.validate(image_path)
             self._log(f"[detect] Stage-1 scope: status={scope['status']} type={scope['type']} conf={scope['confidence']:.1f}%")
 
             # Check for TRUSTED images (dataset samples)
             is_trusted = TRUSTED_DIR_KEYWORD in image_path.lower() or "__" in os.path.basename(image_path)
             if is_trusted:
-                self._log("[detect] Trusted image detected — forcing Stage-1 valid")
+                self._log("[detect] Trusted image detected - forcing Stage-1 valid")
                 scope['status'] = 'valid'
 
             if scope['status'] == 'invalid':
@@ -231,7 +235,7 @@ class PredictionViewSet(viewsets.ModelViewSet):
                     is_non_plant     = (image_type == 'non_plant')
                     is_out_of_scope  = (image_type == 'out_of_scope')
 
-                    # Canonical display labels — never left as raw type keys
+                    # Canonical display labels - never left as raw type keys
                     canonical_plant   = 'Non-Plant Image' if is_non_plant else 'Outside Scope'
                     canonical_disease = 'Not Applicable'
                     canonical_sci     = 'Non-Plant Image' if is_non_plant else 'Outside Scope'
@@ -275,12 +279,12 @@ class PredictionViewSet(viewsets.ModelViewSet):
                         'success':       True,
                     })
             else:
-                # ── STAGE 2: Disease model ────────────────────────────────────────
+                # -- STAGE 2: Disease model ----------------------------------------
                 results = detector.predict(image_path, is_plant_hint=True)
             self._log(f"[detect] Stage-2 detector returned: {results}")
 
             if results is None:
-                # Model not loaded or crashed — do not return random data
+                # Model not loaded or crashed - do not return random data
                 prediction_obj.delete()
                 return Response({
                     "status":  "error",
@@ -337,7 +341,7 @@ class PredictionViewSet(viewsets.ModelViewSet):
                     'success':       True,
                 })
 
-            # ── Valid prediction — persist and return ─────────────────────────
+            # -- Valid prediction - persist and return -------------------------
             prediction_obj.confidence     = results['confidence']
             prediction_obj.severity       = results.get('severity')
             prediction_obj.is_healthy     = results['is_healthy']
@@ -347,7 +351,7 @@ class PredictionViewSet(viewsets.ModelViewSet):
             prediction_obj.plant_name     = results.get('plant_type', '')
             prediction_obj.disease_name   = results.get('disease_name', 'Healthy' if results['is_healthy'] else '')
 
-            # ── Cost logic (Synchronized with frontend standards) ────────────
+            # -- Cost logic (Synchronized with frontend standards) ------------
             if not prediction_obj.is_healthy:
                 cost_map = {
                     'minor':    250.00,

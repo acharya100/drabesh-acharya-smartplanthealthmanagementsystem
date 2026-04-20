@@ -1,12 +1,12 @@
 
 
 const DISEASE_PRODUCT_MAP = {
-  // ── Fungal diseases ────────────────────────────────────────────────────────
+  // -- Fungal diseases --------------------------------------------------------
   "apple black rot": {
     treatable: true,
     keywords: ["captan", "copper", "fungicide", "mancozeb"],
     instructions: [
-      "Apply copper-based fungicide every 7–10 days during wet weather.",
+      "Apply copper-based fungicide every 7-10 days during wet weather.",
       "Remove and destroy all infected fruits and branches.",
       "Prune to improve airflow before the growing season.",
     ],
@@ -35,7 +35,7 @@ const DISEASE_PRODUCT_MAP = {
     instructions: [
       "Begin fungicide application at pink bud stage.",
       "Remove galls from cedar trees nearby.",
-      "Spray every 10–14 days through petal fall.",
+      "Spray every 10-14 days through petal fall.",
     ],
   },
   "corn northern leaf blight": {
@@ -44,7 +44,7 @@ const DISEASE_PRODUCT_MAP = {
     instructions: [
       "Apply foliar fungicide at first lesion appearance.",
       "Ensure good field drainage to reduce humidity.",
-      "Rotate crops — avoid planting corn in same field consecutive years.",
+      "Rotate crops - avoid planting corn in same field consecutive years.",
     ],
   },
   "corn gray leaf spot": {
@@ -87,8 +87,8 @@ const DISEASE_PRODUCT_MAP = {
     treatable: true,
     keywords: ["sulfur", "fungicide", "potassium bicarbonate"],
     instructions: [
-      "Apply sulfur-based fungicide when temperatures are 10–32°C.",
-      "Do not apply sulfur in temperatures above 32°C.",
+      "Apply sulfur-based fungicide when temperatures are 10-32  C.",
+      "Do not apply sulfur in temperatures above 32  C.",
       "Improve canopy airflow by leaf removal.",
     ],
   },
@@ -97,7 +97,7 @@ const DISEASE_PRODUCT_MAP = {
     keywords: ["chlorothalonil", "fungicide", "mancozeb", "copper"],
     instructions: [
       "Spray at first sign of lower leaf lesions.",
-      "Repeat every 7–10 days in humid weather.",
+      "Repeat every 7-10 days in humid weather.",
       "Avoid excessive nitrogen fertilization.",
     ],
   },
@@ -106,7 +106,7 @@ const DISEASE_PRODUCT_MAP = {
     keywords: ["chlorothalonil", "mancozeb", "cymoxanil", "fungicide", "copper"],
     instructions: [
       "Apply preventive fungicide before blight season.",
-      "Destroy infected plant material — do not compost.",
+      "Destroy infected plant material - do not compost.",
       "Plant certified disease-free seed potatoes.",
     ],
   },
@@ -132,7 +132,7 @@ const DISEASE_PRODUCT_MAP = {
     treatable: true,
     keywords: ["copper", "fungicide", "chlorothalonil"],
     instructions: [
-      "Reduce humidity — improve greenhouse ventilation.",
+      "Reduce humidity - improve greenhouse ventilation.",
       "Apply copper fungicide at first pale spots.",
       "Avoid wetting leaves when watering.",
     ],
@@ -151,7 +151,7 @@ const DISEASE_PRODUCT_MAP = {
     keywords: ["sulfur", "potassium bicarbonate", "neem", "fungicide"],
     instructions: [
       "Apply neem oil or sulfur at first white powdery spots.",
-      "Spray in early morning — avoid afternoon heat.",
+      "Spray in early morning - avoid afternoon heat.",
       "Improve air circulation between plants.",
     ],
   },
@@ -179,11 +179,11 @@ const DISEASE_PRODUCT_MAP = {
     instructions: [
       "Apply captan or copper at first symptom.",
       "Remove old foliage after harvest.",
-      "Avoid dense planting — maintain spacing.",
+      "Avoid dense planting - maintain spacing.",
     ],
   },
 
-  // ── Bacterial diseases ─────────────────────────────────────────────────────
+  // -- Bacterial diseases -----------------------------------------------------
   "fire blight": {
     treatable: true,
     keywords: ["copper", "bactericide", "streptomycin"],
@@ -194,7 +194,7 @@ const DISEASE_PRODUCT_MAP = {
     ],
   },
 
-  // ── Viral diseases (no chemical cure) ─────────────────────────────────────
+  // -- Viral diseases (no chemical cure) -------------------------------------
   "tomato yellow leaf curl virus": {
     treatable: false,
     keywords: ["neem", "insecticide", "sticky trap"],   // only bio-control for the whitefly vector
@@ -206,7 +206,7 @@ const DISEASE_PRODUCT_MAP = {
       "Choose resistant cultivars for future planting.",
     ],
     instructions: [
-      "No chemical cure exists — focus on vector (whitefly) control.",
+      "No chemical cure exists - focus on vector (whitefly) control.",
       "Spray neem oil on underside of leaves to repel whiteflies.",
       "Monitor regularly and remove new infections early.",
     ],
@@ -215,14 +215,14 @@ const DISEASE_PRODUCT_MAP = {
     treatable: false,
     keywords: [],
     preventionGuidance: [
-      "Remove and destroy all infected plants — do not compost.",
+      "Remove and destroy all infected plants - do not compost.",
       "Disinfect all tools and hands with soap before touching plants.",
       "Use virus-indexed, certified seeds.",
       "Control aphid vectors with neem oil or insecticidal soap.",
     ],
     instructions: [
       "No chemical treatment available.",
-      "Eliminate the source — remove infected plants.",
+      "Eliminate the source - remove infected plants.",
       "Prevent spread by not touching infected then healthy plants.",
     ],
   },
@@ -243,7 +243,7 @@ const DISEASE_PRODUCT_MAP = {
   },
 };
 
-// ── Normalise disease name for lookup ────────────────────────────────────────
+// -- Normalise disease name for lookup ----------------------------------------
 export const normaliseName = (name = "") => name.toLowerCase().trim();
 
 /**
@@ -257,7 +257,7 @@ export const getDiseaseEntry = (diseaseName) => {
   // Exact match
   if (DISEASE_PRODUCT_MAP[norm]) return DISEASE_PRODUCT_MAP[norm];
 
-  // Partial match — check if any key is contained in the query or vice versa
+  // Partial match - check if any key is contained in the query or vice versa
   for (const key of Object.keys(DISEASE_PRODUCT_MAP)) {
     if (norm.includes(key) || key.includes(norm)) {
       return DISEASE_PRODUCT_MAP[key];
@@ -292,27 +292,27 @@ export const buildChatProductResponse = (diseaseName, relevantProducts) => {
   }
 
   const lines = [];
-  lines.push(`**${diseaseName}** — ${entry.treatable ? "fungal/bacterial disease that can be managed chemically." : "viral disease with no chemical cure."}`);
+  lines.push(`**${diseaseName}** - ${entry.treatable ? "fungal/bacterial disease that can be managed chemically." : "viral disease with no chemical cure."}`);
   lines.push("");
 
   if (!entry.treatable) {
     lines.push("**Prevention Guidance:**");
-    entry.preventionGuidance.forEach(g => lines.push(`• ${g}`));
+    entry.preventionGuidance.forEach(g => lines.push(`* ${g}`));
     if (relevantProducts.length) {
       lines.push("");
       lines.push("**Supportive Products (bio-control / vectors):**");
-      relevantProducts.forEach(p => lines.push(`• **${p.name}** — NPR ${parseFloat(p.effective_price || p.price).toLocaleString()}`));
+      relevantProducts.forEach(p => lines.push(`* **${p.name}** - NPR ${parseFloat(p.effective_price || p.price).toLocaleString()}`));
     }
   } else {
     if (relevantProducts.length) {
       lines.push("**Recommended Products:**");
       relevantProducts.slice(0, 2).forEach(p =>
-        lines.push(`• **${p.name}** — NPR ${parseFloat(p.effective_price || p.price).toLocaleString()}`)
+        lines.push(`* **${p.name}** - NPR ${parseFloat(p.effective_price || p.price).toLocaleString()}`)
       );
       lines.push("");
     }
     lines.push("**Usage Instructions:**");
-    entry.instructions.forEach(i => lines.push(`• ${i}`));
+    entry.instructions.forEach(i => lines.push(`* ${i}`));
   }
 
   return lines.join("\n");

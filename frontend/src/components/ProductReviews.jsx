@@ -19,7 +19,7 @@ const StarRating = ({ value, onChange, readonly = false }) => {
                         transition: 'color 0.15s', fontSize: '1.1rem'
                     }}
                 >
-                    ★
+                       
                 </button>
             ))}
         </div>

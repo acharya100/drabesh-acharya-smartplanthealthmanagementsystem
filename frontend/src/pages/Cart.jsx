@@ -103,7 +103,7 @@ const Cart = () => {
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.5rem' }}>
                                 {cartItems.map((item, i) => (
                                     <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
-                                        <span style={{ color: 'var(--text-muted)' }}>{item.name} × {item.quantity}</span>
+                                        <span style={{ color: 'var(--text-muted)' }}>{item.name}    {item.quantity}</span>
                                         <span style={{ fontWeight: 700 }}>Rs. {(parseFloat(item.price) * item.quantity).toLocaleString()}</span>
                                     </div>
                                 ))}

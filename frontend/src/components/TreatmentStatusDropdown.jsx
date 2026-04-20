@@ -1,5 +1,5 @@
 /**
- * TreatmentStatusDropdown — Standalone component with i18n support
+ * TreatmentStatusDropdown - Standalone component with i18n support
  * Options: Not Started, Treatment In Progress, Mark as Treated,
  *          Healthy (No Treatment Needed), Non-Plant Image, Outside Scope
  */

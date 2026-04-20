@@ -651,6 +651,8 @@ const ne = {
         password: "पासवर्ड",
         confirmPassword: "पासवर्ड पुष्टि गर्नुहोस्",
         passwordRequired: "मेट्न पुष्टि गर्न पासवर्ड आवश्यक छ।",
+        optimal: "उत्तम दायरा",
+        safe: "सुरक्षित",
     },
 
     chat: {

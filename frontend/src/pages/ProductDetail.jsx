@@ -158,8 +158,8 @@ const ProductDetail = () => {
             </div>
             {/* Badges */}
             <div style={{ position: "absolute", top: "1rem", left: "1rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-              {product.is_featured && <span style={{ background: "#f59e0b", color: "white", padding: "0.25rem 0.75rem", borderRadius: "100px", fontSize: "0.72rem", fontWeight: 800 }}>⭐ FEATURED</span>}
-              {product.is_organic && <span style={{ background: "var(--primary)", color: "white", padding: "0.25rem 0.75rem", borderRadius: "100px", fontSize: "0.72rem", fontWeight: 800 }}>🌿 ORGANIC</span>}
+              {product.is_featured && <span style={{ background: "#f59e0b", color: "white", padding: "0.25rem 0.75rem", borderRadius: "100px", fontSize: "0.72rem", fontWeight: 800 }}>    FEATURED</span>}
+              {product.is_organic && <span style={{ background: "var(--primary)", color: "white", padding: "0.25rem 0.75rem", borderRadius: "100px", fontSize: "0.72rem", fontWeight: 800 }}>     ORGANIC</span>}
               {hasDiscount && <span style={{ background: "#ef4444", color: "white", padding: "0.25rem 0.75rem", borderRadius: "100px", fontSize: "0.72rem", fontWeight: 800 }}>SALE</span>}
             </div>
           </div>
@@ -207,7 +207,7 @@ const ProductDetail = () => {
               <span style={{ fontWeight: 700, color: product.stock > 0 ? "var(--primary)" : "#ef4444", fontSize: "0.9rem" }}>
                 {product.stock > 0 ? `${product.stock} in stock` : "Out of Stock"}
               </span>
-              {product.is_low_stock && product.stock > 0 && <span style={{ fontSize: "0.75rem", color: "#f59e0b", marginLeft: "0.5rem" }}>⚠️ Low Stock</span>}
+              {product.is_low_stock && product.stock > 0 && <span style={{ fontSize: "0.75rem", color: "#f59e0b", marginLeft: "0.5rem" }}>       Low Stock</span>}
             </div>
 
             {/* Quantity & Actions */}
@@ -233,7 +233,7 @@ const ProductDetail = () => {
                   style={{ flex: 1, height: "54px", fontSize: "1rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.75rem" }}
                 >
                   <ShoppingCart size={20} />
-                  {added ? "Added! ✓" : `Add ${quantity > 1 ? `${quantity}x ` : ""}to Cart`}
+                  {added ? "Added!    " : `Add ${quantity > 1 ? `${quantity}x ` : ""}to Cart`}
                 </button>
                 <button
                   onClick={handleWishlistToggle}
@@ -248,7 +248,7 @@ const ProductDetail = () => {
                 className="btn-secondary"
                 style={{ textAlign: "center", display: "flex", justifyContent: "center", alignItems: "center", gap: "0.5rem", height: "48px", width: "100%", cursor: "pointer", border: "none" }}
               >
-                <ShoppingBag size={18} /> Buy Now — Go to Checkout
+                <ShoppingBag size={18} /> Buy Now - Go to Checkout
               </button>
             </div>
           </div>
@@ -386,7 +386,7 @@ const ProductDetail = () => {
                     )}
                     {reviewError && (
                       <div style={{ padding: "0.875rem 1rem", background: "#fef2f2", borderRadius: "12px", marginBottom: "1rem", border: "1px solid #fca5a5" }}>
-                        <p style={{ color: "#dc2626", fontSize: "0.875rem", margin: 0, fontWeight: 600 }}>⚠️ {reviewError}</p>
+                        <p style={{ color: "#dc2626", fontSize: "0.875rem", margin: 0, fontWeight: 600 }}>       {reviewError}</p>
                       </div>
                     )}
                     <button

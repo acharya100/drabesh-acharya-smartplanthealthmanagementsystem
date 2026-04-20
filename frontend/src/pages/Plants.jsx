@@ -497,7 +497,7 @@ const Plants = () => {
                     ></textarea>
                   </div>
 
-                  {/* Sunlight + Water — informational box for non_leaf or out_of_scope */}
+                  {/* Sunlight + Water - informational box for non_leaf or out_of_scope */}
                   {(newPlant.healthStatus === 'non_plant' || newPlant.healthStatus === 'out_of_scope') ? (
                     <div style={{
                       background: newPlant.healthStatus === 'non_plant' ? 'var(--bg-main)' : '#fefce8',

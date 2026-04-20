@@ -5,7 +5,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { useLanguage } from "../context/LanguageContext";
 import { useTheme } from "../context/ThemeContext";
 
-/* ── 6-Box OTP Input ─────────────────────────────────────────── */
+/* -- 6-Box OTP Input ------------------------------------------- */
 const OtpBoxes = ({ value, onChange, disabled }) => {
   const refs = useRef([]);
   const digits = (value || "").split("").slice(0, 6);
@@ -76,7 +76,7 @@ const OtpBoxes = ({ value, onChange, disabled }) => {
   );
 };
 
-/* ── Shared Styles (CSS vars for dark/light mode) ───────────── */
+/* -- Shared Styles (CSS vars for dark/light mode) ------------- */
 const inputStyle = {
   width: "100%",
   height: "48px",
@@ -129,7 +129,7 @@ const errorBox = (msg) =>
     </div>
   ) : null;
 
-/* ── Main Login Component ────────────────────────────────────── */
+/* -- Main Login Component -------------------------------------- */
 const Login = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
@@ -154,7 +154,7 @@ const Login = () => {
   const [forgotLoading, setForgotLoading] = useState(false);
   const [timeLeft, setTimeLeft] = useState(120); // 2 minutes in seconds
 
-  /* ── Login submit ── */
+  /* -- Login submit -- */
   const handleLogin = async (e) => {
     e.preventDefault();
     if (loginLoading) return;
@@ -182,7 +182,7 @@ const Login = () => {
     }
   };
 
-  /* ── Countdown Timer for OTP ── */
+  /* -- Countdown Timer for OTP -- */
   useEffect(() => {
     let timer;
     if (forgotMode && forgotStep === "otp" && timeLeft > 0) {
@@ -216,7 +216,7 @@ const Login = () => {
     }
   };
 
-  /* ── Stage 2: Verify OTP ── */
+  /* -- Stage 2: Verify OTP -- */
   const handleVerifyOtp = async (e) => {
     e.preventDefault();
     if (otp.replace(/\s/g, "").length !== 6) {
@@ -240,7 +240,7 @@ const Login = () => {
     }
   };
 
-  /* ── Stage 3: Set New Password ── */
+  /* -- Stage 3: Set New Password -- */
   const handleFinalReset = async (e) => {
     e.preventDefault();
     if (newPwd.length < 8) {
@@ -286,7 +286,7 @@ const Login = () => {
 
   return (
     <div style={{ display: "flex", minHeight: "100vh", background: "var(--bg-main)" }}>
-      {/* ── Left green panel ── */}
+      {/* -- Left green panel -- */}
       <div
         className="hide-on-mobile"
         style={{
@@ -326,7 +326,7 @@ const Login = () => {
           }}
         >
           <div>
-            <div style={{ fontSize: "3.5rem", marginBottom: "1rem" }}>🌿</div>
+            <div style={{ fontSize: "3.5rem", marginBottom: "1rem" }}>    </div>
             <h1
               style={{
                 fontSize: "3rem",
@@ -349,7 +349,7 @@ const Login = () => {
         <style>{`@media(max-width:900px){.hide-on-mobile{display:none!important}}`}</style>
       </div>
 
-      {/* ── Right content panel ── */}
+      {/* -- Right content panel -- */}
       <div
         style={{
           flex: 1,
@@ -361,7 +361,7 @@ const Login = () => {
         }}
       >
         {forgotMode ? (
-          /* ═══════════ FORGOT PASSWORD ═══════════ */
+          /* =========== FORGOT PASSWORD =========== */
           <div style={cardStyle}>
 
             {/* Step 1: Enter email */}
@@ -550,7 +550,7 @@ const Login = () => {
             )}
           </div>
         ) : (
-          /* ═══════════ MAIN LOGIN ═══════════ */
+          /* =========== MAIN LOGIN =========== */
           <div style={cardStyle}>
             <h2 style={{ fontSize: "26px", fontWeight: 800, color: "var(--text-main)", marginBottom: "6px", textAlign: "center" }}>
               {t("login.welcomeBack") || "Welcome back"}

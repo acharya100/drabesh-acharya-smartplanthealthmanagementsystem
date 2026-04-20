@@ -32,7 +32,7 @@ class CustomTokenObtainPairView(TokenObtainPairView):
 def api_root(request):
     return JsonResponse({
         "status": "online",
-        "message": "Smart Plant Health Management System — API is running",
+        "message": "Smart Plant Health Management System - API is running",
         "application": "Smart Plant Health Management System",
         "frontend_url": "Smart Plant Health Management System",
         "endpoints": {

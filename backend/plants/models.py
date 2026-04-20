@@ -209,7 +209,7 @@ class Plant(models.Model):
     def temperature_range(self):
        
         if self.min_temperature is not None and self.max_temperature is not None:
-            return f"{self.min_temperature}-{self.max_temperature}°C"
+            return f"{self.min_temperature}-{self.max_temperature} degC"
         return None
     
     @property

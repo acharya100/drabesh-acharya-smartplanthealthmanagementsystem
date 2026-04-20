@@ -32,86 +32,91 @@ export const OfflineSyncProvider = ({ children }) => {
 
   // Sync Logic
   const processQueue = useCallback(async () => {
+    // Basic guards
     if (!window.navigator.onLine || isSyncing) return;
-
-    const queue = offlineStore.getQueue();
-    if (queue.length === 0) {
+    
+    const currentQueue = offlineStore.getQueue();
+    if (currentQueue.length === 0) {
       setQueueCount(0);
       return;
     }
 
-    console.log(`[OfflineSync] Starting sync for ${queue.length} items...`);
+    console.log(`[OfflineSync] Starting sync for ${currentQueue.length} items...`);
     setIsSyncing(true);
     setLastSyncStatus('syncing');
 
     let successCount = 0;
-
-    // Process items sequentially to preserve order
-    // Track fake offline-xxx → real server ID mapping
     const idRemap = {};
 
+    try {
+      for (const op of currentQueue) {
+        try {
+          offlineStore.updateOpStatus(op.id, 'syncing');
 
+          // Resolve remapped target IDs
+          const resolvedTargetId = idRemap[op.targetId] ?? op.targetId;
 
-    for (const op of queue) {
-      try {
-        offlineStore.updateOpStatus(op.id, 'syncing');
-
-        // Resolve remapped target IDs (offline-xxx → real server id after CREATE_PRED succeeds)
-        const resolvedTargetId = idRemap[op.targetId] ?? op.targetId;
-
-        switch (op.type) {
-          case 'UPDATE_PRED':
-            // Skip if still an unresolved fake offline ID (CREATE_PRED may have failed)
-            if (typeof resolvedTargetId === 'string' && resolvedTargetId.startsWith('offline-')) {
-              console.warn(`[OfflineSync] Skipping UPDATE_PRED for unresolved fake ID: ${resolvedTargetId}`);
-              offlineStore.dequeue(op.id);
-              continue;
-            }
-            await predictionService.update(resolvedTargetId, op.payload);
-            break;
-          case 'DELETE_PRED':
-            await predictionService.delete(resolvedTargetId);
-            break;
-          case 'CREATE_PRED':
-            if (op.payload.imageBase64) {
-              const blob = await fetch(op.payload.imageBase64).then(res => res.blob());
-              const formData = new FormData();
-              formData.append('image', blob, 'offline_capture.jpg');
-              const response = await predictionService.detect(formData);
-              // Map the fake offline ID to the real server-assigned ID
-              const realId = response?.data?.predictionId || response?.data?.id;
-              if (realId && typeof op.targetId === 'string' && op.targetId.startsWith('offline-')) {
-                idRemap[op.targetId] = realId;
-                console.log(`[OfflineSync] ID remapped: ${op.targetId} → ${realId}`);
+          switch (op.type) {
+            case 'UPDATE_PRED':
+              if (typeof resolvedTargetId === 'string' && resolvedTargetId.startsWith('offline-')) {
+                offlineStore.dequeue(op.id);
+                continue;
               }
-            }
-            break;
-          default:
-            console.warn(`[OfflineSync] Unknown operation type: ${op.type}`);
+              await predictionService.update(resolvedTargetId, op.payload);
+              break;
+            case 'DELETE_PRED':
+              await predictionService.delete(resolvedTargetId);
+              break;
+            case 'CREATE_PRED':
+              if (op.payload.imageBase64) {
+                const blob = await fetch(op.payload.imageBase64).then(res => res.blob());
+                const formData = new FormData();
+                formData.append('image', blob, 'offline_capture.jpg');
+                const response = await predictionService.detect(formData);
+                
+                const realId = response?.data?.predictionId || response?.data?.id;
+                if (realId && typeof op.targetId === 'string' && op.targetId.startsWith('offline-')) {
+                  idRemap[op.targetId] = realId;
+                }
+              }
+              break;
+          }
+
+          offlineStore.dequeue(op.id);
+          successCount++;
+        } catch (err) {
+          console.error(`[OfflineSync] Failed to sync operation ${op.id}:`, err);
+          // If it's a 4xx error (client error), it's likely invalid data.
+          // We mark as failed but don't loop.
+          offlineStore.updateOpStatus(op.id, 'failed', true);
+          
+          // Stop processing the queue if we hit a serious network error,
+          // but if it's a 400 (Bad Request), maybe skip this item and continue?
+          if (err.response?.status === 400) {
+             console.warn('[OfflineSync] Item rejected by server (400). Skipping to next item.');
+             offlineStore.dequeue(op.id); // Remove bad data to prevent loops
+          } else {
+             break; // Stop syncing for now (probably network issue)
+          }
         }
-
-        offlineStore.dequeue(op.id);
-        successCount++;
-      } catch (err) {
-        console.error(`[OfflineSync] Failed to sync operation ${op.id}:`, err);
-        offlineStore.updateOpStatus(op.id, 'failed', true);
       }
+    } finally {
+      setIsSyncing(false);
+      setQueueCount(offlineStore.getQueue().length);
+      setLastSyncStatus(successCount > 0 ? 'success' : 'error');
+      setTimeout(() => setLastSyncStatus('idle'), 5000);
     }
+  }, []); // Empty dependencies stabilize the function
 
-    setIsSyncing(false);
-    setQueueCount(offlineStore.getQueue().length);
-    setLastSyncStatus(successCount > 0 ? 'success' : 'error');
-
-    // Reset status after a few seconds
-    setTimeout(() => setLastSyncStatus('idle'), 5000);
-  }, [isSyncing]);
-
-  // Handle auto-sync on reconnect
+  // Handle auto-sync on reconnect (Debounced/Throttled)
   useEffect(() => {
     if (isOnline) {
-      processQueue();
+      const timer = setTimeout(() => {
+        processQueue();
+      }, 3000); // 3-second delay to ensure connection is stable
+      return () => clearTimeout(timer);
     }
-  }, [isOnline, processQueue]);
+  }, [isOnline]); // processQueue is now stable, but we still focus on isOnline
 
   // Periodic poll for queue count to keep UI in sync
   useEffect(() => {

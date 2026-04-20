@@ -89,7 +89,7 @@ const Ecommerce = () => {
         setTimeout(() => setAdminToast(null), 3200);
     };
 
-    // ── Admin CRUD ────────────────────────────────────────────────
+    // -- Admin CRUD ------------------------------------------------
     const openAddForm = () => {
         setEditingProduct(null);
         setProductForm(EMPTY_FORM);
@@ -160,7 +160,7 @@ const Ecommerce = () => {
         }
     };
 
-    // ── Filtering & Sorting ────────────────────────────────────────
+    // -- Filtering & Sorting ----------------------------------------
     const filteredProducts = products.filter(p => {
         const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase()) ||
             p.description.toLowerCase().includes(search.toLowerCase());
@@ -171,7 +171,7 @@ const Ecommerce = () => {
         if (sortBy === "price_high") return parseFloat(b.effective_price || b.price) - parseFloat(a.effective_price || a.price);
         if (sortBy === "rating") return (b.average_rating || 0) - (a.average_rating || 0);
         if (sortBy === "name") return a.name.localeCompare(b.name);
-        return 0; // newest — default API order
+        return 0; // newest - default API order
     });
 
     const categoriesList = [
@@ -189,7 +189,7 @@ const Ecommerce = () => {
         ? (img.startsWith("http") ? img : `http://localhost:8000${img}`)
         : "https://via.placeholder.com/300x200";
 
-    // ── Field helper ──────────────────────────────────────────────
+    // -- Field helper ----------------------------------------------
     const fieldStyle = {
         width: "100%", padding: "0.7rem 0.875rem", borderRadius: 10,
         border: "1px solid var(--border-light)", background: "var(--bg-main)",
@@ -218,7 +218,7 @@ const Ecommerce = () => {
                     </div>
                 )}
 
-                {/* Store Hero — ALL text uses t() */}
+                {/* Store Hero - ALL text uses t() */}
                 <div style={{
                     background: "linear-gradient(135deg, #065f46, #064e3b)", borderRadius: 30,
                     padding: "4rem 3rem", color: "#fff", marginBottom: "3rem",
@@ -250,7 +250,7 @@ const Ecommerce = () => {
                     </div>
                 </div>
 
-                {/* ── Admin Toolbar (sticky, always visible for admins) ── */}
+                {/* -- Admin Toolbar (sticky, always visible for admins) -- */}
                 {isAdmin && (
                     <div style={{
                         position: "sticky", top: 0, zIndex: 100,
@@ -263,10 +263,10 @@ const Ecommerce = () => {
                         <ShieldCheck size={22} color="#6ee7b7" />
                         <div style={{ flex: 1 }}>
                             <div style={{ fontWeight: 900, color: "#fff", fontSize: "0.92rem" }}>
-                                🛡️ Admin Mode — Product Management
+                                        Admin Mode - Product Management
                             </div>
                             <div style={{ color: "#a7f3d0", fontSize: "0.78rem", fontWeight: 600 }}>
-                                Each product card has ✏️ Edit and 🗑️ Delete buttons below the cart button
+                                Each product card has        Edit and         Delete buttons below the cart button
                             </div>
                         </div>
                         <button onClick={openAddForm} style={{
@@ -327,8 +327,8 @@ const Ecommerce = () => {
                                 <ArrowUpDown size={16} color="var(--text-muted)" />
                                 <select value={sortBy} onChange={e => setSortBy(e.target.value)} style={{ height: 56, padding: "0 2.5rem 0 1rem", borderRadius: 14, border: "1px solid var(--border-light)", background: "var(--bg-card)", color: "var(--text-main)", fontWeight: 700, fontSize: "0.85rem", cursor: "pointer", appearance: "auto" }}>
                                     <option value="newest">Newest First</option>
-                                    <option value="price_low">Price: Low → High</option>
-                                    <option value="price_high">Price: High → Low</option>
+                                    <option value="price_low">Price: Low {"->"} High</option>
+                                    <option value="price_high">Price: High {"->"} Low</option>
                                     <option value="rating">Top Rated</option>
                                     <option value="name">Name A-Z</option>
                                 </select>
@@ -394,8 +394,8 @@ const Ecommerce = () => {
                                             </div>
                                             {/* Badges */}
                                             <div style={{ position: "absolute", top: "0.75rem", left: "0.75rem", display: "flex", flexDirection: "column", gap: "0.35rem" }}>
-                                                {product.is_featured && <span style={{ background: "#f59e0b", color: "white", padding: "0.15rem 0.5rem", borderRadius: 100, fontSize: "0.65rem", fontWeight: 800 }}>⭐ FEATURED</span>}
-                                                {product.is_organic && <span style={{ background: "var(--primary)", color: "white", padding: "0.15rem 0.5rem", borderRadius: 100, fontSize: "0.65rem", fontWeight: 800 }}>🌿 ORGANIC</span>}
+                                                {product.is_featured && <span style={{ background: "#f59e0b", color: "white", padding: "0.15rem 0.5rem", borderRadius: 100, fontSize: "0.65rem", fontWeight: 800 }}>    FEATURED</span>}
+                                                {product.is_organic && <span style={{ background: "var(--primary)", color: "white", padding: "0.15rem 0.5rem", borderRadius: 100, fontSize: "0.65rem", fontWeight: 800 }}>     ORGANIC</span>}
                                                 {product.discount_price && parseFloat(product.discount_price) < parseFloat(product.price) && <span style={{ background: "#ef4444", color: "white", padding: "0.15rem 0.5rem", borderRadius: 100, fontSize: "0.65rem", fontWeight: 800 }}>SALE</span>}
                                             </div>
                                             <div className="quick-view-overlay" style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", opacity: 0, transition: "opacity 0.2s", color: "#fff", fontWeight: 800, gap: "0.5rem" }}>
@@ -437,7 +437,7 @@ const Ecommerce = () => {
                                                     <Heart size={16} fill={wishlistIds.has(product.id) ? "#ef4444" : "none"} />
                                                     {wishlistIds.has(product.id) ? t("store.inWishlist") : t("store.addToWishlist")}
                                                 </button>
-                                                {/* ── Admin Action Bar (always visible to admin) ── */}
+                                                {/* -- Admin Action Bar (always visible to admin) -- */}
                                                 {isAdmin && (
                                                     <div style={{
                                                         display: "flex", gap: "0.4rem", marginTop: "0.35rem",
@@ -488,7 +488,7 @@ const Ecommerce = () => {
                     </div>
                 </div>
 
-                {/* ── Quick View Modal ─────────────────────────────────────── */}
+                {/* -- Quick View Modal --------------------------------------- */}
                 {quickViewProduct && (
                     <div className="modal-overlay" style={{ zIndex: 2000 }}>
                         <div className="modal-content animate-scale-up" style={{ maxWidth: 1000, padding: 0, overflow: "auto", maxHeight: "90vh" }}>
@@ -506,7 +506,7 @@ const Ecommerce = () => {
                                         <h2 style={{ fontSize: "2rem", fontWeight: 900, marginBottom: "0.5rem", color: "var(--text-main)" }}>{(t.language === 'ne' && quickViewProduct.name_ne) ? quickViewProduct.name_ne : quickViewProduct.name}</h2>
                                         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
                                             <div style={{ display: "flex", gap: "0.2rem", fontSize: "1.2rem", color: "#f59e0b" }}>
-                                                {[1, 2, 3, 4, 5].map(s => <span key={s}>{s <= Math.round(quickViewProduct.average_rating || 0) ? "★" : "☆"}</span>)}
+                                                {[1, 2, 3, 4, 5].map(s => <span key={s}>{s <= Math.round(quickViewProduct.average_rating || 0) ? "   " : "   "}</span>)}
                                             </div>
                                             <span style={{ color: "var(--text-muted)", fontSize: "0.9rem" }}>
                                                 {quickViewProduct.average_rating || 0} ({quickViewProduct.review_count || 0} {t("store.reviews")})
@@ -549,7 +549,7 @@ const Ecommerce = () => {
                     </div>
                 )}
 
-                {/* ── Delete Confirm Modal ──────────────────────────────────── */}
+                {/* -- Delete Confirm Modal ------------------------------------ */}
                 {deleteTarget && (
                     <div className="modal-overlay" style={{ zIndex: 3000 }}>
                         <div className="modal-content animate-scale-up" style={{ maxWidth: 440, textAlign: "center", padding: "2.5rem" }}>
@@ -571,7 +571,7 @@ const Ecommerce = () => {
                     </div>
                 )}
 
-                {/* ── Product Form Modal ────────────────────────────────────── */}
+                {/* -- Product Form Modal -------------------------------------- */}
                 {showProductForm && (
                     <div className="modal-overlay" style={{ zIndex: 3000 }}>
                         <div className="modal-content animate-scale-up" style={{ maxWidth: 680, padding: "2.5rem", maxHeight: "90vh", overflowY: "auto" }}>
@@ -598,7 +598,7 @@ const Ecommerce = () => {
                                     </div>
                                     <div>
                                         <label style={{ display: "block", fontWeight: 700, fontSize: "0.8rem", color: "var(--text-muted)", marginBottom: "0.4rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Product Name (Nepali)</label>
-                                        <input style={fieldStyle} value={productForm.name_ne} onChange={e => setProductForm(p => ({ ...p, name_ne: e.target.value }))} placeholder="उदाहरण: कपर फन्जिसाइड स्प्रे" />
+                                        <input style={fieldStyle} value={productForm.name_ne} onChange={e => setProductForm(p => ({ ...p, name_ne: e.target.value }))} placeholder="                  :                                                         " />
                                     </div>
                                     <div>
                                         <label style={{ display: "block", fontWeight: 700, fontSize: "0.8rem", color: "var(--text-muted)", marginBottom: "0.4rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Category</label>
@@ -629,7 +629,7 @@ const Ecommerce = () => {
                                     </div>
                                     <div>
                                         <label style={{ display: "block", fontWeight: 700, fontSize: "0.8rem", color: "var(--text-muted)", marginBottom: "0.4rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Description (Nepali)</label>
-                                        <textarea rows={3} style={{ ...fieldStyle, resize: "vertical" }} value={productForm.description_ne} onChange={e => setProductForm(p => ({ ...p, description_ne: e.target.value }))} placeholder="उत्पादनको विवरण..." />
+                                        <textarea rows={3} style={{ ...fieldStyle, resize: "vertical" }} value={productForm.description_ne} onChange={e => setProductForm(p => ({ ...p, description_ne: e.target.value }))} placeholder="                                           ..." />
                                     </div>
                                     <div style={{ gridColumn: "1/-1" }}>
                                         <label style={{ display: "block", fontWeight: 700, fontSize: "0.8rem", color: "var(--text-muted)", marginBottom: "0.4rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Tags (comma separated)</label>
@@ -641,11 +641,11 @@ const Ecommerce = () => {
                                     </div>
                                     <div>
                                         <label style={{ display: "block", fontWeight: 700, fontSize: "0.8rem", color: "var(--text-muted)", marginBottom: "0.4rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Usage Instructions (Nepali)</label>
-                                        <textarea rows={2} style={{ ...fieldStyle, resize: "vertical" }} value={productForm.usage_instructions_ne} onChange={e => setProductForm(p => ({ ...p, usage_instructions_ne: e.target.value }))} placeholder="प्रयोग गर्ने तरिका..." />
+                                        <textarea rows={2} style={{ ...fieldStyle, resize: "vertical" }} value={productForm.usage_instructions_ne} onChange={e => setProductForm(p => ({ ...p, usage_instructions_ne: e.target.value }))} placeholder="                                                  ..." />
                                     </div>
                                     {/* Checkboxes */}
                                     <div style={{ display: "flex", gap: "1.5rem", gridColumn: "1/-1" }}>
-                                        {[["is_featured", "⭐ Featured"], ["is_organic", "🌿 Organic"], ["is_active", "✅ Active"]].map(([key, label]) => (
+                                        {[["is_featured", "    Featured"], ["is_organic", "     Organic"], ["is_active", "    Active"]].map(([key, label]) => (
                                             <label key={key} style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer", fontWeight: 700, fontSize: "0.875rem", color: "var(--text-muted)" }}>
                                                 <input type="checkbox" checked={productForm[key]} onChange={e => setProductForm(p => ({ ...p, [key]: e.target.checked }))} style={{ width: 16, height: 16, accentColor: "var(--primary)" }} />
                                                 {label}

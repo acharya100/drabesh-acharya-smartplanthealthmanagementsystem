@@ -27,6 +27,7 @@ const Treatment = () => {
   const [customDiseases, setCustomDiseases] = useState([]);
   const [loadingCustom, setLoadingCustom] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Modal State
   const [showAddModal, setShowAddModal] = useState(false); // Controls TreatmentFormModal
@@ -336,7 +337,7 @@ const Treatment = () => {
             <div className="treatment-detail-view animate-slide-up" style={{ background: 'var(--bg-card)', borderRadius: '12px', border: '1px solid var(--border-light)', overflow: 'hidden' }}>
               <div style={{ padding: '1.5rem 2.5rem', borderBottom: '1px solid var(--border-light)', display: 'flex', alignItems: 'center', gap: '1rem', background: 'var(--bg-surface-inner)' }}>
                 <button className="btn-secondary" onClick={handleCloseModal} style={{ padding: '0.5rem 1rem' }}>
-                  ← Back to Directory
+                      Back to Directory
                 </button>
                 <h2 style={{ margin: 0, fontSize: '1.25rem' }}>{t("treatment.title")}</h2>
               </div>
@@ -584,7 +585,7 @@ const Treatment = () => {
                                     No specific treatment products are currently linked.
                                     <br />
                                     <span style={{ color: 'var(--primary)', cursor: 'pointer', fontWeight: 600 }} onClick={() => navigate('/store')}>
-                                      Browse general marketplace →
+                                      Browse general marketplace {"->"}
                                     </span>
                                   </p>
                                 </div>
@@ -617,7 +618,17 @@ const Treatment = () => {
                 </p>
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+                <div style={{ position: 'relative', flex: 1, maxWidth: '400px' }}>
+                  <Search size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                  <input
+                    type="text"
+                    placeholder="Search diseases or symptoms..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    style={{ width: '100%', padding: '0.8rem 1rem 0.8rem 2.5rem', borderRadius: '8px', border: '1px solid var(--border-light)', background: 'var(--bg-card)', color: 'var(--text-main)', fontSize: '0.9rem' }}
+                  />
+                </div>
                 <button
                   className="btn-primary"
                   style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
@@ -637,10 +648,32 @@ const Treatment = () => {
                 <div className="diseases-grid">
 
                   {/* DISEASE CARDS */}
-                  {diseases.map(disease => (
-                    <div key={disease.id} className="disease-card-v2 animate-slide-up">
+                  {diseases.filter(d => d.name.toLowerCase().includes(searchQuery.toLowerCase()) || (d.symptoms && d.symptoms.toLowerCase().includes(searchQuery.toLowerCase()))).map(disease => (
+                    <div key={disease.id} className="disease-card-v2 animate-slide-up" style={{ position: 'relative' }}>
                       <div className="disease-header-info" style={{ padding: '2rem' }}>
-                        <div className="disease-title-row">
+                        <button
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            if (window.confirm("Are you sure you want to delete this disease/treatment mapping?")) {
+                               await treatmentService.delete(disease.id);
+                               if (selectedPlant) loadDiseases(selectedPlant.id, true);
+                               else loadAllDiseases(true);
+                            }
+                          }}
+                          style={{
+                            position: 'absolute', top: '1.25rem', right: '1.25rem',
+                            background: 'transparent', color: '#ef4444', border: 'none', cursor: 'pointer',
+                            padding: '0.4rem', borderRadius: '6px',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            transition: 'background 0.2s'
+                          }}
+                          onMouseEnter={e => e.currentTarget.style.background = '#fef2f2'}
+                          onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                          title="Delete Disease"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                        <div className="disease-title-row" style={{ paddingRight: '2rem' }}>
                           <h3>{disease.name}</h3>
                           <div className={`badge ${disease.severity_level === 'critical' ? 'badge-toxic' : 'badge-warning'}`}>
                             {disease.severity_level}

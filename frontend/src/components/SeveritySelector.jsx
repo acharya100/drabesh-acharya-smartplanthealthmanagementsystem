@@ -1,7 +1,7 @@
 /**
- * SeveritySelector — Standalone severity dropdown with dynamic cost display and i18n support
- * Low → NPR 300 | Moderate → NPR 350 | Severe → NPR 400
- * Healthy status → "No treatment required"
+ * SeveritySelector - Standalone severity dropdown with dynamic cost display and i18n support
+ * Low -> NPR 300 | Moderate -> NPR 350 | Severe -> NPR 400
+ * Healthy status -> "No treatment required"
  */
 import { ChevronDown } from "lucide-react";
 import { useLanguage } from "../context/LanguageContext";

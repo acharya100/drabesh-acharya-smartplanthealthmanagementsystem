@@ -30,7 +30,7 @@ const DEFAULT_FORM = {
     phLevel: 6.5, moisture: 50, organicMatter: 4, soilType: "loamy",
 };
 
-// ── Score Gauge ────────────────────────────────────────────────────────────────
+// -- Score Gauge ----------------------------------------------------------------
 const ScoreGauge = ({ score }) => {
     const { t } = useLanguage();
     const color = score >= 75 ? "var(--success)" : score >= 50 ? "var(--warning)" : "var(--danger)";
@@ -57,13 +57,13 @@ const ScoreGauge = ({ score }) => {
     );
 };
 
-// ── Parameter Slider with optimal range indicator ──────────────────────────────
+// -- Parameter Slider with optimal range indicator ------------------------------
 const ParameterSlider = ({ paramKey, label, value, min, max, step, unit, icon: Icon, onChange, color = "var(--primary)", isActive, onInfoClick }) => {
     const { t } = useLanguage();
     const opt = OPTIMAL[paramKey];
     const isLow = opt && value < opt.low;
     const isHigh = opt && value > opt.high;
-    const status = isLow ? `⬇ ${t("common.low") || "Low"}` : isHigh ? `⬆ ${t("common.high") || "High"}` : `✓ ${t("common.good") || "Good"}`;
+    const status = isLow ? `    ${t("common.low") || "Low"}` : isHigh ? `    ${t("common.high") || "High"}` : `    ${t("common.good") || "Good"}`;
     const statusColor = isLow ? "var(--danger)" : isHigh ? "var(--warning)" : "var(--success)";
 
     return (
@@ -107,14 +107,14 @@ const ParameterSlider = ({ paramKey, label, value, min, max, step, unit, icon: I
             />
             <div style={{ display: "flex", justifyContent: "space-between", marginTop: "0.2rem", fontSize: "0.68rem", color: "var(--text-muted)" }}>
                 <span>{min}{unit}</span>
-                {opt && <span style={{ color: "var(--success)", fontWeight: 700 }}>{t("common.optimal") || "Optimal"}: {opt.low}–{opt.high}{unit}</span>}
+                {opt && <span style={{ color: "var(--success)", fontWeight: 700 }}>{t("common.optimal") || "Optimal"}: {opt.low}-{opt.high}{unit}</span>}
                 <span>{max}{unit}</span>
             </div>
         </div>
     );
 };
 
-// ── Nutrient to Marketplace Keyword Mapping ──────────────────────────────
+// -- Nutrient to Marketplace Keyword Mapping ------------------------------
 const NUTRIENT_KEYWORDS = {
     nitrogen: ["urea", "nitrogen", "npk"],
     phosphorus: ["dap", "phosphate", "phosphorus"],
@@ -124,7 +124,7 @@ const NUTRIENT_KEYWORDS = {
     organicMatter: ["compost", "manure", "organic"]
 };
 
-// ── NEW Detail Info Component ──────────────────────────────
+// -- NEW Detail Info Component ------------------------------
 const ActiveParamInfo = ({ paramKey, onClose }) => {
     const { t } = useLanguage();
     const navigate = useNavigate();
@@ -198,7 +198,7 @@ const ActiveParamInfo = ({ paramKey, onClose }) => {
             <div style={{ display: "flex", flexDirection: "column", gap: "1rem", marginBottom: "2rem" }}>
                 <div style={{ background: "var(--bg-surface-1)", padding: "1.25rem", borderRadius: "18px", border: "1px solid var(--border-light)" }}>
                     <p style={{ margin: 0, fontSize: "0.72rem", fontWeight: 800, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.5rem" }}>
-                        🔎 Probable Impact
+                        Probable Impact
                     </p>
                     <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--text-main)", fontStyle: "italic", lineHeight: 1.5, fontWeight: 600 }}>
                         {tip.impact}
@@ -291,7 +291,7 @@ const ActiveParamInfo = ({ paramKey, onClose }) => {
     );
 };
 
-// ── Diagnostic Assistant Modal ──────────────────────────────────────────────────
+// -- Diagnostic Assistant Modal --------------------------------------------------
 const DiagnosticAssistant = ({ isOpen, onClose, onApply }) => {
     const { t } = useLanguage();
     const [selections, setSelections] = useState({ symptoms: "healthy", texture: "buttery" });
@@ -299,17 +299,17 @@ const DiagnosticAssistant = ({ isOpen, onClose, onApply }) => {
     if (!isOpen) return null;
 
     const symptoms = [
-        { id: "healthy", label: t("soil.assistant.symptomHealthy"), icon: "✨", values: { nitrogen: 280, phosphorus: 80, potassium: 250, ph: 6.8, moisture: 55 } },
-        { id: "yellowing", label: t("soil.assistant.symptomYellowing"), icon: "🍂", values: { nitrogen: 140, phosphorus: 90, potassium: 280, ph: 7.2, moisture: 50 } },
-        { id: "purple", label: t("soil.assistant.symptomPurple"), icon: "💜", values: { nitrogen: 250, phosphorus: 40, potassium: 300, ph: 6.2, moisture: 55 } },
-        { id: "brown", label: t("soil.assistant.symptomBrown"), icon: "🔥", values: { nitrogen: 240, phosphorus: 100, potassium: 150, ph: 7.0, moisture: 45 } },
-        { id: "veins", label: t("soil.assistant.symptomVeinYellow"), icon: "🥬", values: { nitrogen: 260, phosphorus: 110, potassium: 240, ph: 8.2, moisture: 50 } },
+        { id: "healthy", label: t("soil.assistant.symptomHealthy"), icon: "   ", values: { nitrogen: 280, phosphorus: 80, potassium: 250, ph: 6.8, moisture: 55 } },
+        { id: "yellowing", label: t("soil.assistant.symptomYellowing"), icon: "    ", values: { nitrogen: 140, phosphorus: 90, potassium: 280, ph: 7.2, moisture: 50 } },
+        { id: "purple", label: t("soil.assistant.symptomPurple"), icon: "    ", values: { nitrogen: 250, phosphorus: 40, potassium: 300, ph: 6.2, moisture: 55 } },
+        { id: "brown", label: t("soil.assistant.symptomBrown"), icon: "    ", values: { nitrogen: 240, phosphorus: 100, potassium: 150, ph: 7.0, moisture: 45 } },
+        { id: "veins", label: t("soil.assistant.symptomVeinYellow"), icon: "    ", values: { nitrogen: 260, phosphorus: 110, potassium: 240, ph: 8.2, moisture: 50 } },
     ];
 
     const textures = [
-        { id: "gritty", label: t("soil.assistant.textureGritty"), icon: "⌛", type: "sandy", moisture: 30 },
-        { id: "smooth", label: t("soil.assistant.textureSmooth"), icon: "🧱", type: "clay", moisture: 75 },
-        { id: "buttery", label: t("soil.assistant.textureButtery"), icon: "🌱", type: "loamy", moisture: 55 },
+        { id: "gritty", label: t("soil.assistant.textureGritty"), icon: "   ", type: "sandy", moisture: 30 },
+        { id: "smooth", label: t("soil.assistant.textureSmooth"), icon: "    ", type: "clay", moisture: 75 },
+        { id: "buttery", label: t("soil.assistant.textureButtery"), icon: "    ", type: "loamy", moisture: 55 },
     ];
 
     const handleApply = () => {
@@ -328,7 +328,7 @@ const DiagnosticAssistant = ({ isOpen, onClose, onApply }) => {
 
     return (
         <div style={{ position: "fixed", inset: 0, zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
-            <div onClick={onClose} style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.4)", backdropFilter: "blur(4px)" }} />
+            <div onClick={onClose} style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.75)", backdropFilter: "blur(12px)" }} />
             <div style={{ position: "relative", width: "100%", maxWidth: 640, background: "var(--bg-card)", borderRadius: 32, border: "1px solid var(--border-light)", boxShadow: "0 25px 50px -12px rgba(0,0,0,0.5)", overflow: "hidden", display: "flex", flexDirection: "column", maxHeight: "90vh" }} className="animate-scale-in">
 
                 {/* Header */}
@@ -412,7 +412,7 @@ const DiagnosticAssistant = ({ isOpen, onClose, onApply }) => {
     );
 };
 
-// ── How-To Guide Panel ─────────────────────────────────────────────────────────
+// -- How-To Guide Panel ---------------------------------------------------------
 const HowToGuide = () => {
     const { t } = useLanguage();
     const [open, setOpen] = useState(false);
@@ -503,16 +503,16 @@ const HowToGuide = () => {
                                 </thead>
                                 <tbody>
                                     {[
-                                        { name: "Nitrogen (N)", range: "0 – 600 kg/ha", opt: "250 – 300 kg/ha", desc: "Vegetative vigor & leaf chlorophyll", color: "#8b5cf6" },
-                                        { name: "Phosphorus (P)", range: "0 – 300 kg/ha", opt: "60 – 120 kg/ha", desc: "Energy transfer and root development", color: "#10b981" },
-                                        { name: "Potassium (K)", range: "0 – 600 kg/ha", opt: "220 – 350 kg/ha", desc: "Water stress & disease resistance", color: "#3b82f6" },
-                                        { name: "pH Level", range: "3 – 10", opt: "6.5 – 7.2", desc: "Controls mineral solubility for roots", color: "#ec4899" },
-                                        { name: "Moisture", range: "0 – 100%", opt: "45 – 70%", desc: "Medium for nutrient mobility", color: "#06b6d4" },
+                                        { name: "Nitrogen (N)", range: "0 - 600 kg/ha", opt: "250 - 300 kg/ha", desc: "Vegetative vigor & leaf chlorophyll", color: "#8b5cf6" },
+                                        { name: "Phosphorus (P)", range: "0 - 300 kg/ha", opt: "60 - 120 kg/ha", desc: "Energy transfer and root development", color: "#10b981" },
+                                        { name: "Potassium (K)", range: "0 - 600 kg/ha", opt: "220 - 350 kg/ha", desc: "Water stress & disease resistance", color: "#3b82f6" },
+                                        { name: "pH Level", range: "3 - 10", opt: "6.5 - 7.2", desc: "Controls mineral solubility for roots", color: "#ec4899" },
+                                        { name: "Moisture", range: "0 - 100%", opt: "45 - 70%", desc: "Medium for nutrient mobility", color: "#06b6d4" },
                                     ].map((row, i) => (
                                         <tr key={i} style={{ background: i % 2 === 0 ? "transparent" : "var(--bg-surface-1)" }}>
                                             <td style={{ padding: "0.5rem 0.75rem", fontWeight: 800, color: row.color }}>{row.name}</td>
                                             <td style={{ padding: "0.5rem 0.75rem", color: "var(--text-muted)" }}>{row.range}</td>
-                                            <td style={{ padding: "0.5rem 0.75rem", color: "#10b981", fontWeight: 700 }}>✓ {row.opt}</td>
+                                            <td style={{ padding: "0.5rem 0.75rem", color: "#10b981", fontWeight: 700 }}>    {row.opt}</td>
                                             <td style={{ padding: "0.5rem 0.75rem", color: "var(--text-main)" }}>{row.desc}</td>
                                         </tr>
                                     ))}
@@ -526,7 +526,7 @@ const HowToGuide = () => {
                         <h4 style={{ margin: 0, fontWeight: 900, fontSize: "1rem", color: "var(--text-main)" }}>{t("soil.howToTitle")}</h4>
                         {isAdmin && (
                             <button onClick={() => editMode ? handleSave() : setEditMode(true)} className="btn-secondary" style={{ padding: "0.4rem 0.8rem", fontSize: "0.8rem" }}>
-                                {editMode ? t("common.save") : "Edit Guide ✏️"}
+                                {editMode ? t("common.save") : "Edit Guide       "}
                             </button>
                         )}
                     </div>
@@ -569,7 +569,7 @@ const HowToGuide = () => {
                                 <ul style={{ margin: 0, padding: 0, listStyle: "none" }}>
                                     {step.tips.map((tip, j) => (
                                         <li key={j} style={{ fontSize: "0.75rem", color: "var(--text-main)", padding: "0.2rem 0", display: "flex", gap: "0.4rem" }}>
-                                            <span style={{ color: "var(--primary)", fontWeight: 800, flexShrink: 0 }}>→</span>
+                                            <span style={{ color: "var(--primary)", fontWeight: 800, flexShrink: 0 }}>{"->"}</span>
                                             {editMode ? (
                                                 <input value={tip} onChange={e => updateTip(i, j, e.target.value)} style={{ width: "100%", padding: "0.2rem", borderRadius: 4, border: "1px solid var(--border-light)" }} />
                                             ) : tip}
@@ -598,8 +598,14 @@ const HowToGuide = () => {
 const SoilAnalysis = () => {
     const { t } = useLanguage();
     const navigate = useNavigate();
-    const [form, setForm] = useState(DEFAULT_FORM);
-    const [result, setResult] = useState(null);
+    const [form, setForm] = useState(() => {
+        const saved = sessionStorage.getItem("soilForm");
+        return saved ? JSON.parse(saved) : DEFAULT_FORM;
+    });
+    const [result, setResult] = useState(() => {
+        const saved = sessionStorage.getItem("soilResult");
+        return saved ? JSON.parse(saved) : null;
+    });
     const [analyzing, setAnalyzing] = useState(false);
     const [showAssistant, setShowAssistant] = useState(false);
     const [activeParam, setActiveParam] = useState(null);
@@ -607,7 +613,19 @@ const SoilAnalysis = () => {
     const [showHistory, setShowHistory] = useState(false);
     const [error, setError] = useState(null);
 
-    useEffect(() => { loadHistory(); }, []);
+    useEffect(() => {
+        loadHistory();
+    }, []);
+
+    // Sync state to session storage
+    useEffect(() => {
+        sessionStorage.setItem("soilForm", JSON.stringify(form));
+        if (result) {
+            sessionStorage.setItem("soilResult", JSON.stringify(result));
+        } else {
+            sessionStorage.removeItem("soilResult");
+        }
+    }, [form, result]);
 
     const loadHistory = async () => {
         try {
@@ -627,11 +645,20 @@ const SoilAnalysis = () => {
                 if (result && result.id === id) {
                     setResult(null);
                     setForm(DEFAULT_FORM);
+                    sessionStorage.removeItem("soilResult");
+                    sessionStorage.removeItem("soilForm");
                 }
             } catch (err) {
                 setError("Failed to delete analysis.");
             }
         }
+    };
+
+    const handleNewAnalysis = () => {
+        setResult(null);
+        setForm(DEFAULT_FORM);
+        sessionStorage.removeItem("soilResult");
+        sessionStorage.removeItem("soilForm");
     };
 
     const handleAnalyze = async () => {
@@ -678,7 +705,7 @@ const SoilAnalysis = () => {
                     </button>
                 </div>
 
-                {/* ── HOW-TO GUIDE ── */}
+                {/* -- HOW-TO GUIDE -- */}
                 <HowToGuide />
 
                 {/* Error */}
@@ -722,9 +749,9 @@ const SoilAnalysis = () => {
                                         </p>
                                         <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
                                             {(h.deficiencies || []).slice(0, 3).map((d, i) => (
-                                                <span key={i} style={{ fontSize: "0.68rem", padding: "0.15rem 0.5rem", borderRadius: 20, background: "var(--danger-subtle)", color: "var(--danger)", fontWeight: 700 }}>⚠ {d}</span>
+                                                <span key={i} style={{ fontSize: "0.68rem", padding: "0.15rem 0.5rem", borderRadius: 20, background: "var(--danger-subtle)", color: "var(--danger)", fontWeight: 700 }}>    {d}</span>
                                             ))}
-                                            {!h.deficiencies?.length && <span key="healthy" style={{ fontSize: "0.68rem", padding: "0.15rem 0.5rem", borderRadius: 20, background: "var(--primary-subtle)", color: "var(--primary)", fontWeight: 700 }}>✓ {t("common.safe") || "Safe"}</span>}
+                                            {!h.deficiencies?.length && <span key="healthy" style={{ fontSize: "0.68rem", padding: "0.15rem 0.5rem", borderRadius: 20, background: "var(--primary-subtle)", color: "var(--primary)", fontWeight: 700 }}>    {t("common.safe") || "Safe"}</span>}
                                         </div>
                                     </div>
                                 ))}
@@ -733,7 +760,7 @@ const SoilAnalysis = () => {
                     </div>
                 )}
 
-                {/* ── MAIN GRID ── */}
+                {/* -- MAIN GRID -- */}
                 <div style={{ display: "grid", gridTemplateColumns: "420px 1fr", gap: "2rem", alignItems: "start" }}>
 
                     {/* INPUT PANEL */}
@@ -756,7 +783,7 @@ const SoilAnalysis = () => {
                             </button>
                         </div>
                         <p style={{ fontSize: "0.72rem", color: "var(--text-muted)", fontWeight: 600, marginBottom: "1.5rem" }}>
-                            ✓ {t("common.good") || "Good"} &nbsp; ⬇ {t("common.low") || "Low"} &nbsp; ⬆ {t("common.high") || "High"}
+                            {t("common.good") || "Good"} &nbsp;     {t("common.low") || "Low"} &nbsp;     {t("common.high") || "High"}
                         </p>
 
                         <DiagnosticAssistant
@@ -819,14 +846,14 @@ const SoilAnalysis = () => {
                         <button onClick={handleAnalyze} disabled={analyzing} className="btn-primary"
                             style={{ width: "100%", justifyContent: "center", padding: "1.1rem", fontSize: "1rem", fontWeight: 900, borderRadius: 14 }}>
                             {analyzing ? (
-                                <><span style={{ animation: "spin 1s linear infinite", display: "inline-block", marginRight: "0.5rem" }}>⟳</span>{t("soil.analyzing")}</>
+                                <><span style={{ animation: "spin 1s linear infinite", display: "inline-block", marginRight: "0.5rem" }}>   </span>{t("soil.analyzing")}</>
                             ) : (
                                 <><TestTube size={18} /> {t("soil.analyzeBtn")}</>
                             )}
                         </button>
 
                         {result && (
-                            <button onClick={() => { setResult(null); setForm(DEFAULT_FORM); }} className="btn-secondary"
+                            <button onClick={handleNewAnalysis} className="btn-secondary"
                                 style={{ width: "100%", justifyContent: "center", padding: "0.75rem", marginTop: "0.75rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
                                 <RotateCcw size={15} /> {t("soil.newAnalysis")}
                             </button>
@@ -838,7 +865,7 @@ const SoilAnalysis = () => {
                         {!result ? (
                             <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
                                 {/* Empty state - mini guide */}
-                                {/* Empty state — informational, no random demo buttons */}
+                                {/* Empty state - informational, no random demo buttons */}
                                 <div style={{ background: "var(--primary-subtle)", borderRadius: 20, padding: "3rem 2rem", textAlign: "center", border: "1px dashed var(--primary-light)" }}>
                                     <FlaskConical size={52} style={{ color: "var(--primary)", opacity: 0.5, marginBottom: "1rem" }} />
                                     <h3 style={{ color: "var(--text-main)", fontWeight: 900, marginBottom: "0.75rem" }}>
@@ -849,7 +876,7 @@ const SoilAnalysis = () => {
                                     </p>
                                     <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center", flexWrap: "wrap" }}>
                                         {[
-                                            { dot: "var(--success)", text: t("soil.healthScore") || "Health score (0–100)" },
+                                            { dot: "var(--success)", text: t("soil.healthScore") || "Health score (0-100)" },
                                             { dot: "var(--warning)", text: t("soil.deficiencyAlerts") || "Deficiency alerts" },
                                             { dot: "var(--info)", text: t("soil.expertAdvice") || "Expert advice" },
                                         ].map((item, i) => (
@@ -899,7 +926,7 @@ const SoilAnalysis = () => {
                                     <div style={{ display: "flex", alignItems: "center", gap: "1rem", padding: "1.25rem 1.5rem", background: "var(--primary-subtle)", border: "1px solid var(--primary)", borderRadius: 16 }}>
                                         <CheckCircle size={28} style={{ color: "var(--success)", flexShrink: 0 }} />
                                         <div>
-                                            <p style={{ margin: 0, fontWeight: 900, color: "var(--primary)", fontSize: "1rem" }}>🎉 {t("soil.safeTitle") || "Soil is Healthy!"}</p>
+                                            <p style={{ margin: 0, fontWeight: 900, color: "var(--primary)", fontSize: "1rem" }}>     {t("soil.safeTitle") || "Soil is Healthy!"}</p>
                                             <p style={{ margin: 0, fontSize: "0.84rem", color: "var(--text-secondary)", marginTop: "0.15rem" }}>
                                                 {t("soil.safeDesc") || "All nutrients are within optimal ranges."}
                                             </p>
@@ -916,7 +943,7 @@ const SoilAnalysis = () => {
                                         <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginBottom: "0.75rem" }}>
                                             {result.deficiencies.map((d, i) => (
                                                 <span key={i} style={{ padding: "0.45rem 1.1rem", borderRadius: 20, background: "var(--danger-subtle)", color: "var(--danger)", border: "1px solid var(--danger)", fontWeight: 800, fontSize: "0.85rem" }}>
-                                                    ⚠ {d}
+                                                    {d}
                                                 </span>
                                             ))}
                                         </div>
@@ -949,7 +976,7 @@ const SoilAnalysis = () => {
                                                     </div>
                                                     {rec.explanation && (
                                                         <p style={{ margin: "0 0 0.6rem", fontSize: "0.83rem", color: "var(--text-muted)", lineHeight: 1.6, fontStyle: "italic", borderBottom: `1px solid ${severityColor(rec.severity)}20`, paddingBottom: "0.5rem" }}>
-                                                            <strong style={{ fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.05em", fontStyle: "normal", color: "var(--text-main)" }}>💡 {t("common.why") || "Why it matters"}:</strong> {rec.explanation}
+                                                            {rec.explanation}
                                                         </p>
                                                     )}
                                                     <div>
@@ -965,7 +992,7 @@ const SoilAnalysis = () => {
                                 )}
 
                                 {/* Recommended Products */}
-                                {result.suggested_products?.length > 0 && (
+                                {result.suggested_products?.length > 0 && !showAssistant && (
                                     <div style={{ background: "var(--bg-card)", borderRadius: 24, padding: "2rem", border: "1px solid var(--border-light)", boxShadow: "var(--shadow-md)" }}>
                                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
                                             <h4 style={{ margin: 0, fontWeight: 900, fontSize: "1.2rem", display: "flex", alignItems: "center", gap: "0.75rem" }}>
@@ -1038,7 +1065,7 @@ const SoilAnalysis = () => {
                     </div>
                 </div>
 
-                {/* ── USER MANUAL SECTION ── */}
+                {/* -- USER MANUAL SECTION -- */}
                 <div style={{ marginTop: "4rem", borderTop: "2px solid var(--border-light)", paddingTop: "3rem" }}>
                     <div className="section-header" style={{ textAlign: "center", marginBottom: "3rem" }}>
                         <div style={{ display: "inline-flex", background: "var(--primary-subtle)", padding: "1rem", borderRadius: "1.5rem", marginBottom: "1rem" }}>
@@ -1055,18 +1082,18 @@ const SoilAnalysis = () => {
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))", gap: "2.5rem" }}>
                         {/* Step 1: Expert Sampling */}
                         <div style={{ background: "var(--bg-card)", padding: "2.5rem", borderRadius: "2rem", border: "1px solid var(--border-light)", transition: "transform 0.3s ease", cursor: "default" }}>
-                            <div style={{ fontSize: "2.5rem", marginBottom: "1rem" }}>🧪</div>
+                            <div style={{ fontSize: "2.5rem", marginBottom: "1rem" }}>    </div>
                             <h3 style={{ fontWeight: 900, marginBottom: "1.25rem", color: "var(--text-main)" }}>
                                 1. {t("soil.manual.step1Title") || "Expert Soil Sampling"}
                             </h3>
                             <p style={{ fontSize: "0.95rem", color: "var(--text-muted)", lineHeight: 1.7 }}>
-                                {t("soil.manual.step1Desc") || "Collect soil from 6–9 inches deep across several points in your field. Mix thoroughly and allow to air dry. This ensures that the diagnostic data represents the entire root zone of your crops."}
+                                {t("soil.manual.step1Desc") || "Collect soil from 6-9 inches deep across several points in your field. Mix thoroughly and allow to air dry. This ensures that the diagnostic data represents the entire root zone of your crops."}
                             </p>
                         </div>
 
                         {/* Step 2: Intelligent Analysis */}
                         <div style={{ background: "var(--bg-card)", padding: "2.5rem", borderRadius: "2rem", border: "1px solid var(--border-light)", transition: "transform 0.3s ease" }}>
-                            <div style={{ fontSize: "2.5rem", marginBottom: "1rem" }}>🧠</div>
+                            <div style={{ fontSize: "2.5rem", marginBottom: "1rem" }}>    </div>
                             <h3 style={{ fontWeight: 900, marginBottom: "1.25rem", color: "var(--text-main)" }}>
                                 2. {t("soil.manual.step2Title") || "Intelligent Analysis"}
                             </h3>
@@ -1077,7 +1104,7 @@ const SoilAnalysis = () => {
 
                         {/* Step 3: Targeted Correction */}
                         <div style={{ background: "var(--bg-card)", padding: "2.5rem", borderRadius: "2rem", border: "1px solid var(--border-light)", transition: "transform 0.3s ease" }}>
-                            <div style={{ fontSize: "2.5rem", marginBottom: "1rem" }}>🛒</div>
+                            <div style={{ fontSize: "2.5rem", marginBottom: "1rem" }}>    </div>
                             <h3 style={{ fontWeight: 900, marginBottom: "1.25rem", color: "var(--text-main)" }}>
                                 3. {t("soil.manual.step3Title") || "Targeted Correction"}
                             </h3>

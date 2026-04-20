@@ -157,10 +157,9 @@ const Diseases = () => {
         e.preventDefault();
         loadDiseases();
     };
-
     return (
         <div className="page-container">
-            <Navbar activePage="disease" />
+            <Navbar activePage="diseases" />
             <div className="page-content animate-slide-up">
                 <div className="page-header">
                     <div>

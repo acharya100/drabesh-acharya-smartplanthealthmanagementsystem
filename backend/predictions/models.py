@@ -20,7 +20,7 @@ class Prediction(models.Model):
     confidence     = models.DecimalField(max_digits=5, decimal_places=2, help_text="Confidence (0-100)")
     estimated_cost = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
 
-    # ── Severity ──────────────────────────────────────────────────────────────
+    # -- Severity --------------------------------------------------------------
     SEVERITY_CHOICES = [
         ('minor',    'Minor'),
         ('moderate', 'Moderate'),
@@ -34,7 +34,7 @@ class Prediction(models.Model):
         max_length=20, choices=SEVERITY_CHOICES, blank=True, null=True
     )
 
-    # ── Treatment Status ──────────────────────────────────────────────────────
+    # -- Treatment Status ------------------------------------------------------
     TREATMENT_STATUS_CHOICES = [
         ('untreated',    'Not Started'),
         ('in_progress',  'Treatment In Progress'),
@@ -50,7 +50,7 @@ class Prediction(models.Model):
         help_text="Current treatment status",
     )
 
-    # ── Source (Where this scan originated) ──────────────────────────────
+    # -- Source (Where this scan originated) ------------------------------
     SOURCE_CHOICES = [
         ('disease_detection', 'Disease Detection'),
         ('plant_identification', 'Plant Identification (My Plants)'),

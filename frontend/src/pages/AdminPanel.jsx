@@ -64,7 +64,7 @@ const AdminPanel = () => {
         }
     }, [navigate]);
 
-    // ── Hash-based tab navigation (back/forward button support) ────────────────
+    // -- Hash-based tab navigation (back/forward button support) ----------------
     useEffect(() => {
         const hashTab = window.location.hash.replace("#", "");
         const validTabs = ["dashboard", "users", "predictions", "ecom-overview", "products", "orders", "coupons", "reviews", "user-detail", "system-plants"];
@@ -298,7 +298,7 @@ const AdminPanel = () => {
                                 background: "linear-gradient(135deg, #10b981, #059669)",
                                 display: "flex", alignItems: "center", justifyContent: "center",
                                 fontSize: "1.2rem"
-                            }}>🌿</div>
+                            }}>    </div>
                             <div>
                                 <div style={{ color: "#fff", fontWeight: 800, fontSize: "0.95rem", lineHeight: 1.2 }}>{t("admin.title")}</div>
                                 <div style={{ color: "#64748b", fontSize: "0.75rem" }}>{t("admin.subtitle")}</div>
@@ -369,7 +369,7 @@ const AdminPanel = () => {
                                     >EN</button>
                                     <button
                                         onClick={() => language !== "ne" && setLanguage("ne")}
-                                        title="Nepali (नेपाली)"
+                                        title="Nepali (                  )"
                                         style={{ flex: 1, padding: "0.4rem", borderRadius: 6, border: "none", cursor: "pointer", fontSize: "0.75rem", fontWeight: 800, background: language === "ne" ? "linear-gradient(135deg, #10b981, #059669)" : "transparent", color: language === "ne" ? "white" : "var(--text-muted)", transition: "all 0.2s" }}
                                     >NP</button>
                                 </div>
@@ -423,7 +423,7 @@ const AdminPanel = () => {
                             display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.9rem"
                         }}>
                             <AlertTriangle size={16} /> {error}
-                            <button onClick={() => setError("")} style={{ marginLeft: "auto", background: "none", border: "none", cursor: "pointer", color: "#dc2626" }}>✕</button>
+                            <button onClick={() => setError("")} style={{ marginLeft: "auto", background: "none", border: "none", cursor: "pointer", color: "#dc2626" }}>   </button>
                         </div>
                     )}
 
@@ -474,7 +474,7 @@ const AdminPanel = () => {
                                                             </div>
                                                             <div style={{ flex: 1 }}>
                                                                 <div style={{ fontWeight: 700, fontSize: "0.9rem", color: "var(--text-main)" }}>{s.disease}</div>
-                                                                <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 500 }}>{t("admin.byUser")} {s.username} · {new Date(s.createdAt).toLocaleDateString()}</div>
+                                                                <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 500 }}>{t("admin.byUser")} {s.username}    {new Date(s.createdAt).toLocaleDateString()}</div>
                                                             </div>
                                                             <div style={{ textAlign: "right", flexShrink: 0 }}>
                                                                 <div style={{ fontWeight: 800, color: !s.isHealthy ? "#ef4444" : "#10b981", fontSize: "0.9rem" }}>{Math.round(s.confidence * 100)}{t("admin.confSuffix")}</div>
@@ -1044,6 +1044,17 @@ const AdminPanel = () => {
                                 </div>
                             </div>
 
+                            {/* Search for Products */}
+                            <div style={{ position: "relative", marginBottom: "1.5rem" }}>
+                                <Search size={16} style={{ position: "absolute", left: "1rem", top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />
+                                <input
+                                    placeholder={t("ecom.searchProducts") || "Search products..."}
+                                    value={searchQuery}
+                                    onChange={e => setSearchQuery(e.target.value)}
+                                    style={{ paddingLeft: "2.75rem", width: "100%", height: 44, borderRadius: 10, border: "1px solid var(--border-light)", background: "var(--bg-main)" }}
+                                />
+                            </div>
+
                             {loading ? <LoadingSpinner t={t} /> : (
                                 <div style={{ background: "var(--bg-card)", borderRadius: 16, border: "1px solid var(--border-light)", overflow: "hidden" }}>
                                     <table style={{ width: "100%", borderCollapse: "collapse" }}>
@@ -1055,7 +1066,7 @@ const AdminPanel = () => {
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {products.map(p => (
+                                            {products.filter(p => (p.name || "").toLowerCase().includes(searchQuery.toLowerCase()) || (p.sku || "").toLowerCase().includes(searchQuery.toLowerCase())).map(p => (
                                                 <tr key={p.id} style={{ borderBottom: "1px solid var(--border-light)" }} onMouseEnter={e => e.currentTarget.style.background = "var(--bg-main)"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
                                                     <td style={{ padding: "0.875rem 1rem" }}>
                                                         <div style={{ width: 44, height: 44, borderRadius: 8, background: "var(--bg-main)", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid var(--border-light)" }}>
@@ -1068,8 +1079,8 @@ const AdminPanel = () => {
                                                     </td>
                                                     <td style={{ padding: "0.875rem 1rem", fontSize: "0.85rem", color: "var(--text-muted)" }}>{categories.find(c => c.id === p.category)?.name || "Uncategorized"}</td>
                                                     <td style={{ padding: "0.875rem 1rem" }}>
-                                                        <div style={{ fontWeight: 800, color: "var(--text-main)", fontSize: "0.9rem" }}>₨ {p.price}</div>
-                                                        {p.discountPrice && <div style={{ fontSize: "0.72rem", color: "#10b981", fontWeight: 700 }}>SALE: ₨ {p.discountPrice}</div>}
+                                                        <div style={{ fontWeight: 800, color: "var(--text-main)", fontSize: "0.9rem" }}>    {p.price}</div>
+                                                        {p.discountPrice && <div style={{ fontSize: "0.72rem", color: "#10b981", fontWeight: 700 }}>SALE:     {p.discountPrice}</div>}
                                                     </td>
                                                     <td style={{ padding: "0.875rem 1rem" }}>
                                                         <span style={{ fontWeight: 700, fontSize: "0.9rem", color: p.stock <= 5 ? "#ef4444" : "var(--text-main)" }}>{p.stock}</span>
@@ -1081,7 +1092,7 @@ const AdminPanel = () => {
                                                         <div style={{ display: "flex", gap: "0.4rem" }}>
                                                             <button onClick={() => { setEditingProduct(p); setProductForm({ name: p.name, category: p.category, description: p.description, price: p.price, discountPrice: p.discountPrice || "", stock: p.stock, sku: p.sku || "", tags: p.tags || "", usageInstructions: p.usageInstructions || "", isFeatured: p.isFeatured, isOrganic: p.isOrganic, isActive: p.isActive }); setShowProductForm(true); }}
                                                                 style={{ padding: "0.35rem 0.65rem", background: "var(--primary-subtle)", color: "var(--primary)", border: "none", borderRadius: 6, cursor: "pointer", display: "flex", alignItems: "center", gap: "0.3rem", fontSize: "0.78rem", fontWeight: 600 }}>
-                                                                <Edit2 size={12} /> {t("common.edit")}
+                                                                <Edit2 size={12} /> Edit
                                                             </button>
                                                             <button onClick={() => setConfirmDelete({ ...p, _type: "product" })}
                                                                 style={{ padding: "0.35rem 0.65rem", background: "#fef2f2", color: "#ef4444", border: "none", borderRadius: 6, cursor: "pointer", display: "flex", alignItems: "center", fontSize: "0.78rem", fontWeight: 600 }}>
@@ -1144,7 +1155,7 @@ const AdminPanel = () => {
                                                 <input value={productForm.tags} onChange={e => setProductForm(prev => ({ ...prev, tags: e.target.value }))} placeholder="e.g. bestseller,organic,premium" style={{ width: "100%", height: 40, padding: "0 0.75rem", borderRadius: 8, border: "1px solid var(--border-light)", background: "var(--bg-main)", color: "var(--text-main)", fontSize: "0.9rem" }} />
                                             </div>
                                             <div style={{ gridColumn: "1/-1", display: "flex", gap: "1.5rem", flexWrap: "wrap" }}>
-                                                {[{ key: "isFeatured", label: `⭐ ${t("ecom.status.featured")}` }, { key: "isOrganic", label: `🌿 ${t("ecom.status.organic")}` }, { key: "isActive", label: `✅ ${t("ecom.status.active")}` }].map(f => (
+                                                {[{ key: "isFeatured", label: `    ${t("ecom.status.featured")}` }, { key: "isOrganic", label: `     ${t("ecom.status.organic")}` }, { key: "isActive", label: `    ${t("ecom.status.active")}` }].map(f => (
                                                     <label key={f.key} style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer", fontWeight: 600, fontSize: "0.9rem", color: "var(--text-main)" }}>
                                                         <input type="checkbox" checked={productForm[f.key]} onChange={e => setProductForm(prev => ({ ...prev, [f.key]: e.target.checked }))} style={{ width: 16, height: 16 }} />
                                                         {f.label}
@@ -1218,17 +1229,17 @@ const AdminPanel = () => {
                                                     </div>
                                                     <div style={{ flex: 1, minWidth: "150px" }}>
                                                         <div style={{ fontWeight: 700, fontSize: "0.9rem", color: "var(--text-main)" }}>{o.user_name}</div>
-                                                        <div style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}>{o.payment_method?.toUpperCase()} · {o.items?.length || 0} {t("orders.itemsCount")}</div>
+                                                        <div style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}>{o.payment_method?.toUpperCase()}    {o.items?.length || 0} {t("orders.itemsCount")}</div>
                                                     </div>
-                                                    <div style={{ fontWeight: 800, fontSize: "1.1rem", color: "var(--text-main)" }}>₨ {Number(o.total_amount).toLocaleString()}</div>
+                                                    <div style={{ fontWeight: 800, fontSize: "1.1rem", color: "var(--text-main)" }}>    {Number(o.total_amount).toLocaleString()}</div>
                                                     <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
                                                         <select value={o.status} onChange={async e => {
-                                                            try { await adminService.updateOrderStatus(o.id, { status: e.target.value }); showToast(`${t("orders.order")} #${o.id} → ${t(`orders.status.${e.target.value}`)}`); fetchOrders(); } catch { setError(t("orders.errorUpdateStatus")); }
+                                                            try { await adminService.updateOrderStatus(o.id, { status: e.target.value }); showToast(`${t("orders.order")} #${o.id} -> ${t(`orders.status.${e.target.value}`)}`); fetchOrders(); } catch { setError(t("orders.errorUpdateStatus")); }
                                                         }} style={{ padding: "0.3rem 0.6rem", borderRadius: 8, border: "none", fontWeight: 700, fontSize: "0.78rem", background: sc.bg, color: sc.color, cursor: "pointer", outline: "none" }}>
                                                             {["pending", "processing", "shipped", "delivered", "cancelled"].map(s => <option key={s} value={s}>{t(`orders.status.${s}`)}</option>)}
                                                         </select>
                                                         <select value={o.payment_status} onChange={async e => {
-                                                            try { await adminService.updateOrderStatus(o.id, { payment_status: e.target.value }); showToast(`${t("orders.paymentStatus")} → ${t(`orders.payment.${e.target.value}`)}`); fetchOrders(); } catch { setError(t("orders.errorUpdatePayment")); }
+                                                            try { await adminService.updateOrderStatus(o.id, { payment_status: e.target.value }); showToast(`${t("orders.paymentStatus")} -> ${t(`orders.payment.${e.target.value}`)}`); fetchOrders(); } catch { setError(t("orders.errorUpdatePayment")); }
                                                         }} style={{ padding: "0.3rem 0.6rem", borderRadius: 8, border: "none", fontWeight: 700, fontSize: "0.78rem", background: pc.bg, color: pc.color, cursor: "pointer", outline: "none" }}>
                                                             {["paid", "unpaid", "refunded"].map(s => <option key={s} value={s}>{t(`orders.payment.${s}`)}</option>)}
                                                         </select>
@@ -1248,7 +1259,7 @@ const AdminPanel = () => {
                                                             <div>
                                                                 <div style={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", marginBottom: "0.3rem" }}>{t("orders.shippingAddress")}</div>
                                                                 <div style={{ fontSize: "0.85rem", color: "var(--text-main)" }}>{o.shipping_address}</div>
-                                                                {o.phone_number && <div style={{ fontSize: "0.82rem", color: "var(--text-muted)", marginTop: "0.25rem" }}>📞 {o.phone_number}</div>}
+                                                                {o.phone_number && <div style={{ fontSize: "0.82rem", color: "var(--text-muted)", marginTop: "0.25rem" }}>     {o.phone_number}</div>}
                                                             </div>
                                                             {o.notes && <div>
                                                                 <div style={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", marginBottom: "0.3rem" }}>{t("orders.notes")}</div>
@@ -1259,10 +1270,10 @@ const AdminPanel = () => {
                                                         {o.items?.map(item => (
                                                             <div key={item.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.5rem 0", borderBottom: "1px solid var(--border-light)" }}>
                                                                 <span style={{ fontWeight: 600, fontSize: "0.9rem", color: "var(--text-main)" }}>{item.product_name}</span>
-                                                                <span style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>x{item.quantity} · ₨ {Number(item.subtotal).toLocaleString()}</span>
+                                                                <span style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>x{item.quantity}        {Number(item.subtotal).toLocaleString()}</span>
                                                             </div>
                                                         ))}
-                                                        {o.coupon_code && <div style={{ marginTop: "0.75rem", fontSize: "0.82rem", color: "#059669", fontWeight: 600 }}>🏷️ {t("orders.couponApplied")}: {o.coupon_code} · {t("checkout.discount")}: ₨ {Number(o.discount_amount).toLocaleString()}</div>}
+                                                        {o.coupon_code && <div style={{ marginTop: "0.75rem", fontSize: "0.82rem", color: "#059669", fontWeight: 600 }}>        {t("orders.couponApplied")}: {o.coupon_code}    {t("checkout.discount")}:     {Number(o.discount_amount).toLocaleString()}</div>}
                                                     </div>
                                                 )}
                                             </div>
@@ -1311,9 +1322,9 @@ const AdminPanel = () => {
                                                         <span style={{ fontFamily: "monospace", fontWeight: 800, fontSize: "0.95rem", background: "var(--bg-main)", padding: "0.25rem 0.6rem", borderRadius: 6, color: "var(--primary)" }}>{c.code}</span>
                                                     </td>
                                                     <td style={{ padding: "0.875rem 1rem", fontSize: "0.85rem", color: "var(--text-muted)", textTransform: "capitalize" }}>{c.discountType}</td>
-                                                    <td style={{ padding: "0.875rem 1rem", fontWeight: 700, color: "var(--text-main)" }}>{c.discountType === "percentage" ? `${c.discountValue}%` : `₨ ${c.discountValue}`}</td>
-                                                    <td style={{ padding: "0.875rem 1rem", fontSize: "0.85rem", color: "var(--text-muted)" }}>₨ {c.minOrderAmount}</td>
-                                                    <td style={{ padding: "0.875rem 1rem", fontSize: "0.85rem", color: "var(--text-muted)" }}>{c.used_count} / {c.maxUses || "∞"}</td>
+                                                    <td style={{ padding: "0.875rem 1rem", fontWeight: 700, color: "var(--text-main)" }}>{c.discountType === "percentage" ? `${c.discountValue}%` : `    ${c.discountValue}`}</td>
+                                                    <td style={{ padding: "0.875rem 1rem", fontSize: "0.85rem", color: "var(--text-muted)" }}>    {c.minOrderAmount}</td>
+                                                    <td style={{ padding: "0.875rem 1rem", fontSize: "0.85rem", color: "var(--text-muted)" }}>{c.used_count} / {c.maxUses || "   "}</td>
                                                     <td style={{ padding: "0.875rem 1rem", fontSize: "0.82rem", color: "var(--text-muted)" }}>{c.validUntil ? new Date(c.validUntil).toLocaleDateString() : t("common.notAvailable")}</td>
                                                     <td style={{ padding: "0.875rem 1rem" }}>
                                                         <span style={{ padding: "0.2rem 0.6rem", borderRadius: 99, fontSize: "0.72rem", fontWeight: 700, background: c.isActive ? "var(--success-subtle)" : "#fef2f2", color: c.isActive ? "#059669" : "#dc2626" }}>{c.isActive ? t("ecom.status.active") : t("ecom.status.inactive")}</span>

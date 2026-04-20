@@ -6,9 +6,9 @@ import os
 import json
 
 
-# Confidence thresholds — tuned for production accuracy
-CONF_THRESHOLD_VALID      = 40.0  # Below this → Outside Scope (model not confident)
-CONF_THRESHOLD_HIGH_BYPASS = 80.0  # Above this → Skip coherence check (model is certain)
+# Confidence thresholds - tuned for production accuracy
+CONF_THRESHOLD_VALID      = 40.0  # Below this -> Outside Scope (model not confident)
+CONF_THRESHOLD_HIGH_BYPASS = 80.0  # Above this -> Skip coherence check (model is certain)
 CONF_THRESHOLD_NON_PLANT  = 55.0  # MobileNet threshold to declare non-plant
 CONF_THRESHOLD_FOREIGN_PLANT = 45.0  # MobileNet threshold to declare out-of-scope plant
 
@@ -30,7 +30,7 @@ def _load_image_robust(image_path):
 MODEL_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_PATH = os.path.join(MODEL_DIR, 'plant_disease_model.pth')
 
-# All 39 PlantVillage classes — synchronized with training set
+# All 39 PlantVillage classes - synchronized with training set
 PLANT_VILLAGE_CLASSES = [
     'Apple___Apple_scab',
     'Apple___Black_rot',
@@ -174,7 +174,7 @@ GEOGRAPHIC_SCENES = [
     'shrubbery', 'potted plant', 'houseplant'
 ]
 
-# Non-plant garbage labels from ImageNet — expanded for household/landscape/city rejection
+# Non-plant garbage labels from ImageNet - expanded for household/landscape/city rejection
 LIKELY_GARBAGE = [
     'garment', 'person', 'dog', 'cat',
     'furniture', 'car', 'vehicle', 'bicycle', 'motorcycle', 'scooter', 'truck',
@@ -198,6 +198,8 @@ LIKELY_GARBAGE = [
     'snow', 'ski', 'skier', 'winter', 'resort', 'outdoor',
     'plaza', 'square', 'fountain', 'bench', 'pavilion', 'monument', 'statue',
     'palace', 'monastery', 'temple', 'castle', 'church', 'tower',
+    'diagram', 'chart', 'graph', 'sketch', 'drawing', 'blueprint', 'schematic',
+    'web site', 'menu', 'newspaper', 'packet', 'comic book', 'envelope'
 ]
 
 
@@ -213,13 +215,13 @@ def _log_inference(message):
         pass
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-# STAGE 1 — Image Scope Validator
+# ==============================================================================
+# STAGE 1 - Image Scope Validator
 # Uses MobileNet (ImageNet) to classify image as:
-#   - plant         → allowed into disease model
-#   - non_plant     → BLOCKED, return immediately
-#   - out_of_scope  → BLOCKED, return immediately
-# ══════════════════════════════════════════════════════════════════════════════
+#   - plant         -> allowed into disease model
+#   - non_plant     -> BLOCKED, return immediately
+#   - out_of_scope  -> BLOCKED, return immediately
+# ==============================================================================
 
 class ImageScopeValidator:
     """
@@ -261,13 +263,13 @@ class ImageScopeValidator:
         """
         # If MobileNet failed to load, allow the image through (fail-open)
         if not self.model:
-            _log_inference("[validator] MobileNet not loaded — allowing image through")
+            _log_inference("[validator] MobileNet not loaded - allowing image through")
             return {
                 "status": "valid",
                 "type": "plant",
                 "confidence": 0.0,
                 "identified_as": "Unknown",
-                "message": "Scope validator not available — proceeding with disease model."
+                "message": "Scope validator not available - proceeding with disease model."
             }
 
         try:
@@ -277,7 +279,7 @@ class ImageScopeValidator:
                 output = self.model(input_tensor.unsqueeze(0))
 
             probabilities = torch.nn.functional.softmax(output[0], dim=0)
-            # ── 'Shield' Update: Expanding scan reach to Top 10 ──
+            # -- 'Shield' Update: Expanding scan reach to Top 10 --
             top10_probs, top10_indices = torch.topk(probabilities, k=min(10, len(self.imagenet_labels)))
             top10_labels = []
             for idx in top10_indices:
@@ -291,7 +293,7 @@ class ImageScopeValidator:
                 f"(Next 5 suppressed for logs)"
             )
 
-            # ── Check 0: Is it a CERTAIN non-plant/garbage object? ──
+            # -- Check 0: Is it a CERTAIN non-plant/garbage object? --
             # Aggregate probabilities across top-10 to catch split classes
             garbage_conf = 0.0
             for label, prob in zip(top10_labels, top10_probs):
@@ -301,7 +303,7 @@ class ImageScopeValidator:
 
             is_garbage = garbage_conf >= 15.0
 
-            # ── Check 0B: Geographic/Landscape logic ──
+            # -- Check 0B: Geographic/Landscape logic --
             # Images identified as 'Valley', 'Park', 'Meadow' are Non-Plant for our leaf model.
             geographic_conf = 0.0
             for label, prob in zip(top10_labels, top10_probs):
@@ -313,10 +315,10 @@ class ImageScopeValidator:
             if is_landscape:
                  _log_inference(f"[validator] Landscape/Scene detected @ {geographic_conf:.1f}%")
 
-            # ── Check 1: Is it a supported crop? ──
+            # -- Check 1: Is it a supported crop? --
             is_supported = any(p.lower() in top1_label for p in [s.lower() for s in SUPPORTED_PLANTS])
 
-            # ── Check 2: Is it an explicitly out-of-scope (foreign) plant/botany label? ──
+            # -- Check 2: Is it an explicitly out-of-scope (foreign) plant/botany label? --
             is_foreign = False
             for label, prob in zip(top10_labels, top10_probs):
                 conf_pct = float(prob.item() * 100)
@@ -325,7 +327,7 @@ class ImageScopeValidator:
                         is_foreign = True
                         break
 
-            # ── Check 3: Is it plant-like matter at all? ──
+            # -- Check 3: Is it plant-like matter at all? --
             # Stricter: require actual botanical features (leaf, foliage, stalk)
             is_botanical = False
             for label, prob in zip(top10_labels, top10_probs):
@@ -335,7 +337,7 @@ class ImageScopeValidator:
                         is_botanical = True
                         break
 
-            # ── Decision tree ──
+            # -- Decision tree --
             # 1. High-Confidence Garbage/Landscape (Highest Priority unless botanical hit found)
             if (is_garbage or is_landscape) and not is_botanical:
                  _log_inference(f"[validator] INVALID (Non-Plant/Scene): garbage={is_garbage} landscape={is_landscape}")
@@ -361,7 +363,7 @@ class ImageScopeValidator:
             # 3. Botanical marker detection -> PROCEED TO STAGE 2
             # We let the specialized Stage 2 detector decide if the plant is supported or out-of-scope.
             if is_botanical:
-                _log_inference(f"[validator] PROCEED: botanical hit '{top1_label}' — handing off to Stage 2")
+                _log_inference(f"[validator] PROCEED: botanical hit '{top1_label}' - handing off to Stage 2")
                 return {
                     "status": "valid",
                     "type": "plant",
@@ -392,11 +394,11 @@ class ImageScopeValidator:
             }
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-# STAGE 2 — Disease Detector
+# ==============================================================================
+# STAGE 2 - Disease Detector
 # Only called when Stage 1 returns status="valid".
 # No random output. No fallback disease assignment.
-# ══════════════════════════════════════════════════════════════════════════════
+# ==============================================================================
 
 class DiseaseDetector:
     """
@@ -437,7 +439,7 @@ class DiseaseDetector:
                     self.model = torch.load(MODEL_PATH, map_location='cpu')
 
                 if isinstance(self.model, dict):
-                    _log_inference("Found state_dict — reconstructing ResNet18...")
+                    _log_inference("Found state_dict - reconstructing ResNet18...")
                     model_full = models.resnet18()
                     num_ftrs = model_full.fc.in_features
                     model_full.fc = torch.nn.Linear(num_ftrs, len(self.classes))
@@ -450,7 +452,7 @@ class DiseaseDetector:
             except Exception as e:
                 import traceback
                 _log_inference(f"CRITICAL: Model load error: {e}\n{traceback.format_exc()}")
-                # Do NOT fall back to untrained model — that produces random garbage.
+                # Do NOT fall back to untrained model - that produces random garbage.
                 # Set model to None so predict() returns an explicit error.
                 self.model = None
         else:
@@ -472,7 +474,7 @@ class DiseaseDetector:
         Returns a structured result dict on success.
         """
         if self.model is None:
-            _log_inference("[detector] Model not loaded — refusing to produce random output")
+            _log_inference("[detector] Model not loaded - refusing to produce random output")
             return None
 
         try:
@@ -491,11 +493,11 @@ class DiseaseDetector:
             predicted_class = self.classes[predicted_idx.item()]
             _log_inference(f"[detector] Top class: {predicted_class} ({confidence_score:.2f}%)")
 
-            # ── Gate A: Background/No-leaf class ──────────────────────────────
+            # -- Gate A: Background/No-leaf class ------------------------------
             if "background_without_leaves" in predicted_class.lower():
                 if is_plant_hint:
-                    # MobileNet said it's a plant, but disease model disagrees → out of scope
-                    _log_inference("[detector] Background class with plant hint → out_of_scope")
+                    # MobileNet said it's a plant, but disease model disagrees -> out of scope
+                    _log_inference("[detector] Background class with plant hint -> out_of_scope")
                     return {
                         "status": "invalid",
                         "type": "out_of_scope",
@@ -511,7 +513,7 @@ class DiseaseDetector:
                     }
                 else:
                     # Both models agree it's not a plant leaf
-                    _log_inference("[detector] Background class, no plant hint → non_plant")
+                    _log_inference("[detector] Background class, no plant hint -> non_plant")
                     return {
                         "status": "invalid",
                         "type": "non_plant",
@@ -526,9 +528,9 @@ class DiseaseDetector:
                         "message": "The uploaded image is not a plant."
                     }
 
-            # ── Gate B: Below confidence threshold → out of scope ─────────────
+            # -- Gate B: Below confidence threshold -> out of scope -------------
             if confidence_score < CONF_THRESHOLD_VALID:
-                _log_inference(f"[detector] Low confidence {confidence_score:.2f}% < {CONF_THRESHOLD_VALID}% → outside_scope")
+                _log_inference(f"[detector] Low confidence {confidence_score:.2f}% < {CONF_THRESHOLD_VALID}% -> outside_scope")
                 return {
                     "status": "invalid",
                     "type": "out_of_scope",
@@ -543,9 +545,9 @@ class DiseaseDetector:
                     "message": "The plant is not available in the dataset."
                 }
 
-            # ── Gate C: Coherence check (entropy-based) ────────────────────────
+            # -- Gate C: Coherence check (entropy-based) ------------------------
             if self._is_out_of_scope(probabilities):
-                _log_inference(f"[detector] Coherence check failed → outside_scope. Top: {predicted_class}")
+                _log_inference(f"[detector] Coherence check failed -> outside_scope. Top: {predicted_class}")
                 return {
                     "status": "invalid",
                     "type": "out_of_scope",
@@ -560,7 +562,7 @@ class DiseaseDetector:
                     "message": "The plant is not available in the dataset."
                 }
 
-            # ── Parse the class name ───────────────────────────────────────────
+            # -- Parse the class name -------------------------------------------
             mapping = LABEL_MAPPING.get(predicted_class)
             
             if mapping:
@@ -583,7 +585,7 @@ class DiseaseDetector:
                         disease_name = f"{plant_name} {disease_name}"
                 scientific_name = SCIENTIFIC_NAMES.get(plant_name, "Unknown Species")
 
-            _log_inference(f"[detector] Result: {plant_name} — {disease_name} ({confidence_score:.1f}%)")
+            _log_inference(f"[detector] Result: {plant_name} - {disease_name} ({confidence_score:.1f}%)")
 
             return {
                 "status": "valid",
@@ -625,7 +627,7 @@ class DiseaseDetector:
         top_probs, top_indices = torch.topk(probabilities, k=k)
         top1_conf = float(top_probs[0].item() * 100)
 
-        # High confidence bypass — model is certain
+        # High confidence bypass - model is certain
         if top1_conf > CONF_THRESHOLD_HIGH_BYPASS:
             return False
 
@@ -647,7 +649,7 @@ class DiseaseDetector:
         same_family = sum(1 for f in families if f == dominant)
         _log_inference(f"[coherence] families={families} unique={unique_families} dominant_count={same_family}")
 
-        # Scattered results across multiple plant families → out of scope
+        # Scattered results across multiple plant families -> out of scope
         if len(families) >= 3 and unique_families == len(families):
             _log_inference("[coherence] REJECT: scattered families")
             return True
@@ -660,10 +662,10 @@ class DiseaseDetector:
         return False
 
 
-# ══════════════════════════════════════════════════════════════════════════════
+# ==============================================================================
 # Plant Identifier (used by My Plants "Identify with AI")
 # Wraps the same two-stage pipeline.
-# ══════════════════════════════════════════════════════════════════════════════
+# ==============================================================================
 
 class PlantIdentifier:
     """
@@ -714,7 +716,7 @@ class PlantIdentifier:
         try:
             self._log(f"Identifying: {os.path.basename(image_path)}")
 
-            # ── STAGE 1: Centralized Gating ──
+            # -- STAGE 1: Centralized Gating --
             scope = scope_validator.validate(image_path)
             
             is_plant_image = (scope['status'] == 'valid')
@@ -722,10 +724,10 @@ class PlantIdentifier:
             generic_name = scope.get('identified_as', 'Unknown').title()
             confidence = scope.get('confidence', 0.0)
 
-            # ── STAGE 2: Deep Analysis ──
+            # -- STAGE 2: Deep Analysis --
             disease_guess = detector.predict(image_path, is_plant_hint=is_plant_image)
 
-            # ── STAGE 1B: High Confidence Rescue ──
+            # -- STAGE 1B: High Confidence Rescue --
             # If Stage 1 rejected this but our specific dataset detector is extremely sure,
             # we rescue it and declare it a valid plant image.
             if not is_plant_image and disease_guess and disease_guess.get('status') == 'valid' and disease_guess.get('confidence', 0) > 85.0:
@@ -784,7 +786,7 @@ class PlantIdentifier:
             }
 
 
-# ── Singleton instances ────────────────────────────────────────────────────
+# -- Singleton instances ----------------------------------------------------
 scope_validator = ImageScopeValidator()
 detector = DiseaseDetector()
 identifier = PlantIdentifier()

@@ -2,7 +2,7 @@ import { useOfflineSync } from "../context/OfflineSyncContext";
 import { WifiOff, Cloud, RefreshCcw } from "lucide-react";
 
 /**
- * OfflineBar — Refined Professional Version
+ * OfflineBar - Refined Professional Version
  */
 const OfflineBar = () => {
   const { isOnline, isSyncing, queueCount, triggerSync } = useOfflineSync();

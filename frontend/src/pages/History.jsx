@@ -13,7 +13,7 @@ import { useNavigate } from "react-router-dom";
 import { useOfflineSync } from "../context/OfflineSyncContext";
 import { offlineStore } from "../utils/offlineStore";
 
-// ── Helpers ───────────────────────────────────────────────────────────
+// -- Helpers -----------------------------------------------------------
 
 // Normalise treatment_status-based invalid flags introduced by both old and new API
 const isNonPlantRecord = (pred) => pred.is_plant_image === false || pred.treatment_status === 'non_plant';
@@ -26,7 +26,7 @@ const getDisplayTitle = (pred, t) => {
     if (isNonPlantRecord(pred)) return t("history.badgeNonLeaf") || 'Non-Plant Image';
     if (isOutOfScopeRecord(pred)) return t("history.badgeOutsideScope") || 'Outside Scope';
     if (pred.is_healthy || pred.disease_name === 'Healthy')
-        return `${pred.plant_name || t("plants.plantName")} – ${t("history.badgeHealthy")}`;
+        return `${pred.plant_name || t("plants.plantName")} - ${t("history.badgeHealthy")}`;
     return pred.disease_name_ne && t.language === 'ne' ? pred.disease_name_ne : pred.disease_name;
 };
 
@@ -75,7 +75,7 @@ const History = () => {
 
             let reconciledHistory = [];
             
-            // Always attempt local backend — Django on localhost is accessible without internet
+            // Always attempt local backend - Django on localhost is accessible without internet
             const { data } = await predictionService.getHistory();
             const history = data.results || data;
             reconciledHistory = offlineStore.applyOfflineUpdates(history);
@@ -364,7 +364,7 @@ const History = () => {
                 )}
             </div>
 
-            {/* ── Info Modal: Non-Plant / Out-of-Scope ─────────────────────────── */}
+            {/* -- Info Modal: Non-Plant / Out-of-Scope --------------------------- */}
             {infoModalData && (
                 <div className="modal-overlay" onClick={() => setInfoModalData(null)}>
                     <div className="modal-content animate-slide-up" onClick={e => e.stopPropagation()} style={{ maxWidth: '460px', padding: '2rem' }}>
@@ -419,13 +419,13 @@ const History = () => {
                 </div>
             )}
 
-            {/* ── Edit Modal ─────────────────────────────────────────────── */}
+            {/* -- Edit Modal ----------------------------------------------- */}
             {showEditModal && editingPrediction && (
                 <div className="modal-overlay" onClick={() => setShowEditModal(false)}>
                     <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '500px' }}>
                         <h2 style={{ marginBottom: '1.5rem' }}>{t("history.editTitle")}</h2>
 
-                        {/* For invalid records — show read-only summary, no editable fields */}
+                        {/* For invalid records - show read-only summary, no editable fields */}
                         {isInvalidRecord(editingPrediction) ? (
                             <div>
                                 <div style={{ background: 'var(--bg-main)', borderRadius: 12, padding: '1.25rem', border: '1px solid var(--border-light)', marginBottom: '1.5rem' }}>
@@ -452,7 +452,7 @@ const History = () => {
                                 </div>
                             </div>
                         ) : (
-                            /* For valid records — show editable form */
+                            /* For valid records - show editable form */
                             <form onSubmit={handleUpdatePrediction}>
                                 <div style={{ marginBottom: '1.5rem' }}>
                                     <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>

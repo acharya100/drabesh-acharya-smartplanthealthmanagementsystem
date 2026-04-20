@@ -8,7 +8,6 @@ const LEGACY_UPDATES_KEY = 'plant_management_offline_updates';
 
 export const offlineStore = {
   /**
-   * Enqueue a new operation
    * @param {string} type - Action type (e.g. 'UPDATE_PRED', 'DELETE_PRED')
    * @param {number|string} targetId - ID of the entity being acted upon
    * @param {object} payload - Data to be sent to the server

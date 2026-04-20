@@ -141,7 +141,7 @@ const Navbar = ({ activePage }) => {
             >EN</button>
             <button
               onClick={() => language !== "ne" && toggleLanguage()}
-              title="Nepali (नेपाली)"
+              title="Nepali (                  )"
               style={{ padding: "4px 8px", borderRadius: "50px", border: "none", cursor: "pointer", fontSize: "0.75rem", fontWeight: 800, background: language === "ne" ? "var(--primary)" : "transparent", color: language === "ne" ? "white" : "var(--text-muted)", transition: "all 0.2s" }}
             >NP</button>
           </div>

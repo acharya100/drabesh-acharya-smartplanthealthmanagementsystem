@@ -38,7 +38,7 @@ class ForgotPasswordCodeView(APIView):
         
         # If user looked up via phone number, simulate an SMS
         if user.phone_number and identifier == user.phone_number:
-            print(f"\n[{timezone.now()}] ► MOCK SMS SENT TO {user.phone_number} ◄\nYour Smart Plant Health reset code is {code}\n")
+            print(f"\n[{timezone.now()}] > MOCK SMS SENT TO {user.phone_number}    \nYour Smart Plant Health reset code is {code}\n")
             return Response({'message': 'Reset code sent via SMS successfully.'}, status=status.HTTP_200_OK)
             
         if not user.email:
@@ -77,7 +77,7 @@ class ForgotPasswordCodeView(APIView):
         plain_message = f'Your password reset code is: {code}\n\nThis code expires in 2 minutes.\n\nIf you did not request this, ignore this email.'
         try:
             send_mail(
-                subject='Reset your password — Smart Plant Health',
+                subject='Reset your password - Smart Plant Health',
                 message=plain_message,
                 from_email=settings.EMAIL_HOST_USER,
                 recipient_list=[email],
@@ -153,8 +153,8 @@ class SendPhoneOtpView(APIView):
         code = str(random.randint(100000, 999999))
         cache.set(f"phone_verify_{phone_number}", code, timeout=300)  # 5 minutes
 
-        # Mock SMS — print to console (replace with Twilio/SparkPost for production)
-        print(f"\n[{timezone.now()}] ► MOCK SMS TO {phone_number} ◄\nYour Smart Plant Health verification code is: {code}\n")
+        # Mock SMS - print to console (replace with Twilio/SparkPost for production)
+        print(f"\n[{timezone.now()}] > MOCK SMS TO {phone_number}    \nYour Smart Plant Health verification code is: {code}\n")
 
         return Response({
             'message': f'Verification code sent to {phone_number}.',
@@ -446,7 +446,7 @@ class AdminToggleStaffView(APIView):
 
 
 class AdminEcommerceOverviewView(APIView):
-    """Admin: E-commerce KPIs — products, orders, revenue, coupons, reviews."""
+    """Admin: E-commerce KPIs - products, orders, revenue, coupons, reviews."""
     permission_classes = [IsAdminUser]
 
     def get(self, request):
@@ -539,7 +539,7 @@ class AdminEcommerceOverviewView(APIView):
 
 
 def models_avg_rating():
-    """Helper to avoid circular import — returns Avg expression for Review.rating."""
+    """Helper to avoid circular import - returns Avg expression for Review.rating."""
     from django.db.models import Avg
     return Avg('rating')
 
@@ -589,7 +589,7 @@ class AdminOrderManageView(APIView):
                 # Mock SMS sending to user's phone if attached
                 if order.user.phone_number:
                     from django.utils import timezone
-                    print(f"\n[{timezone.now()}] ► MOCK E-COMMERCE SMS TO {order.user.phone_number} ◄\n{title}: {msg}\n")
+                    print(f"\n[{timezone.now()}] > MOCK E-COMMERCE SMS TO {order.user.phone_number}    \n{title}: {msg}\n")
 
         if new_payment_status and order.payment_status != new_payment_status:
             order.payment_status = new_payment_status

@@ -1,11 +1,4 @@
-"""
-Soil Analysis Engine â€” Professional Agricultural Advisor
-Deterministic, expert-grade soil health computation.
-No random values. All outputs are based on user-supplied inputs and
-established agronomic science (NARC / FAO reference ranges).
-"""
-
-# â”€â”€ Optimal ranges (scientifically validated for South Asian crops) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# -- Optimal ranges (scientifically validated for South Asian crops) ----------
 OPTIMAL_RANGES = {
     'nitrogen':       {'low': 250, 'high': 300},   # kg/ha
     'phosphorus':     {'low': 60,  'high': 120},   # kg/ha
@@ -15,7 +8,7 @@ OPTIMAL_RANGES = {
     'organic_matter': {'low': 3.5, 'high': 7.0},  # %
 }
 
-# â”€â”€ Per-deficiency data â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# -- Per-deficiency data --------------------------------------------------------
 DEFICIENCY_RECOMMENDATIONS = {
     'nitrogen': {
         'name': 'Nitrogen (N) Deficiency',
@@ -145,11 +138,11 @@ SOIL_TYPE_NOTES = {
     'loamy': (
         'Loamy soil is the ideal agricultural soil type with good drainage, '
         'aeration, and nutrient retention. Maintain this balance with annual '
-        'organic matter additions (compost or manure at 3â€“5 t/ha).'
+        'organic matter additions (compost or manure at 3-5 t/ha).'
     ),
     'clay': (
         'Clay soil retains water and nutrients well but is prone to waterlogging '
-        'and compaction. Add gypsum (calcium sulphate) at 1â€“2 t/ha to improve '
+        'and compaction. Add gypsum (calcium sulphate) at 1-2 t/ha to improve '
         'structure. Avoid tillage when wet. Raised beds can improve drainage significantly.'
     ),
     'silty': (
@@ -181,10 +174,10 @@ def _compute_organic_matter_from_inputs(nitrogen, moisture, soil_type):
         'silty': 2.5, 'peaty': 8.0, 'chalky': 1.0,
     }.get(soil_type, 2.0)
 
-    # N level contribution (0â€“280+ kg/ha â†’ adjust Â±1.5%)
+    # N level contribution (0-280+ kg/ha -> adjust +/-1.5%)
     n_factor = min((nitrogen / 280.0) * 1.5, 1.5)
 
-    # Moisture contribution (40â€“65% ideal â†’ adds up to 0.5%)
+    # Moisture contribution (40-65% ideal -> adds up to 0.5%)
     m_factor = min((moisture / 65.0) * 0.5, 0.5)
 
     # Clamp to realistic range
@@ -193,7 +186,7 @@ def _compute_organic_matter_from_inputs(nitrogen, moisture, soil_type):
 
 
 def compute_score(nitrogen, phosphorus, potassium, ph_level, moisture, organic_matter):
-    """Return a deterministic 0â€“100 soil health score."""
+    """Return a deterministic 0-100 soil health score."""
     score = 100.0
     deductions = []
 
@@ -282,7 +275,7 @@ def build_overall_explanation(score, deficiencies):
         return (
             f'Your soil has {count} area(s) that need attention. '
             'Applying the recommended treatments now will significantly improve crop yield. '
-            'Re-test soil after 4â€“6 weeks of treatment to track improvement.'
+            'Re-test soil after 4-6 weeks of treatment to track improvement.'
         )
     else:
         return (
@@ -307,7 +300,7 @@ def find_suggested_products(deficiencies):
                     keyword_to_reason[kw] = info['name']
 
         if not keyword_to_reason:
-            # No deficiencies â€” return 2 maintenance products
+            # No deficiencies - return 2 maintenance products
             maintenance = Product.objects.filter(
                 is_active=True
             ).filter(
@@ -365,7 +358,7 @@ def find_suggested_products(deficiencies):
 def analyze_soil(nitrogen, phosphorus, potassium, ph_level, moisture, soil_type, organic_matter=None):
     """
     Main entry point. Returns a fully-populated deterministic soil analysis result.
-    All values are computed from the inputs â€” no randomness.
+    All values are computed from the inputs - no randomness.
     """
     # Derive organic_matter if not provided
     if organic_matter is None:

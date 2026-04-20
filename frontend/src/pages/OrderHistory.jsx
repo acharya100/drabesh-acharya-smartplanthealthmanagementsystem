@@ -161,7 +161,7 @@ const OrderHistory = () => {
                           <StatusIcon size={12} />{cfg.label}
                         </span>
                         {order.payment_status === "paid" && (
-                          <span style={{ padding: "0.2rem 0.6rem", borderRadius: "100px", fontSize: "0.72rem", fontWeight: 800, background: "#f0fdf4", color: "#16a34a" }}>💳 {t("orders.payment.paid")}</span>
+                          <span style={{ padding: "0.2rem 0.6rem", borderRadius: "100px", fontSize: "0.72rem", fontWeight: 800, background: "#f0fdf4", color: "#16a34a" }}>     {t("orders.payment.paid")}</span>
                         )}
                       </div>
                       <div style={{ display: "flex", gap: "1.25rem", fontSize: "0.82rem", color: "var(--text-muted)" }}>
@@ -199,7 +199,7 @@ const OrderHistory = () => {
                             <p style={{ fontWeight: 800, margin: 0, fontSize: "0.9rem" }}>
                                 {(t.language === 'ne' && item.product_name_ne) ? item.product_name_ne : item.product_name}
                             </p>
-                            <p style={{ color: "var(--text-muted)", margin: 0, fontSize: "0.8rem" }}>Qty: {item.quantity} × Rs. {parseFloat(item.price).toLocaleString()}</p>
+                            <p style={{ color: "var(--text-muted)", margin: 0, fontSize: "0.8rem" }}>Qty: {item.quantity}    Rs. {parseFloat(item.price).toLocaleString()}</p>
                           </div>
                           <p style={{ fontWeight: 900, color: "var(--primary)", margin: 0 }}>Rs. {(parseFloat(item.price) * item.quantity).toLocaleString()}</p>
                         </div>
