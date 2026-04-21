@@ -46,7 +46,7 @@ const SeverityBadge = ({ severity, t }) => {
         minor: { bg: '#fef9c3', color: '#854d0e', label: t("history.severityLow") || "Minor" },
         moderate: { bg: '#ffedd5', color: '#9a3412', label: t("history.severityModerate") || "Moderate" },
         severe: { bg: '#fee2e2', color: '#dc2626', label: t("history.severityHigh") || "Severe" },
-        critical: { bg: '#fef2f2', color: '#991b1b', label: t("history.severityCritical") || "Critical" },
+        critical: { bg: '#fee2e2', color: '#dc2626', label: t("history.severityHigh") || "Severe" },
     };
     const s = map[severity?.toLowerCase()] || { bg: '#f1f5f9', color: '#475569', label: severity };
     return <span style={{ padding: '0.2rem 0.6rem', borderRadius: 100, fontSize: '0.7rem', fontWeight: 800, background: s.bg, color: s.color }}>{s.label}</span>;
@@ -75,7 +75,7 @@ const History = () => {
             else setRefreshing(true);
 
             let reconciledHistory = [];
-            
+
             // Always attempt local backend - Django on localhost is accessible without internet
             const { data } = await predictionService.getHistory();
             const history = data.results || data;
@@ -98,9 +98,9 @@ const History = () => {
         else if (filter === "infected") statusMatch = !p.is_healthy && !isInvalidRecord(p) && p.disease_name !== 'Not Applicable';
         else if (filter === "outside_scope") statusMatch = isOutOfScopeRecord(p) || p.disease_name === 'Outside Scope' || p.disease_name === 'Not Applicable';
         else if (filter === "non_plant") statusMatch = isNonPlantRecord(p) || p.disease_name === 'Non-Plant Image';
-        
+
         if (!statusMatch) return false;
-        
+
         if (!searchQuery) return true;
         const q = searchQuery.toLowerCase();
         const title = getDisplayTitle(p, t).toLowerCase();
@@ -181,38 +181,38 @@ const History = () => {
                         width: 'fit-content',
                         border: '1px solid var(--border-light)'
                     }}>
-                    {[
-                        { id: 'all', label: t("history.filterAll"), icon: <Search size={16} /> },
-                        { id: 'infected', label: t("history.filterInfected"), icon: <AlertTriangle size={16} />, color: '#dc2626' },
-                        { id: 'healthy', label: t("history.filterHealthy"), icon: <CheckCircle size={16} />, color: '#15803d' },
-                        { id: 'outside_scope', label: t("history.filterOutsideScope"), icon: <Leaf size={16} />, color: '#b45309' },
-                        { id: 'non_plant', label: t("history.filterNonLeaf"), icon: <Ban size={16} />, color: '#475569' }
-                    ].map(tab => (
-                        <button
-                            key={tab.id}
-                            onClick={() => setFilter(tab.id)}
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '0.5rem',
-                                padding: '0.6rem 1.2rem',
-                                borderRadius: '12px',
-                                border: 'none',
-                                fontSize: '0.9rem',
-                                fontWeight: 700,
-                                cursor: 'pointer',
-                                transition: 'all 0.2s ease',
-                                background: filter === tab.id ? (tab.color || 'var(--primary)') : 'transparent',
-                                color: filter === tab.id ? 'white' : 'var(--text-secondary)',
-                                boxShadow: filter === tab.id ? '0 4px 12px rgba(0,0,0,0.1)' : 'none'
-                            }}
-                        >
-                            {tab.icon}
-                            {tab.label}
-                        </button>
-                    ))}
+                        {[
+                            { id: 'all', label: t("history.filterAll"), icon: <Search size={16} /> },
+                            { id: 'infected', label: t("history.filterInfected"), icon: <AlertTriangle size={16} />, color: '#dc2626' },
+                            { id: 'healthy', label: t("history.filterHealthy"), icon: <CheckCircle size={16} />, color: '#15803d' },
+                            { id: 'outside_scope', label: t("history.filterOutsideScope"), icon: <Leaf size={16} />, color: '#b45309' },
+                            { id: 'non_plant', label: t("history.filterNonLeaf"), icon: <Ban size={16} />, color: '#475569' }
+                        ].map(tab => (
+                            <button
+                                key={tab.id}
+                                onClick={() => setFilter(tab.id)}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '0.5rem',
+                                    padding: '0.6rem 1.2rem',
+                                    borderRadius: '12px',
+                                    border: 'none',
+                                    fontSize: '0.9rem',
+                                    fontWeight: 700,
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s ease',
+                                    background: filter === tab.id ? (tab.color || 'var(--primary)') : 'transparent',
+                                    color: filter === tab.id ? 'white' : 'var(--text-secondary)',
+                                    boxShadow: filter === tab.id ? '0 4px 12px rgba(0,0,0,0.1)' : 'none'
+                                }}
+                            >
+                                {tab.icon}
+                                {tab.label}
+                            </button>
+                        ))}
                     </div>
-                    
+
                     <div className="search-container" style={{ position: 'relative', flex: '1 1 300px', maxWidth: '400px' }}>
                         <Search size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
                         <input
@@ -350,6 +350,17 @@ const History = () => {
                                                                 <Activity size={16} style={{ marginRight: '0.4rem' }} />
                                                                 {t("history.startTreatment")}
                                                             </button>
+                                                        )}
+
+                                                        {pred.treatment_status === 'in_progress' && (
+                                                            <Link
+                                                                to="/treatment-history"
+                                                                className="btn-primary"
+                                                                style={{ fontSize: '0.85rem', padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+                                                            >
+                                                                <Activity size={16} />
+                                                                {t("history.trackProgress") || "Track Progress"}
+                                                            </Link>
                                                         )}
                                                     </div>
                                                 )}
@@ -511,7 +522,7 @@ const History = () => {
                                                 {t("history.severityLevel")}
                                             </label>
                                             <select
-                                                value={editingPrediction.severity || 'moderate'}
+                                                value={editingPrediction.severity?.toLowerCase() || 'moderate'}
                                                 onChange={(e) => setEditingPrediction({ ...editingPrediction, severity: e.target.value })}
                                                 style={{
                                                     width: '100%',
@@ -525,7 +536,6 @@ const History = () => {
                                                 <option value="minor">{t("history.severityLow") || "Minor"}</option>
                                                 <option value="moderate">{t("history.severityModerate") || "Moderate"}</option>
                                                 <option value="severe">{t("history.severityHigh") || "Severe"}</option>
-                                                <option value="critical">{t("history.severityCritical") || "Critical"}</option>
                                             </select>
                                         </div>
 

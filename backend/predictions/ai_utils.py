@@ -575,8 +575,6 @@ class DiseaseDetector:
 
     def _determine_severity(self, confidence):
         """Map model confidence to clinical severity label."""
-        if confidence > 90:
-            return "critical"
         if confidence > 70:
             return "severe"
         if confidence > 50:

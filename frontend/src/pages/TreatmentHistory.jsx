@@ -676,7 +676,7 @@ const TreatmentCard = ({ item, t, formatDate, onUpdateStatus, onUpdateSeverity, 
                 {!isHealthyStatus && !isSpecialCase && (
                     <div style={{ flex: '1 1 auto', position: 'relative' }}>
                         <select
-                            value={item.severity || ''}
+                            value={item.severity?.toLowerCase() || ''}
                             onChange={(e) => onUpdateSeverity(item.id, e.target.value)}
                             title="Set Severity Level"
                             style={{
@@ -685,8 +685,8 @@ const TreatmentCard = ({ item, t, formatDate, onUpdateStatus, onUpdateSeverity, 
                                 borderRadius: 10, fontWeight: 700, fontSize: '0.82rem',
                                 cursor: 'pointer', outline: 'none', fontFamily: 'inherit',
                                 border: `1.5px solid ${!item.severity ? '#94a3b8'
-                                    : item.severity === 'minor' ? '#ca8a04'
-                                        : item.severity === 'moderate' ? '#c2410c'
+                                    : item.severity.toLowerCase() === 'minor' ? '#ca8a04'
+                                        : item.severity.toLowerCase() === 'moderate' ? '#c2410c'
                                             : '#dc2626'
                                     }`,
                                 background: !item.severity ? '#f8fafc'

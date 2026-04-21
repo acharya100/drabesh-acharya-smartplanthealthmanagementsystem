@@ -156,6 +156,9 @@ const DiseaseDetection = () => {
         return 300;
       };
 
+      const rawSeverity = (payload.severity || 'minor').toLowerCase();
+      const safeSeverity = rawSeverity === 'critical' ? 'severe' : rawSeverity;
+
       setResult({
         ...payload,
         id: res.predictionId,
@@ -166,8 +169,8 @@ const DiseaseDetection = () => {
         plantName: payload.plant_name || payload.plantName,
         confidence: payload.confidence ?? 0,
         recommendedTreatment: payload.recommended_treatment || payload.recommendedTreatment || null,
-        severity: payload.severity || 'minor',
-        estimatedCost: payload.estimated_cost || payload.estimatedCost || getSuggestedCost(payload.severity)
+        severity: safeSeverity,
+        estimatedCost: payload.estimated_cost || payload.estimatedCost || getSuggestedCost(safeSeverity)
       });
     } catch (err) {
       console.error("Detection error:", err);

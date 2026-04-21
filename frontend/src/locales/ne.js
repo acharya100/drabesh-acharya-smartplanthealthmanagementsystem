@@ -130,7 +130,7 @@ const ne = {
         badgeOutsideScope: "क्षेत्र बाहिर",
         confidence: "निश्चितता",
         severity: "गम्भीरता",
-        viewTreatment: "उपचार प्रगतिमा हेर्नुहोस्",
+        viewTreatment: "उपचार विधि हेर्नुहोस्",
         edit: "सम्पादन",
         noHistoryTitle: "इतिहास फेला परेन",
         noHistoryDesc: "तपाईंले अहिलेसम्म कुनै बिरुवा स्क्यान गर्नुभएको छैन।",
@@ -168,6 +168,7 @@ const ne = {
         modalAcknowledge: "ठिक छ, बन्द गर्नुहोस्",
         viewDetails: "विवरण हेर्नुस्",
         startTreatment: "उपचार सुरु गर्नुस्",
+        trackProgress: "प्रगति ट्र्याक गर्नुहोस्",
     },
 
     detection: {
@@ -189,7 +190,7 @@ const ne = {
         confidenceLabel: "एआई निश्चितता",
         severityLabel: "रोगको गम्भीरता",
         recommendedActions: "सिफारिस गरिएका कार्यहरू",
-        viewTreatmentGuide: "उपचार प्रगतिमा हेर्नुहोस्",
+        viewTreatmentGuide: "उपचार विधि हेर्नुहोस्",
         noTreatmentFound: "हाम्रो डाटाबेसमा कुनै विशेष उपचार फेला परेन। थप जानकारीको लागि रोग अभिलेखहरू जाँच गर्नुहोस्।",
         healthyTip: "कुनै रोग फेला परेन। आफ्नो नियमित हेरचाह दिनचर्या जारी राख्नुस् र कुनै परिवर्तन देखेमा निगरानी गर्नुस्।",
         errorImage: "कृपया तस्विर फाइल छान्नुहोस्",

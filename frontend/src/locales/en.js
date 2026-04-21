@@ -130,7 +130,7 @@ const en = {
         badgeOutsideScope: "Outside Scope",
         confidence: "Confidence",
         severity: "Severity",
-        viewTreatment: "View Treatment in Progress",
+        viewTreatment: "View Protocol",
         edit: "Edit",
         noHistoryTitle: "No History Found",
         noHistoryDesc: "You haven't scanned any plants yet.",
@@ -168,6 +168,7 @@ const en = {
         modalAcknowledge: "Acknowledge & Close",
         viewDetails: "View Details",
         startTreatment: "Start Treatment",
+        trackProgress: "Track Progress",
     },
 
     detection: {
@@ -189,7 +190,7 @@ const en = {
         confidenceLabel: "AI CONFIDENCE",
         severityLabel: "Disease Severity",
         recommendedActions: "Recommended Actions",
-        viewTreatmentGuide: "View Treatment in Progress",
+        viewTreatmentGuide: "View Protocol",
         noTreatmentFound: "No specific treatment found in our database. Check the Disease Records for more information.",
         healthyTip: "No diseases detected. Keep up with your regular plant care routine and monitor for any changes.",
         errorImage: "Please select an image file",

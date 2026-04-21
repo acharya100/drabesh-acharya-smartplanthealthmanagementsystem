@@ -323,12 +323,12 @@ class PredictionViewSet(viewsets.ModelViewSet):
             # -- Cost logic (Synchronized with frontend standards) ------------
             if not prediction_obj.is_healthy:
                 cost_map = {
-                    'minor':    250.00,
+                    'minor':    300.00,
                     'moderate': 350.00,
-                    'severe':   450.00,
-                    'critical': 450.00,
+                    'severe':   400.00,
+                    'critical': 400.00,
                 }
-                prediction_obj.estimated_cost = cost_map.get(prediction_obj.severity, 250.00)
+                prediction_obj.estimated_cost = cost_map.get(str(prediction_obj.severity).lower(), 300.00)
             else:
                 prediction_obj.estimated_cost = 0.00
 
