@@ -15,7 +15,7 @@ import TreatmentFilterTabs from "../components/TreatmentFilterTabs";
 import { offlineStore } from "../utils/offlineStore";
 import { useOfflineSync } from "../context/OfflineSyncContext";
 
-// -- Shared helpers ----------------------------------------------------------
+// -- Shared helpers 
 const getCardTitle = (item, t) => {
     if (item.treatment_status === 'non_plant' || item.is_plant_image === false)
         return t("treatmentFilters.non_plant");

@@ -13,6 +13,4 @@ psycopg2-binary==2.9.10
 torch --index-url https://download.pytorch.org/whl/cpu
 torchvision --index-url https://download.pytorch.org/whl/cpu
 torchaudio --index-url https://download.pytorch.org/whl/cpu
-dj-database-url==2.2.0
-whitenoise==6.7.0
-gunicorn==22.0.0
+
