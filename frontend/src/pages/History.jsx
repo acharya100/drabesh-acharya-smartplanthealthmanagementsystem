@@ -59,6 +59,7 @@ const History = () => {
     const [predictions, setPredictions] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState("all"); // all, healthy, infected
+    const [searchQuery, setSearchQuery] = useState("");
     const [showEditModal, setShowEditModal] = useState(false);
     const [editingPrediction, setEditingPrediction] = useState(null);
     const [infoModalData, setInfoModalData] = useState(null);
@@ -92,11 +93,19 @@ const History = () => {
     };
 
     const filteredPredictions = predictions.filter(p => {
-        if (filter === "healthy") return p.is_healthy;
-        if (filter === "infected") return !p.is_healthy && !isInvalidRecord(p) && p.disease_name !== 'Not Applicable';
-        if (filter === "outside_scope") return isOutOfScopeRecord(p) || p.disease_name === 'Outside Scope' || p.disease_name === 'Not Applicable';
-        if (filter === "non_plant") return isNonPlantRecord(p) || p.disease_name === 'Non-Plant Image';
-        return true;
+        let statusMatch = true;
+        if (filter === "healthy") statusMatch = p.is_healthy;
+        else if (filter === "infected") statusMatch = !p.is_healthy && !isInvalidRecord(p) && p.disease_name !== 'Not Applicable';
+        else if (filter === "outside_scope") statusMatch = isOutOfScopeRecord(p) || p.disease_name === 'Outside Scope' || p.disease_name === 'Not Applicable';
+        else if (filter === "non_plant") statusMatch = isNonPlantRecord(p) || p.disease_name === 'Non-Plant Image';
+        
+        if (!statusMatch) return false;
+        
+        if (!searchQuery) return true;
+        const q = searchQuery.toLowerCase();
+        const title = getDisplayTitle(p, t).toLowerCase();
+        const plantName = p.plant_name ? p.plant_name.toLowerCase() : "";
+        return title.includes(q) || plantName.includes(q);
     });
 
     const formatDate = (dateString) => {
@@ -162,16 +171,16 @@ const History = () => {
                     </div>
                 </div>
 
-                <div className="filter-tabs-container" style={{
-                    display: 'flex',
-                    gap: '1rem',
-                    marginBottom: '2rem',
-                    background: 'var(--bg-surface-inner)',
-                    padding: '0.4rem',
-                    borderRadius: '16px',
-                    width: 'fit-content',
-                    border: '1px solid var(--border-light)'
-                }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem', marginBottom: '2rem' }}>
+                    <div className="filter-tabs-container" style={{
+                        display: 'flex',
+                        gap: '1rem',
+                        background: 'var(--bg-surface-inner)',
+                        padding: '0.4rem',
+                        borderRadius: '16px',
+                        width: 'fit-content',
+                        border: '1px solid var(--border-light)'
+                    }}>
                     {[
                         { id: 'all', label: t("history.filterAll"), icon: <Search size={16} /> },
                         { id: 'infected', label: t("history.filterInfected"), icon: <AlertTriangle size={16} />, color: '#dc2626' },
@@ -202,6 +211,26 @@ const History = () => {
                             {tab.label}
                         </button>
                     ))}
+                    </div>
+                    
+                    <div className="search-container" style={{ position: 'relative', flex: '1 1 300px', maxWidth: '400px' }}>
+                        <Search size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                        <input
+                            type="text"
+                            placeholder="Search scans..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            style={{
+                                width: '100%',
+                                padding: '0.8rem 1rem 0.8rem 2.8rem',
+                                borderRadius: '12px',
+                                border: '1px solid var(--border-light)',
+                                background: 'white',
+                                outline: 'none',
+                                fontSize: '0.9rem'
+                            }}
+                        />
+                    </div>
                 </div>
 
                 {loading ? (

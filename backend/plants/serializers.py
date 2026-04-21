@@ -53,13 +53,8 @@ class PlantListSerializer(serializers.ModelSerializer):
 
 
 class PlantDetailSerializer(serializers.ModelSerializer):
-  
-    
-    # Computed properties
     temperature_range = serializers.ReadOnlyField()
     is_low_maintenance = serializers.ReadOnlyField()
-    
-    # Display values for choice fields
     sunlight_display = serializers.CharField(
         source='get_sunlight_requirement_display',
         read_only=True
@@ -72,10 +67,7 @@ class PlantDetailSerializer(serializers.ModelSerializer):
         source='get_difficulty_level_display',
         read_only=True
     )
-    
-    # Count of related diseases (without loading all disease data)
     disease_count = serializers.SerializerMethodField()
-    
     class Meta:
         model = Plant
         fields = [

@@ -129,7 +129,7 @@ const errorBox = (msg) =>
     </div>
   ) : null;
 
-/* -- Main Login Component -------------------------------------- */
+/* -- Main Login Component - */
 const Login = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();

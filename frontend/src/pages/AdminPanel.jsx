@@ -822,7 +822,7 @@ const AdminPanel = () => {
                                                             background: p.healthStatus === 'healthy' ? "#d1fae5" : p.healthStatus === 'unhealthy' ? "#fee2e2" : "#f1f5f9",
                                                             color: p.healthStatus === 'healthy' ? "#059669" : p.healthStatus === 'unhealthy' ? "#ef4444" : "#64748b"
                                                         }}>
-                                                            {p.healthStatus.charAt(0).toUpperCase() + p.healthStatus.slice(1)}
+                                                            {(p.healthStatus || 'unknown').charAt(0).toUpperCase() + (p.healthStatus || 'unknown').slice(1)}
                                                         </span>
                                                     </td>
                                                     <td style={{ padding: "1rem", fontSize: "0.85rem", color: "var(--text-muted)" }}>{p.sunlightDisplay}</td>

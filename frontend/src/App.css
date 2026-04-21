@@ -1103,6 +1103,10 @@ textarea:focus {
   box-shadow: var(--glass-shadow);
   padding: 2.5rem;
   border: 1px solid var(--border-light);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 500px;
 }
 
 .hidden {

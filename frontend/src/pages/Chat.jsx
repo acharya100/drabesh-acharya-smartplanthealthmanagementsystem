@@ -3,6 +3,7 @@
  * AI-powered plant health chat with markdown rendering
  */
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { chatService } from "../services/api";
 import { useLanguage } from "../context/LanguageContext";
@@ -16,8 +17,6 @@ import { eCommerceService } from "../services/api";
 
 const POLL_INTERVAL = 1500; // ms
 
-// -- Disease-product query interceptor -----------------------------------------
-// Patterns: "what product for X", "medicine for X", "how to treat X", "product needed for X"
 const PRODUCT_QUERY_RE = /(?:what\s+(?:product|medicine|treatment|fungicide|chemical)[s]?\s+(?:is\s+)?(?:needed\s+)?for|how\s+to\s+treat|treatment\s+for|cure\s+for|product\s+for)\s+([a-z\s]+?)(?:\s*disease|\s*infection|\s*problem|\s*\?|$)/i;
 
 const interceptProductQuery = async (text) => {
@@ -114,7 +113,7 @@ const TypewriterText = ({ text, animate, hasMarkdown }) => {
 
 const MessageBubble = ({ msg, isUser }) => {
     const { t } = useLanguage();
-    const hasMarkdown = !isUser && (msg.content.includes("**") || msg.content.includes("*") || msg.content.includes("#") || msg.content.includes("|"));
+    const hasMarkdown = !isUser && !!(msg.content?.includes("**") || msg.content?.includes("#") || msg.content?.includes("|"));
     const formatTime = (iso) => new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
     // Animate only if AI message and recently created
@@ -173,6 +172,8 @@ const MessageBubble = ({ msg, isUser }) => {
 };
 
 const Chat = () => {
+    const location = useLocation();
+    const navigate = useNavigate();
     const { t } = useLanguage();
     const [rooms, setRooms] = useState([]);
     const [activeRoom, setActiveRoom] = useState(null);
@@ -363,6 +364,22 @@ const Chat = () => {
         }
     };
 
+    // -- incoming navigation prompt detection --
+    useEffect(() => {
+        if (!loadingRooms && location.state?.initialMessage) {
+            const msg = location.state.initialMessage;
+            
+            // Safely clear the state so it doesn't re-trigger on unmount/re-mount
+            const newHistoryState = { ...window.history.state };
+            if (newHistoryState && newHistoryState.usr) {
+                delete newHistoryState.usr.initialMessage;
+            }
+            window.history.replaceState(newHistoryState, "");
+
+            sendMessage(msg);
+        }
+    }, [loadingRooms, location.state?.initialMessage]);
+
     const handleKeyDown = (e) => {
         if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); }
     };
@@ -375,8 +392,8 @@ const Chat = () => {
         return d.toLocaleDateString();
     };
 
-    const SUGGESTIONS = t("chat.suggestions") || [];
-    const QUICK_REPLIES = t("chat.quickReplies") || [];
+    const SUGGESTIONS = Array.isArray(t("chat.suggestions")) ? t("chat.suggestions") : [];
+    const QUICK_REPLIES = Array.isArray(t("chat.quickReplies")) ? t("chat.quickReplies") : [];
 
     // -- render -------------------------------------------------------------------
     return (

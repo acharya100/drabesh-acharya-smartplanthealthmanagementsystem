@@ -1,4 +1,4 @@
-
+﻿
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
@@ -21,31 +21,22 @@ class UserRegistrationView(generics.CreateAPIView):
 
 class ForgotPasswordCodeView(APIView):
     permission_classes = [AllowAny]
-
     def post(self, request):
         identifier = request.data.get('email') # the payload still uses key 'email'
         if not identifier:
             return Response({'error': 'Email or phone number is required'}, status=status.HTTP_400_BAD_REQUEST)
-            
         from django.db.models import Q
         user = User.objects.filter(Q(email=identifier) | Q(phone_number=identifier)).first()
         if not user:
             return Response({'error': 'invalid id'}, status=status.HTTP_404_NOT_FOUND)
-        
-        # Generate 6-digit code
         code = str(random.randint(100000, 999999))
         cache.set(f"pwd_reset_{identifier}", code, timeout=120) # Valid for 2 minutes
-        
-        # If user looked up via phone number, simulate an SMS
         if user.phone_number and identifier == user.phone_number:
             print(f"\n[{timezone.now()}] > MOCK SMS SENT TO {user.phone_number}    \nYour Smart Plant Health reset code is {code}\n")
             return Response({'message': 'Reset code sent via SMS successfully.'}, status=status.HTTP_200_OK)
-            
         if not user.email:
             return Response({'error': 'Account has no email attached to send code to.'}, status=status.HTTP_400_BAD_REQUEST)
-        
         email = user.email
-        # Dispatch Real HTML Email via SMTP
         html_message = f"""
         <!DOCTYPE html>
         <html lang="en">
@@ -89,21 +80,15 @@ class ForgotPasswordCodeView(APIView):
             return Response({
                 'error': f'Failed to send email: {error_msg}'
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-            
         return Response({'message': 'Reset code sent successfully.'}, status=status.HTTP_200_OK)
-
 class VerifyOtpView(APIView):
     permission_classes = [AllowAny]
-
     def post(self, request):
         identifier = request.data.get('email')
         code = request.data.get('code')
-        
         if not identifier or not code:
             return Response({'error': 'Identifier and code are required'}, status=status.HTTP_400_BAD_REQUEST)
-            
         cached_code = cache.get(f"pwd_reset_{identifier}")
-        
         if not cached_code or str(cached_code) != str(code):
             return Response({'error': 'wrong code'}, status=status.HTTP_400_BAD_REQUEST)
             
@@ -136,7 +121,6 @@ class ForgotPasswordResetView(APIView):
         
         return Response({'message': 'Password has been reset successfully. You can now login.'}, status=status.HTTP_200_OK)
 
-
 class SendPhoneOtpView(APIView):
     """Send a one-time code to a phone number before account creation."""
     permission_classes = [AllowAny]
@@ -145,8 +129,6 @@ class SendPhoneOtpView(APIView):
         phone_number = request.data.get('phone_number', '').strip()
         if not phone_number:
             return Response({'error': 'Phone number is required.'}, status=status.HTTP_400_BAD_REQUEST)
-
-        # Check if phone already registered
         if User.objects.filter(phone_number=phone_number).exists():
             return Response({'error': 'This phone number is already registered.'}, status=status.HTTP_400_BAD_REQUEST)
 

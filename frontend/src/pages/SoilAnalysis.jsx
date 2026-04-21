@@ -1,7 +1,3 @@
-/**
- * Soil Analysis & Fertilizer Recommendation
- * Analyzes soil data and recommends products from the marketplace
- */
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
@@ -418,10 +414,10 @@ const HowToGuide = () => {
     const [open, setOpen] = useState(false);
     const translationSteps = t("soil.guideSteps");
     const DEFAULT_STEPS = Array.isArray(translationSteps) ? translationSteps : [
-        "Gather a small sample of soil from about 6 inches deep in your field.",
-        "Mix the soil with distilled water and let it settle for 30 minutes.",
-        "Use a professional NPK kit to measure nutrient concentrations.",
-        "Enter the values into the form on the left for AI-based advisor recommendations."
+        { icon: "🪱", title: "Collect Soil Sample", desc: "Gather soil from 6-9 inches deep across several points in your field. Mix thoroughly and allow to air dry.", tips: ["Sample from at least 5 spots", "Avoid sampling near fences or paths", "Use a clean container"] },
+        { icon: "🧪", title: "Test with NPK Kit", desc: "Mix the soil with distilled water and let settle 30 minutes. Use a professional NPK kit to measure concentrations.", tips: ["Follow kit instructions carefully", "Test at the same time of day", "Record all values accurately"] },
+        { icon: "📊", title: "Enter Values", desc: "Enter your measured NPK, pH, Moisture and Organic Matter values into the sliders on the left panel.", tips: ["Use the Field Assistant if unsure", "Values are compared to global FAO standards", "Check the optimal range shown below each slider"] },
+        { icon: "💊", title: "Apply Recommendations", desc: "Follow the expert recommendations generated. Purchase the suggested products directly from the marketplace.", tips: ["Buy products linked to your deficiencies", "Re-test soil after 4-6 weeks", "Track improvements using Analysis History"] },
     ];
 
     const [steps, setSteps] = useState(() => {
@@ -612,6 +608,7 @@ const SoilAnalysis = () => {
     const [history, setHistory] = useState([]);
     const [showHistory, setShowHistory] = useState(false);
     const [error, setError] = useState(null);
+    const [activeSection, setActiveSection] = useState('all');
 
     useEffect(() => {
         loadHistory();
@@ -664,6 +661,7 @@ const SoilAnalysis = () => {
     const handleAnalyze = async () => {
         setAnalyzing(true);
         setError(null);
+        setActiveSection('all');
         try {
             const { data } = await soilService.analyze(form);
             setResult(data);
@@ -675,6 +673,16 @@ const SoilAnalysis = () => {
         } finally {
             setAnalyzing(false);
         }
+    };
+
+    const handleAskChat = (topic) => {
+        let msg = `I need an expert soil analysis based on these parameters:\n- Nitrogen: ${form.nitrogen} kg/ha\n- Phosphorus: ${form.phosphorus} kg/ha\n- Potassium: ${form.potassium} kg/ha\n- pH: ${form.phLevel}\n- Moisture: ${form.moisture}%\n- Organic Matter: ${form.organicMatter}%\n\n`;
+
+        if (topic === 'health') msg += "Can you give me a detailed health score breakdown and what this means for crop selection?";
+        if (topic === 'deficiency') msg += "Are there any targeted deficiency alerts or risks of toxicity I should be aware of?";
+        if (topic === 'expert') msg += "Please provide professional expert advice on what fertilizers or soil conditioners I should apply to optimize this field.";
+
+        navigate("/chat", { state: { initialMessage: msg } });
     };
 
     const severityColor = (s) => s === "high" ? "#ef4444" : s === "medium" ? "#f59e0b" : "#3b82f6";
@@ -764,7 +772,7 @@ const SoilAnalysis = () => {
                 <div style={{ display: "grid", gridTemplateColumns: "420px 1fr", gap: "2rem", alignItems: "start" }}>
 
                     {/* INPUT PANEL */}
-                    <div style={{ background: "var(--bg-card)", borderRadius: 20, padding: "1.75rem", border: "1px solid var(--border-light)", boxShadow: "var(--shadow-sm)", position: "sticky", top: "1rem" }}>
+                    <div style={{ background: "var(--bg-card)", borderRadius: 20, padding: "1.75rem", border: "1px solid var(--border-light)", boxShadow: "var(--shadow-sm)", position: "sticky", top: "1rem", zIndex: 0, isolation: "isolate" }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
                             <h3 style={{ fontWeight: 900, fontSize: "1rem", margin: 0, color: "var(--text-main)", display: "flex", alignItems: "center", gap: "0.5rem" }}>
                                 <Activity size={17} style={{ color: "var(--primary)" }} />
@@ -861,7 +869,7 @@ const SoilAnalysis = () => {
                     </div>
 
                     {/* RESULTS PANEL */}
-                    <div>
+                    <div style={{ position: "relative", zIndex: 1 }}>
                         {!result ? (
                             <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
                                 {/* Empty state - mini guide */}
@@ -876,14 +884,17 @@ const SoilAnalysis = () => {
                                     </p>
                                     <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center", flexWrap: "wrap" }}>
                                         {[
-                                            { dot: "var(--success)", text: t("soil.healthScore") || "Health score (0-100)" },
-                                            { dot: "var(--warning)", text: t("soil.deficiencyAlerts") || "Deficiency alerts" },
-                                            { dot: "var(--info)", text: t("soil.expertAdvice") || "Expert advice" },
+                                            { id: 'health', dot: "var(--success)", text: t("soil.healthScore") || "Health Score" },
+                                            { id: 'deficiency', dot: "var(--warning)", text: t("soil.deficiencyAlerts") || "Deficiency Alerts" },
+                                            { id: 'expert', dot: "var(--info)", text: t("soil.expertAdvice") || "Expert Advice" },
                                         ].map((item, i) => (
-                                            <div key={i} style={{ padding: "0.65rem 1rem", background: "var(--bg-card)", borderRadius: 12, border: "1px solid var(--border-light)", display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.8rem", color: "var(--text-main)", fontWeight: 600 }}>
+                                            <button key={i} title="Ask Expert AI about this" onClick={() => handleAskChat(item.id)} style={{ padding: "0.65rem 1rem", background: "var(--bg-card)", borderRadius: 12, border: "1px solid var(--border-light)", display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.8rem", color: "var(--text-main)", fontWeight: 600, cursor: "pointer", transition: "all 0.2s" }}
+                                                onMouseEnter={e => { e.currentTarget.style.borderColor = "var(--primary)"; e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "var(--shadow-sm)"; }}
+                                                onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border-light)"; e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "none"; }}
+                                            >
                                                 <span style={{ width: 8, height: 8, borderRadius: "50%", background: item.dot, flexShrink: 0 }} />
                                                 {item.text}
-                                            </div>
+                                            </button>
                                         ))}
                                     </div>
                                 </div>
@@ -891,38 +902,67 @@ const SoilAnalysis = () => {
                         ) : (
                             <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
 
-                                {/* Score card */}
-                                <div style={{ background: "var(--bg-card)", borderRadius: 20, padding: "2rem", border: "1px solid var(--border-light)", boxShadow: "var(--shadow-md)", display: "flex", alignItems: "center", gap: "2.5rem" }}>
-                                    <ScoreGauge score={result.health_score} />
-                                    <div style={{ flex: 1 }}>
-                                        <h3 style={{ fontWeight: 900, fontSize: "1.2rem", marginBottom: "0.5rem", color: "var(--text-main)" }}>
-                                            {t("soil.soilHealth")}
-                                        </h3>
-                                        {result.overall_explanation && (
-                                            <p style={{ color: "var(--text-muted)", lineHeight: 1.6, fontSize: "0.88rem", marginBottom: "1rem" }}>
-                                                {result.overall_explanation}
-                                            </p>
-                                        )}
-                                        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-                                            {[
-                                                { label: `N: ${form.nitrogen} kg/ha`, color: "#8b5cf6" },
-                                                { label: `P: ${form.phosphorus} kg/ha`, color: "#3b82f6" },
-                                                { label: `K: ${form.potassium} kg/ha`, color: "#f59e0b" },
-                                                { label: `pH: ${form.ph_level}`, color: "#ec4899" },
-                                                { label: `Moisture: ${form.moisture}%`, color: "#06b6d4" },
-                                                { label: `OM: ${result.organic_matter ?? form.organic_matter}%`, color: "#84cc16" },
-                                                { label: form.soil_type, color: "var(--primary)" },
-                                            ].map((chip, i) => (
-                                                <span key={i} style={{ padding: "0.25rem 0.7rem", borderRadius: 20, fontSize: "0.72rem", fontWeight: 700, background: `${chip.color}18`, color: chip.color, border: `1px solid ${chip.color}40` }}>
-                                                    {chip.label}
-                                                </span>
-                                            ))}
-                                        </div>
-                                    </div>
+                                {/* Section Tabs */}
+                                <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", background: "var(--bg-surface-inner)", padding: "0.35rem", borderRadius: 14, border: "1px solid var(--border-light)", width: "fit-content" }}>
+                                    {[
+                                        { id: 'all', dot: "var(--primary)", text: t("common.all") || "All Results" },
+                                        { id: 'health', dot: "var(--success)", text: t("soil.healthScore") || "Health Score" },
+                                        { id: 'deficiency', dot: "var(--warning)", text: t("soil.deficiencyAlerts") || "Deficiency Alerts" },
+                                        { id: 'expert', dot: "var(--info)", text: t("soil.expertAdvice") || "Expert Advice" },
+                                    ].map(tab => (
+                                        <button
+                                            key={tab.id}
+                                            onClick={() => setActiveSection(tab.id)}
+                                            style={{
+                                                display: "flex", alignItems: "center", gap: "0.4rem",
+                                                padding: "0.45rem 1rem", borderRadius: 10, border: "none",
+                                                fontSize: "0.78rem", fontWeight: 700, cursor: "pointer",
+                                                transition: "all 0.2s",
+                                                background: activeSection === tab.id ? "var(--bg-card)" : "transparent",
+                                                color: activeSection === tab.id ? tab.dot : "var(--text-muted)",
+                                                boxShadow: activeSection === tab.id ? "var(--shadow-sm)" : "none",
+                                            }}
+                                        >
+                                            <span style={{ width: 7, height: 7, borderRadius: "50%", background: tab.dot, flexShrink: 0 }} />
+                                            {tab.text}
+                                        </button>
+                                    ))}
                                 </div>
 
+                                {/* Score card */}
+                                {(activeSection === 'all' || activeSection === 'health') && (
+                                    <div style={{ background: "var(--bg-card)", borderRadius: 20, padding: "2rem", border: "1px solid var(--border-light)", boxShadow: "var(--shadow-md)", display: "flex", alignItems: "center", gap: "2.5rem" }}>
+                                        <ScoreGauge score={result.health_score} />
+                                        <div style={{ flex: 1 }}>
+                                            <h3 style={{ fontWeight: 900, fontSize: "1.2rem", marginBottom: "0.5rem", color: "var(--text-main)" }}>
+                                                {t("soil.soilHealth")}
+                                            </h3>
+                                            {result.overall_explanation && (
+                                                <p style={{ color: "var(--text-muted)", lineHeight: 1.6, fontSize: "0.88rem", marginBottom: "1rem" }}>
+                                                    {result.overall_explanation}
+                                                </p>
+                                            )}
+                                            <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+                                                {[
+                                                    { label: `N: ${form.nitrogen} kg/ha`, color: "#8b5cf6" },
+                                                    { label: `P: ${form.phosphorus} kg/ha`, color: "#3b82f6" },
+                                                    { label: `K: ${form.potassium} kg/ha`, color: "#f59e0b" },
+                                                    { label: `pH: ${form.phLevel}`, color: "#ec4899" },
+                                                    { label: `Moisture: ${form.moisture}%`, color: "#06b6d4" },
+                                                    { label: `OM: ${result.organic_matter ?? form.organicMatter}%`, color: "#84cc16" },
+                                                    { label: form.soilType, color: "var(--primary)" },
+                                                ].map((chip, i) => (
+                                                    <span key={i} style={{ padding: "0.25rem 0.7rem", borderRadius: 20, fontSize: "0.72rem", fontWeight: 700, background: `${chip.color}18`, color: chip.color, border: `1px solid ${chip.color}40` }}>
+                                                        {chip.label}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
                                 {/* All-good banner */}
-                                {!result.deficiencies?.length && (
+                                {(activeSection === 'all' || activeSection === 'health' || activeSection === 'deficiency') && !result.deficiencies?.length && (
                                     <div style={{ display: "flex", alignItems: "center", gap: "1rem", padding: "1.25rem 1.5rem", background: "var(--primary-subtle)", border: "1px solid var(--primary)", borderRadius: 16 }}>
                                         <CheckCircle size={28} style={{ color: "var(--success)", flexShrink: 0 }} />
                                         <div>
@@ -935,7 +975,7 @@ const SoilAnalysis = () => {
                                 )}
 
                                 {/* Deficiencies */}
-                                {result.deficiencies?.length > 0 && (
+                                {(activeSection === 'all' || activeSection === 'deficiency') && result.deficiencies?.length > 0 && (
                                     <div style={{ background: "var(--bg-card)", borderRadius: 16, padding: "1.5rem", border: "1px solid var(--danger)" }}>
                                         <h4 style={{ fontWeight: 900, marginBottom: "1rem", display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--danger)" }}>
                                             <AlertTriangle size={18} /> {t("soil.deficiencies")}
@@ -954,7 +994,7 @@ const SoilAnalysis = () => {
                                 )}
 
                                 {/* Recommendations */}
-                                {result.recommendations?.length > 0 && (
+                                {(activeSection === 'all' || activeSection === 'expert') && result.recommendations?.length > 0 && (
                                     <div style={{ background: "var(--bg-card)", borderRadius: 16, padding: "1.5rem", border: "1px solid var(--border-light)" }}>
                                         <h4 style={{ fontWeight: 900, marginBottom: "1.25rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
                                             <TrendingUp size={18} style={{ color: "var(--primary)" }} /> {t("soil.suggestions")}
@@ -992,7 +1032,7 @@ const SoilAnalysis = () => {
                                 )}
 
                                 {/* Recommended Products */}
-                                {result.suggested_products?.length > 0 && !showAssistant && (
+                                {(activeSection === 'all' || activeSection === 'expert') && result.suggested_products?.length > 0 && !showAssistant && (
                                     <div style={{ background: "var(--bg-card)", borderRadius: 24, padding: "2rem", border: "1px solid var(--border-light)", boxShadow: "var(--shadow-md)" }}>
                                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
                                             <h4 style={{ margin: 0, fontWeight: 900, fontSize: "1.2rem", display: "flex", alignItems: "center", gap: "0.75rem" }}>

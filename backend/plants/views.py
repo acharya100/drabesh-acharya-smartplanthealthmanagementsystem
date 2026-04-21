@@ -19,17 +19,13 @@ from .serializers import (
 
 
 class PlantViewSet(viewsets.ModelViewSet):
-   
     queryset = Plant.objects.all()
     permission_classes = [IsAuthenticatedOrReadOnly]
-    
-    # Enable filtering, searching and ordering
     filter_backends = [
         DjangoFilterBackend,
         filters.SearchFilter,
         filters.OrderingFilter
     ]
-    
     # Define filterable fields
     filterset_fields = {
         'sunlight_requirement': ['exact'],
@@ -38,8 +34,6 @@ class PlantViewSet(viewsets.ModelViewSet):
         'health_status': ['exact'],
         'family': ['exact', 'icontains'],
     }
-    
-    # Define searchable fields
     search_fields = [
         'name',
         'scientific_name',
@@ -47,20 +41,14 @@ class PlantViewSet(viewsets.ModelViewSet):
         'description',
         'care_instructions'
     ]
-    
-    # Define orderable fields
     ordering_fields = [
         'name',
         'scientific_name',
         'created_at',
         'difficulty_level'
-    ]
-    
-    # Default ordering
+    ] 
     ordering = ['name']
-    
     def get_serializer_class(self): # type: ignore[reportIncompatibleMethodOverride]
-      
         if self.action == 'list':
             return PlantListSerializer
         elif self.action in ['create', 'update', 'partial_update']:

@@ -116,12 +116,8 @@ const DiseaseDetection = () => {
       setError(t("detection.errorFirst") || "Please select an image first");
       return;
     }
-
     setLoading(true);
     setError("");
-
-    // Always attempt the local backend - it runs on localhost and is accessible
-    // even without internet. navigator.onLine checks internet, NOT local server.
     try {
       const formData = new FormData();
       formData.append("image", selectedFile);
@@ -138,31 +134,44 @@ const DiseaseDetection = () => {
         return;
       }
 
-      if (res.status === "invalid" || (res.success === true && payload.isRecognized === false)) {
-        const type = res.type || (payload.isPlantImage === false ? "non_plant" : "out_of_scope");
+      if (res.status === "invalid" || (res.success === true && (payload.is_recognized === false || payload.isRecognized === false))) {
+        const type = res.type || (payload.is_plant_image === false || payload.isPlantImage === false ? "non_plant" : "out_of_scope");
         setResult({
           ...payload,
           id: res.predictionId,
+          // Normalize snake_case → camelCase for invalid results
+          isNonPlant: type === "non_plant",
           isPlantImage: type !== "non_plant",
           isOutOfScope: type === "out_of_scope",
           isRecognized: false,
-          _message: res.message || payload.message,
+          message: payload.message || res.message,
         });
         return;
       }
+
+      const getSuggestedCost = (sev) => {
+        const s = sev?.toLowerCase() || 'minor';
+        if (s === 'moderate') return 350;
+        if (s === 'severe' || s === 'critical') return 400;
+        return 300;
+      };
 
       setResult({
         ...payload,
         id: res.predictionId,
         isRecognized: true,
+        isHealthy: payload.is_healthy ?? payload.isHealthy,
+        diseaseName: payload.disease_name || payload.diseaseName,
+        diseaseId: payload.disease_id || payload.diseaseId,
+        plantName: payload.plant_name || payload.plantName,
+        confidence: payload.confidence ?? 0,
+        recommendedTreatment: payload.recommended_treatment || payload.recommendedTreatment || null,
         severity: payload.severity || 'minor',
-        estimatedCost: payload.estimatedCost || (payload.severity === 'moderate' ? 350 : (payload.severity === 'severe' ? 400 : 300))
+        estimatedCost: payload.estimated_cost || payload.estimatedCost || getSuggestedCost(payload.severity)
       });
     } catch (err) {
       console.error("Detection error:", err);
 
-      // If the server actually responded, it's NOT a network error.
-      // We should show the specific error from the backend instead of triggering offline mode.
       if (err.response) {
         const errorData = err.response.data;
         let msg = "";
@@ -241,15 +250,15 @@ const DiseaseDetection = () => {
       <Navbar activePage="disease" />
 
       <div className="discovery-content animate-slide-up">
-        <header className="discovery-header mb-8" style={{ textAlign: 'center' }}>
-          {/* Badge is a nice tiny UI detail that makes the page feel premium */}
-          <div className="header-badge" style={{ display: 'inline-block', padding: '0.4rem 1rem', background: 'var(--primary-subtle)', color: 'var(--primary)', borderRadius: '100px', fontSize: '0.75rem', fontWeight: 800, letterSpacing: '0.1em', marginBottom: '1rem' }}>{t("detection.aiDetectionBadge")}</div>
-          <h1 style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--secondary)', marginBottom: '0.5rem' }}>{t("detection.title")}</h1>
-          <p style={{ maxWidth: '600px', margin: '0 auto', fontSize: '1rem', color: 'var(--text-muted)' }}>{t("detection.subtitle")}</p>
-        </header>
-
         <div className="detection-layout">
           <div className="detection-main">
+            <header className="discovery-header mb-8" style={{ textAlign: 'center' }}>
+              {/* Badge is a nice tiny UI detail that makes the page feel premium */}
+              <div className="header-badge" style={{ display: 'inline-block', padding: '0.4rem 1rem', background: 'var(--primary-subtle)', color: 'var(--primary)', borderRadius: '100px', fontSize: '0.75rem', fontWeight: 800, letterSpacing: '0.1em', marginBottom: '1rem' }}>{t("detection.aiDetectionBadge")}</div>
+              <h1 style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--secondary)', marginBottom: '0.5rem' }}>{t("detection.title")}</h1>
+              <p style={{ maxWidth: '600px', margin: '0 auto', fontSize: '1rem', color: 'var(--text-muted)' }}>{t("detection.subtitle")}</p>
+            </header>
+
             <div className="upload-container-v2">
               {!preview && !cameraActive ? (
                 <div className="upload-options" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -333,7 +342,7 @@ const DiseaseDetection = () => {
                   {/* 
                       NON-PLANT IMAGE - clear label, no disease/confidence UI
                   */}
-                  {result.isNonPlant ? (
+                  {(result.isNonPlant || result.is_non_plant) ? (
                     <div style={{ padding: 0 }}>
                       {/* Header */}
                       <div style={{ padding: '2rem 2.5rem', background: 'var(--bg-card)', borderBottom: '1px solid var(--border-light)', display: 'flex', alignItems: 'flex-start', gap: '1.25rem' }}>
@@ -441,7 +450,6 @@ const DiseaseDetection = () => {
                           ))}
                         </div>
                       </div>
-
                       {/* Actions */}
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                         {[
@@ -461,8 +469,6 @@ const DiseaseDetection = () => {
                         <RefreshCw size={16} /> Try Another Image
                       </button>
                     </div>
-
-                    /* -- VALID PLANT RESULT ----------------------------------- */
                   ) : (
                     <>
                       <div className="result-header animate-slide-up" style={{ padding: '2.5rem', background: 'var(--bg-main)', borderBottom: '1px solid var(--border-light)' }}>
@@ -475,15 +481,13 @@ const DiseaseDetection = () => {
                         <div className="confidence-meter">
                           <div className="meter-label" style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', fontWeight: 700, marginBottom: '0.5rem', opacity: 0.7 }}>
                             <span>{t("detection.confidenceLabel")}</span>
-                            <span>{result.confidence.toFixed(1)}%</span>
+                            <span>{(result.confidence || 0).toFixed(1)}%</span>
                           </div>
                           <div className="meter-bar" style={{ height: '8px', background: 'var(--border-light)', borderRadius: '100px', overflow: 'hidden' }}>
                             <div className="meter-fill" style={{ width: `${result.confidence}%`, height: '100%', background: 'var(--primary)', transition: 'width 1s cubic-bezier(0.4, 0, 0.2, 1)' }}></div>
                           </div>
                         </div>
                       </div>
-
-
                       <div className="result-details" style={{ padding: '2.5rem' }}>
                         {!result.isHealthy && !result.isUnverified && (
                           <div className="severity-cost-override" style={{ marginBottom: '2.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -493,13 +497,16 @@ const DiseaseDetection = () => {
                               </label>
                               <select
                                 value={result.severity}
-                                onChange={(e) => setResult({ ...result, severity: e.target.value })}
+                                onChange={(e) => {
+                                  const newSev = e.target.value;
+                                  const suggestedCost = newSev === 'severe' ? 400 : newSev === 'moderate' ? 350 : 300;
+                                  setResult({ ...result, severity: newSev, estimatedCost: suggestedCost });
+                                }}
                                 style={{ width: '100%', padding: '0.75rem', borderRadius: '10px', border: '1px solid var(--border-light)', background: 'var(--bg-main)', fontSize: '1rem', fontWeight: 700, color: 'var(--secondary)' }}
                               >
                                 <option value="minor">{t("history.severityLow") || "Minor"}</option>
                                 <option value="moderate">{t("history.severityModerate") || "Moderate"}</option>
                                 <option value="severe">{t("history.severityHigh") || "Severe"}</option>
-                                <option value="critical">{t("history.severityCritical") || "Critical"}</option>
                               </select>
                             </div>
 

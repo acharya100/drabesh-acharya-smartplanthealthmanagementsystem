@@ -9,9 +9,7 @@ from ecommerce.models import Product, Category, Order
 from soil.models import SoilAnalysis
 from chat.models import ChatRoom
 import datetime
-
 User = get_user_model()
-
 class BackendSystemFullVerificationTest(TestCase):
     def test_full_app_lifecycle_from_scratch(self):
         print("\n--- Starting Full System Backend Verification ---")
@@ -92,5 +90,4 @@ class BackendSystemFullVerificationTest(TestCase):
         user_id = user.id
         user.delete()
         self.assertEqual(User.objects.filter(id=user_id).count(), 0)
-        
         print("--- Full System Backend Verification Passed Successfully ---")

@@ -55,10 +55,7 @@ class PredictionViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['post'])
     def identify(self, request):
-        """
-        Unified identification endpoint for the 'Add Plant' modal.
-        Synchronized with Stage-1/Stage-2 pipeline for perfect consistency.
-        """
+    
         serializer = PredictionCreateSerializer(data=request.data)
         if not serializer.is_valid():
              return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -69,8 +66,6 @@ class PredictionViewSet(viewsets.ModelViewSet):
             image_path = prediction_obj.image.path
             self._log(f"--- Identify Request for {os.path.basename(image_path)} ---")
 
-            # -- STAGE 1: Centralized Gating --
-            # We use the EXACT same validator as the Detection Lab to ensure consistency.
             scope = scope_validator.validate(image_path)
             self._log(f"[identify] Scope verdict: status={scope['status']} type={scope['type']}")
 
@@ -79,9 +74,7 @@ class PredictionViewSet(viewsets.ModelViewSet):
                 scope['status'] = 'valid'
 
             if scope['status'] == 'invalid':
-                # STAGE 1B: High Confidence Override
-                # If Stage 1 falsely rejects a dataset crop feature (like corn blight),
-                # we rescue it if our specialized Stage 2 detector is highly confident (>85%).
+              
                 stage2_check = detector.predict(image_path, is_plant_hint=True)
                 if stage2_check and stage2_check.get('status') == 'valid' and stage2_check.get('confidence', 0) > 70.0:
                     self._log(f"[identify] High-confidence Stage-2 override triggered: {stage2_check['confidence']:.1f}% > 70.0%")
@@ -129,8 +122,6 @@ class PredictionViewSet(viewsets.ModelViewSet):
                     "prediction_id": None
                 })
 
-            # -- STAGE 2: Deep Analysis (Only for valid scope) --
-            # Run the plant-recognizer + disease-detector pipeline
             id_results = identifier.predict(image_path)
             disease_results = detector.predict(image_path, is_plant_hint=True)
 
@@ -175,27 +166,7 @@ class PredictionViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['post'])
     def detect(self, request):
-        """
-        Disease Detection endpoint - two-stage sequential pipeline.
 
-        Stage 1: ImageScopeValidator (MobileNet)
-          - BLOCKS non-plant and out-of-scope images immediately.
-          - Disease model is NEVER called for invalid images.
-
-        Stage 2: DiseaseDetector (ResNet18, trained on PlantVillage)
-          - Only runs when Stage 1 returns status='valid'.
-          - Returns None if model not loaded (no random output).
-          - Applies confidence threshold and coherence check.
-
-        Response shape:
-          {
-            "status":        "valid" | "invalid",
-            "type":          "plant" | "non_plant" | "out_of_scope",
-            "message":       str,
-            "data":          {...},
-            "prediction_id": int | null
-          }
-        """
         serializer = PredictionCreateSerializer(data=request.data)
         if not serializer.is_valid():
             # Debug: Log the exact validation error to terminal
@@ -222,9 +193,7 @@ class PredictionViewSet(viewsets.ModelViewSet):
                 scope['status'] = 'valid'
 
             if scope['status'] == 'invalid':
-                # STAGE 1B: High Confidence Override
-                # If Stage 1 thinks it is a non-plant, but the specialized detector 
-                # (Stage 2) is EXTREMELY sure it is a diseased leaf, we trust Stage 2.
+    
                 stage2_check = detector.predict(image_path, is_plant_hint=True)
                 if stage2_check and stage2_check.get('status') == 'valid' and stage2_check.get('confidence', 0) > 70.0:
                     self._log(f"[detect] High-confidence Stage-2 override: {stage2_check['confidence']:.1f}% > 70.0%")

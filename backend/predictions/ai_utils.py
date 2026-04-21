@@ -6,7 +6,6 @@ import os
 import json
 
 
-# Confidence thresholds - tuned for production accuracy
 CONF_THRESHOLD_VALID      = 40.0  # Below this -> Outside Scope (model not confident)
 CONF_THRESHOLD_HIGH_BYPASS = 80.0  # Above this -> Skip coherence check (model is certain)
 CONF_THRESHOLD_NON_PLANT  = 55.0  # MobileNet threshold to declare non-plant
@@ -215,14 +214,6 @@ def _log_inference(message):
         pass
 
 
-# ==============================================================================
-# STAGE 1 - Image Scope Validator
-# Uses MobileNet (ImageNet) to classify image as:
-#   - plant         -> allowed into disease model
-#   - non_plant     -> BLOCKED, return immediately
-#   - out_of_scope  -> BLOCKED, return immediately
-# ==============================================================================
-
 class ImageScopeValidator:
     """
     Pre-validation gate. Runs BEFORE the disease model.
@@ -293,8 +284,6 @@ class ImageScopeValidator:
                 f"(Next 5 suppressed for logs)"
             )
 
-            # -- Check 0: Is it a CERTAIN non-plant/garbage object? --
-            # Aggregate probabilities across top-10 to catch split classes
             garbage_conf = 0.0
             for label, prob in zip(top10_labels, top10_probs):
                 conf_pct = float(prob.item() * 100)
@@ -303,8 +292,7 @@ class ImageScopeValidator:
 
             is_garbage = garbage_conf >= 15.0
 
-            # -- Check 0B: Geographic/Landscape logic --
-            # Images identified as 'Valley', 'Park', 'Meadow' are Non-Plant for our leaf model.
+
             geographic_conf = 0.0
             for label, prob in zip(top10_labels, top10_probs):
                 conf_pct = float(prob.item() * 100)
@@ -326,9 +314,6 @@ class ImageScopeValidator:
                     if any(kw in label for kw in NON_SUPPORTED_PLANT_KEYWORDS):
                         is_foreign = True
                         break
-
-            # -- Check 3: Is it plant-like matter at all? --
-            # Stricter: require actual botanical features (leaf, foliage, stalk)
             is_botanical = False
             for label, prob in zip(top10_labels, top10_probs):
                 conf_pct = float(prob.item() * 100)
@@ -336,9 +321,6 @@ class ImageScopeValidator:
                     if any(kw in label for kw in PLANT_RELATED_KEYWORDS):
                         is_botanical = True
                         break
-
-            # -- Decision tree --
-            # 1. High-Confidence Garbage/Landscape (Highest Priority unless botanical hit found)
             if (is_garbage or is_landscape) and not is_botanical:
                  _log_inference(f"[validator] INVALID (Non-Plant/Scene): garbage={is_garbage} landscape={is_landscape}")
                  return {
@@ -348,8 +330,6 @@ class ImageScopeValidator:
                     "identified_as": "Non-Plant Image",
                     "message": "The uploaded image is not a plant leaf."
                 }
-
-            # 2. Explicitly foreign plant detection (Higher Priority than botanical)
             if is_foreign:
                  _log_inference(f"[validator] OUTSIDE SCOPE: foreign plant detected '{top1_label}'")
                  return {
@@ -360,8 +340,6 @@ class ImageScopeValidator:
                     "message": "This plant species is not currently supported."
                 }
 
-            # 3. Botanical marker detection -> PROCEED TO STAGE 2
-            # We let the specialized Stage 2 detector decide if the plant is supported or out-of-scope.
             if is_botanical:
                 _log_inference(f"[validator] PROCEED: botanical hit '{top1_label}' - handing off to Stage 2")
                 return {
@@ -372,7 +350,6 @@ class ImageScopeValidator:
                     "message": "Botanical features detected."
                 }
 
-            # 4. Final uncertainty fallback -> Strictly Non-Plant
             _log_inference(f"[validator] UNCERTAIN: defaulting to non_plant for safety. Label: {top1_label}")
             return {
                 "status": "invalid",
@@ -384,7 +361,6 @@ class ImageScopeValidator:
 
         except Exception as e:
             _log_inference(f"[validator] Error during validation: {e}")
-            # Fail-open: allow image through if validator crashes
             return {
                 "status": "valid",
                 "type": "plant",
@@ -392,24 +368,14 @@ class ImageScopeValidator:
                 "identified_as": "Unknown",
                 "message": "Validation skipped due to internal error."
             }
-
-
-# ==============================================================================
-# STAGE 2 - Disease Detector
-# Only called when Stage 1 returns status="valid".
-# No random output. No fallback disease assignment.
-# ==============================================================================
-
 class DiseaseDetector:
     """
     Disease detection using trained PlantVillage ResNet18 model.
     Only called after ImageScopeValidator confirms the image is valid.
     """
-
     def __init__(self):
         self.classes = PLANT_VILLAGE_CLASSES
         self.model_loaded_ok = False
-
         if os.path.exists(MODEL_PATH):
             _log_inference(f"Loading trained model from {MODEL_PATH}")
             try:
@@ -562,7 +528,7 @@ class DiseaseDetector:
                     "message": "The plant is not available in the dataset."
                 }
 
-            # -- Parse the class name -------------------------------------------
+            # -- Parse the class name 
             mapping = LABEL_MAPPING.get(predicted_class)
             
             if mapping:
@@ -660,12 +626,6 @@ class DiseaseDetector:
             return True
 
         return False
-
-
-# ==============================================================================
-# Plant Identifier (used by My Plants "Identify with AI")
-# Wraps the same two-stage pipeline.
-# ==============================================================================
 
 class PlantIdentifier:
     """

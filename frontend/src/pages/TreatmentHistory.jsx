@@ -7,10 +7,10 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { predictionService } from "../services/api";
-import { Activity, Clock, CheckCircle, AlertTriangle, ChevronRight, DollarSign, ExternalLink, Edit, Trash2, X, Ban, Leaf } from "lucide-react";
+import { Activity, Clock, CheckCircle, AlertTriangle, ChevronRight, DollarSign, ExternalLink, Edit, Trash2, X, Ban, Leaf, Search, TrendingUp } from "lucide-react";
 import { useLanguage } from "../context/LanguageContext";
 import TreatmentStatusDropdown from "../components/TreatmentStatusDropdown";
-import SeveritySelector from "../components/SeveritySelector";
+import SeveritySelector, { COST_MAP } from "../components/SeveritySelector";
 import TreatmentFilterTabs from "../components/TreatmentFilterTabs";
 import { offlineStore } from "../utils/offlineStore";
 import { useOfflineSync } from "../context/OfflineSyncContext";
@@ -27,10 +27,10 @@ const getCardTitle = (item, t) => {
 };
 
 const SEV_MAP = {
-    minor:    { bg: '#fef9c3', color: '#854d0e', label: 'Minor' },
+    minor: { bg: '#fef9c3', color: '#854d0e', label: 'Minor' },
     moderate: { bg: '#ffedd5', color: '#c2410c', label: 'Moderate' },
-    severe:   { bg: '#fee2e2', color: '#dc2626', label: 'Severe' },
-    critical: { bg: '#fef2f2', color: '#991b1b', label: 'Critical' },
+    severe: { bg: '#fee2e2', color: '#dc2626', label: 'Severe' },
+    critical: { bg: '#fee2e2', color: '#dc2626', label: 'Severe' }
 };
 
 const SeverityBadge = ({ severity }) => {
@@ -45,8 +45,12 @@ const SeverityBadge = ({ severity }) => {
     );
 };
 
-const COST_MAP = { minor: 300, moderate: 350, severe: 400, critical: 400 };
-const getCost = (severity) => COST_MAP[severity?.toLowerCase()] || 300;
+// Use COST_MAP from SeveritySelector.jsx (imported above)
+const getCost = (severity) => {
+    const s = severity?.toLowerCase();
+    if (s === 'critical') return 400;
+    return COST_MAP[s] || 300;
+};
 
 const TreatmentHistory = () => {
     const { t } = useLanguage();
@@ -54,10 +58,12 @@ const TreatmentHistory = () => {
     const [historyItems, setHistoryItems] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState("all");
+    const [searchQuery, setSearchQuery] = useState("");
     const [totalCost, setTotalCost] = useState(0);
     const [refreshing, setRefreshing] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [editingPrediction, setEditingPrediction] = useState(null);
+    const [showBreakdownModal, setShowBreakdownModal] = useState(false);
 
     useEffect(() => {
         loadTreatmentHistory();
@@ -67,11 +73,10 @@ const TreatmentHistory = () => {
         try {
             if (!silent) setLoading(true);
             else setRefreshing(true);
-            
+
             let reconciledHistory = [];
 
-            // Always attempt local backend - Django runs on localhost and is accessible
-            // even when navigator.onLine is false (that only indicates external internet)
+
             const { data } = await predictionService.getHistory();
             const history = data.results || data;
             // Filter records that are part of treatment history
@@ -82,15 +87,11 @@ const TreatmentHistory = () => {
             setHistoryItems(reconciledHistory);
 
             // Calculate total estimated cost (for active ones)
-            let total = 0;
+            let totalVal = 0;
             reconciledHistory.filter(p => !['treated', 'healthy', 'non_plant', 'out_of_scope'].includes(p.treatment_status) && !p.is_healthy).forEach(item => {
-                const sev = item.severity?.toLowerCase();
-                let cost = 300;
-                if (sev === 'moderate') cost = 350;
-                if (sev === 'severe' || sev === 'high' || sev === 'critical') cost = 400;
-                total += cost;
+                totalVal += getCost(item.severity);
             });
-            setTotalCost(total);
+            setTotalCost(totalVal);
 
             if (!silent) setLoading(false);
             setRefreshing(false);
@@ -181,9 +182,18 @@ const TreatmentHistory = () => {
     };
 
     const filteredItems = historyItems.filter(item => {
-        if (filter === 'all') return true;
-        if (filter === 'healthy') return item.is_healthy || item.treatment_status === 'healthy';
-        return item.treatment_status === filter;
+        let matchFilter = true;
+        if (filter !== 'all') {
+            if (filter === 'healthy') matchFilter = item.is_healthy || item.treatment_status === 'healthy';
+            else matchFilter = item.treatment_status === filter;
+        }
+        if (!matchFilter) return false;
+
+        if (!searchQuery) return true;
+        const q = searchQuery.toLowerCase();
+        const title = getCardTitle(item, t).toLowerCase();
+        const plantStr = item.plant_name ? item.plant_name.toLowerCase() : "";
+        return title.includes(q) || plantStr.includes(q);
     });
 
     const activeCount = historyItems.filter(p => !['treated', 'healthy', 'non_plant', 'out_of_scope'].includes(p.treatment_status) && !p.is_healthy).length;
@@ -198,27 +208,69 @@ const TreatmentHistory = () => {
                         <p className="subtitle">{t("treatmentHistory.subtitle")}</p>
                     </div>
                     {activeCount > 0 && (
-                        <div style={{
-                            background: 'var(--primary-subtle)',
-                            padding: '1rem 1.5rem',
-                            borderRadius: '12px',
-                            border: '1px solid var(--primary-light)',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'flex-end'
-                        }}>
-                            <span style={{ fontSize: '0.8rem', color: 'var(--primary)', fontWeight: 700 }}>
+                        <div
+                            onClick={() => setShowBreakdownModal(true)}
+                            title="Click for breakdown"
+                            style={{
+                                background: 'var(--primary-subtle)',
+                                padding: '1rem 1.5rem',
+                                borderRadius: '12px',
+                                border: '1px solid var(--primary-light)',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'flex-end',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                                boxShadow: '0 4px 12px rgba(16, 185, 129, 0.1)',
+                                position: 'relative',
+                                overflow: 'hidden'
+                            }}
+                            className="total-cost-clickable"
+                            onMouseOver={(e) => {
+                                e.currentTarget.style.transform = 'translateY(-3px)';
+                                e.currentTarget.style.boxShadow = '0 8px 20px rgba(16, 185, 129, 0.2)';
+                                e.currentTarget.style.borderColor = 'var(--primary)';
+                            }}
+                            onMouseOut={(e) => {
+                                e.currentTarget.style.transform = 'translateY(0)';
+                                e.currentTarget.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.1)';
+                                e.currentTarget.style.borderColor = 'var(--primary-light)';
+                            }}
+                        >
+                            <span style={{ fontSize: '0.8rem', color: 'var(--primary)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                                 {t("treatmentHistory.totalEstimatedCost")}
                             </span>
-                            <span style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--primary)' }}>
+                            <span style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                 NPR {totalCost.toLocaleString()}
+                                <ChevronRight size={18} style={{ opacity: 0.5 }} />
                             </span>
                         </div>
                     )}
                 </div>
 
-                {/* -- NEW: TreatmentFilterTabs component -- */}
-                <TreatmentFilterTabs activeFilter={filter} onChange={setFilter} />
+                {/* -- NEW: TreatmentFilterTabs component + Search -- */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem', marginBottom: '2rem' }}>
+                    <TreatmentFilterTabs activeFilter={filter} onChange={setFilter} />
+
+                    <div className="search-container" style={{ position: 'relative', flex: '1 1 300px', maxWidth: '400px' }}>
+                        <Search size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                        <input
+                            type="text"
+                            placeholder="Search treatments..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            style={{
+                                width: '100%',
+                                padding: '0.8rem 1rem 0.8rem 2.8rem',
+                                borderRadius: '12px',
+                                border: '1px solid var(--border-light)',
+                                background: 'white',
+                                outline: 'none',
+                                fontSize: '0.9rem'
+                            }}
+                        />
+                    </div>
+                </div>
 
                 {loading ? (
                     <div className="loading-spinner-container">
@@ -270,16 +322,25 @@ const TreatmentHistory = () => {
                             <button className="close-btn" onClick={() => setShowEditModal(false)}><X /></button>
                         </div>
                         <form onSubmit={handleUpdatePrediction}>
-                            <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                                <div className="form-group">
-                                    <label>{t("history.healthStatus")}</label>
+                            <div className="modal-body" style={{ padding: '1.5rem' }}>
+                                <div style={{ marginBottom: '1.5rem' }}>
+                                    <label className="label" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>{t("history.severityLevel")}</label>
+                                    <SeveritySelector
+                                        severity={editingPrediction.severity?.toLowerCase() || 'minor'}
+                                        onChange={(val) => setEditingPrediction({ ...editingPrediction, severity: val })}
+                                        treatmentStatus={editingPrediction.treatment_status}
+                                    />
+                                </div>
+                                <div style={{ marginBottom: '1.5rem' }}>
+                                    <label className="label" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>{t("history.treatmentStatusLabel")}</label>
                                     <select
-                                        value={editingPrediction.is_healthy ? "healthy" : "diseased"}
-                                        onChange={(e) => setEditingPrediction({ ...editingPrediction, is_healthy: e.target.value === "healthy" })}
-                                        className="form-control"
+                                        value={editingPrediction.treatment_status}
+                                        onChange={(e) => setEditingPrediction({ ...editingPrediction, treatment_status: e.target.value })}
+                                        style={{ width: '100%', padding: '0.75rem', borderRadius: '10px', border: '1px solid var(--border-light)', background: 'var(--bg-main)' }}
                                     >
-                                        <option value="healthy">{t("history.optionHealthy")}</option>
-                                        <option value="diseased">{t("history.optionDiseased")}</option>
+                                        <option value="untreated">{t("history.statusUntreated")}</option>
+                                        <option value="in_progress">{t("history.statusInProgress")}</option>
+                                        <option value="treated">{t("history.statusTreated")}</option>
                                     </select>
                                 </div>
 
@@ -300,7 +361,7 @@ const TreatmentHistory = () => {
                                         <label>Estimated Price (NPR)</label>
                                         <input
                                             type="number"
-                                            value={editingPrediction.estimated_cost || (editingPrediction.severity === 'moderate' ? 350 : (editingPrediction.severity === 'severe' ? 400 : 300))}
+                                            value={editingPrediction.estimated_cost || (COST_MAP[editingPrediction.severity?.toLowerCase()] || 300)}
                                             onChange={(e) => setEditingPrediction({ ...editingPrediction, estimated_cost: e.target.value })}
                                             className="form-control"
                                         />
@@ -325,6 +386,103 @@ const TreatmentHistory = () => {
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Cost Breakdown Modal */}
+            {showBreakdownModal && (
+                <div className="modal-overlay" onClick={() => setShowBreakdownModal(false)}>
+                    <div className="modal-content animate-slide-up" style={{ maxWidth: '600px', width: '95%' }} onClick={e => e.stopPropagation()}>
+                        <div className="modal-header" style={{ padding: '1.5rem', borderBottom: '1px solid var(--border-light)' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                <div style={{ background: 'var(--primary-subtle)', color: 'var(--primary)', padding: '0.75rem', borderRadius: '12px' }}>
+                                    <TrendingUp size={24} />
+                                </div>
+                                <div>
+                                    <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-main)', margin: 0 }}>
+                                        {t("treatmentHistory.totalEstimatedCost")}
+                                    </h2>
+                                    <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>Detailed cost analysis for active treatments</p>
+                                </div>
+                            </div>
+                            <button className="close-btn" onClick={() => setShowBreakdownModal(false)}><X /></button>
+                        </div>
+
+                        <div className="modal-body" style={{ padding: '1.5rem', maxHeight: '60vh', overflowY: 'auto' }}>
+                            <div className="breakdown-list" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                {historyItems.filter(p => !['treated', 'healthy', 'non_plant', 'out_of_scope'].includes(p.treatment_status) && !p.is_healthy).map((item, idx) => {
+                                    const total = getCost(item.severity);
+                                    const fee = 200; // Base professional fee
+                                    const resources = total - fee;
+                                    const displaySev = item.severity?.toLowerCase() === 'critical' ? 'severe' : (item.severity?.toLowerCase() || 'minor');
+
+                                    return (
+                                        <div key={item.id} style={{
+                                            border: '1px solid var(--border-light)',
+                                            borderRadius: '12px',
+                                            padding: '1.25rem',
+                                            background: 'var(--bg-card)',
+                                            position: 'relative',
+                                            overflow: 'hidden'
+                                        }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                                                <div>
+                                                    <h4 style={{ margin: '0 0 0.25rem 0', color: 'var(--text-main)', fontWeight: 800 }}>{getCardTitle(item, t)}</h4>
+                                                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600 }}>ID: {item.id}</span>
+                                                </div>
+                                                <span style={{
+                                                    fontSize: '0.7rem',
+                                                    fontWeight: 800,
+                                                    padding: '4px 10px',
+                                                    borderRadius: '6px',
+                                                    textTransform: 'uppercase',
+                                                    letterSpacing: '0.05em',
+                                                    background: displaySev === 'severe' ? '#fee2e2' : displaySev === 'moderate' ? '#fef3c7' : '#dcfce7',
+                                                    color: displaySev === 'severe' ? '#ef4444' : displaySev === 'moderate' ? '#f59e0b' : '#10b981'
+                                                }}>{displaySev}</span>
+                                            </div>
+
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
+                                                    <span>Professional Treatment Fee</span>
+                                                    <span>NPR {fee}</span>
+                                                </div>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
+                                                    <span>Required Pesticides/Tools</span>
+                                                    <span>NPR {resources}</span>
+                                                </div>
+                                                <div style={{
+                                                    marginTop: '0.5rem',
+                                                    paddingTop: '0.75rem',
+                                                    borderTop: '1px dashed var(--border-light)',
+                                                    display: 'flex',
+                                                    justifyContent: 'space-between',
+                                                    fontWeight: 800,
+                                                    fontSize: '1rem',
+                                                    color: 'var(--secondary)'
+                                                }}>
+                                                    <span>Subtotal</span>
+                                                    <span>NPR {total}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        <div className="modal-footer" style={{ padding: '1.5rem', background: 'var(--bg-main)', borderTop: '1px solid var(--border-light)', textAlign: 'right' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <div style={{ textAlign: 'left' }}>
+                                    <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600, display: 'block' }}>Total Estimate</span>
+                                    <span style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--primary)' }}>NPR {totalCost}</span>
+                                </div>
+                                <button className="btn-primary" onClick={() => setShowBreakdownModal(false)} style={{ padding: '0.8rem 2rem' }}>
+                                    {t("common.ok") || "Got it"}
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}
@@ -390,9 +548,10 @@ const TreatmentCard = ({ item, t, formatDate, onUpdateStatus, onUpdateSeverity, 
             <div style={{ display: 'flex', gap: '1.25rem' }}>
                 <div style={{ position: 'relative' }}>
                     <img
-                        src={item.image_url || item.image}
-                        alt={item.disease_name}
-                        style={{ width: '100px', height: '100px', borderRadius: '16px', objectFit: 'cover', flexShrink: 0, border: '2px solid var(--border-light)' }}
+                        src={item.image_url || item.image || ''}
+                        alt={item.disease_name || 'Scan'}
+                        style={{ width: '100px', height: '100px', borderRadius: '16px', objectFit: 'cover', flexShrink: 0, border: '2px solid var(--border-light)', background: 'var(--bg-surface-inner)' }}
+                        onError={(e) => { e.target.style.display = 'none'; }}
                     />
                     {!isCompleted && (
                         <div style={{
@@ -497,19 +656,21 @@ const TreatmentCard = ({ item, t, formatDate, onUpdateStatus, onUpdateSeverity, 
             )}
 
             <div style={{ display: 'flex', gap: '0.75rem', marginTop: 'auto', flexWrap: 'wrap' }}>
-                <Link
-                    to="/treatment"
-                    state={{
-                        initialDiseaseId: item.predicted_disease,
-                        initialDiseaseName: item.disease_name,
-                        fromHistory: true
-                    }}
-                    className="btn-secondary"
-                    style={{ flex: '1 1 auto', fontSize: '0.82rem', padding: '0.6rem', justifyContent: 'center', borderRadius: '10px' }}
-                >
-                    <ExternalLink size={15} />
-                    {t("treatmentHistory.viewProtocol")}
-                </Link>
+                {!isHealthyStatus && !isSpecialCase && item.predicted_disease && (
+                    <Link
+                        to="/treatment"
+                        state={{
+                            initialDiseaseId: item.predicted_disease,
+                            initialDiseaseName: item.disease_name,
+                            fromHistory: true
+                        }}
+                        className="btn-secondary"
+                        style={{ flex: '1 1 auto', fontSize: '0.82rem', padding: '0.6rem', justifyContent: 'center', borderRadius: '10px' }}
+                    >
+                        <ExternalLink size={15} />
+                        {t("treatmentHistory.viewProtocol")}
+                    </Link>
+                )}
 
                 {/* Severity dropdown - only for active diseased records */}
                 {!isHealthyStatus && !isSpecialCase && (
@@ -524,9 +685,9 @@ const TreatmentCard = ({ item, t, formatDate, onUpdateStatus, onUpdateSeverity, 
                                 borderRadius: 10, fontWeight: 700, fontSize: '0.82rem',
                                 cursor: 'pointer', outline: 'none', fontFamily: 'inherit',
                                 border: `1.5px solid ${!item.severity ? '#94a3b8'
-                                        : item.severity === 'minor' ? '#ca8a04'
-                                            : item.severity === 'moderate' ? '#c2410c'
-                                                : '#dc2626'
+                                    : item.severity === 'minor' ? '#ca8a04'
+                                        : item.severity === 'moderate' ? '#c2410c'
+                                            : '#dc2626'
                                     }`,
                                 background: !item.severity ? '#f8fafc'
                                     : item.severity === 'minor' ? '#fef9c3'

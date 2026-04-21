@@ -422,7 +422,6 @@ const Diseases = () => {
                                         <h1 style={{ fontSize: '2.5rem', marginBottom: '0.5rem', fontWeight: 800 }}>{selectedDiseaseDetail.name}</h1>
                                         <p className="scientific-name" style={{ fontSize: '1.2rem', opacity: 0.7 }}>{selectedDiseaseDetail.scientific_name}</p>
                                     </div>
-
                                     <div style={{ marginBottom: '2rem' }}>
                                         <h4 style={{ color: 'var(--primary)', marginBottom: '0.75rem', textTransform: 'uppercase', fontSize: '0.8rem', fontWeight: 800 }}>Symptoms</h4>
                                         {/* This bubble provides a nice focus for reading symptoms */}

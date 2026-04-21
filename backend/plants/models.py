@@ -8,8 +8,6 @@ from django.conf import settings # Import settings to access AUTH_USER_MODEL
 
 class Plant(models.Model):
 
-    # Each plant must be owned by a user. This ensures that when you login, 
-    # you only see the plants you've added avoiding clutter from other users.
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, 
         on_delete=models.CASCADE, 

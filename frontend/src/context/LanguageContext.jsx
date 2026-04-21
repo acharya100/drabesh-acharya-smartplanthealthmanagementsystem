@@ -25,10 +25,7 @@ export const LanguageProvider = ({ children }) => {
         setLanguageState(lang);
     };
 
-    /**
-     * Translate a dot-notation key, e.g. t("nav.dashboard")
-     * Supports interpolation using {{varName}}
-     */
+    
     const t = (key, options = {}) => {
         const parts = key.split(".");
         let value = locales[language];

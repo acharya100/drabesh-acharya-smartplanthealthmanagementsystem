@@ -133,7 +133,6 @@ class Disease(models.Model):
     def __str__(self):
         """String representation of the disease"""
         return f"{self.name} ({self.get_disease_type_display()})"
-    
     @property
     def affected_plant_count(self):
 
@@ -141,11 +140,8 @@ class Disease(models.Model):
     
     @property
     def treatment_count(self):
-       
         return self.treatments.count()
-    
     def get_severity_color(self):
-    
         severity_colors = {
             'mild': 'green',
             'moderate': 'yellow',
@@ -216,7 +212,6 @@ class Treatment(models.Model):
         null=True,
         help_text="How often to apply the treatment (e.g., 'Every 7 days for 3 weeks')"
     )
-    
     # Effectiveness and duration
     effectiveness_rate = models.IntegerField(
         blank=True,
@@ -237,7 +232,6 @@ class Treatment(models.Model):
         blank=True,
         help_text="Safety precautions and warnings (e.g., 'Wear gloves', 'Keep away from pets')"
     )
-    
     # Additional information
     cost_estimate = models.CharField(
         max_length=50,

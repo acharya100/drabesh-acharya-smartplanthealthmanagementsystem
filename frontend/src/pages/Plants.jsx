@@ -104,7 +104,6 @@ const Plants = () => {
     if (file) {
       let processedFile = file;
 
-      // Extract folder name from path if available (webkitRelativePath)
       if (file.webkitRelativePath) {
         const pathParts = file.webkitRelativePath.split('/');
         if (pathParts.length > 1) {

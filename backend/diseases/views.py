@@ -40,7 +40,7 @@ class DiseaseViewSet(viewsets.ModelViewSet):
     # Default ordering
     ordering = ['name']
 
-    def get_serializer_class(self):
+    def get_serializer_class(self):  # type: ignore[override]
         """Return the appropriate serializer based on action."""
         if self.action == 'list':
             return DiseaseListSerializer
@@ -77,7 +77,7 @@ class TreatmentViewSet(viewsets.ModelViewSet):
     
     search_fields = ['name', 'description', 'instructions', 'products_needed']
 
-    def get_serializer_class(self):
+    def get_serializer_class(self):  # type: ignore[override]
         """Return the appropriate serializer based on action."""
         if self.action in ['create', 'update', 'partial_update']:
             return TreatmentCreateUpdateSerializer

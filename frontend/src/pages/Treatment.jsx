@@ -50,7 +50,12 @@ const Treatment = () => {
         name: location.state.initialDiseaseName || "Detected Disease"
       });
       // Clear the state so it doesn't reopen if the user navigates away and back
-      navigate(location.pathname, { replace: true });
+      const newHistoryState = { ...window.history.state };
+      if (newHistoryState && newHistoryState.usr) {
+        delete newHistoryState.usr.initialDiseaseId;
+        delete newHistoryState.usr.initialDiseaseName;
+      }
+      window.history.replaceState(newHistoryState, "");
     }
   }, []);
 

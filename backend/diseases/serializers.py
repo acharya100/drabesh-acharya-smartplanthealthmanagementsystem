@@ -109,8 +109,6 @@ class TreatmentDetailSerializer(serializers.ModelSerializer):
 
 class DiseaseListSerializer(serializers.ModelSerializer):
    
-    
-    # Display values for choice fields
     disease_type_display = serializers.CharField(
         source='get_disease_type_display',
         read_only=True
@@ -152,16 +150,9 @@ class DiseaseListSerializer(serializers.ModelSerializer):
             'created_at',
         ]
         read_only_fields = ['id', 'created_at']
-    
     def get_severity_color(self, obj):
-        
         return obj.get_severity_color()
-
-
 class DiseaseDetailSerializer(serializers.ModelSerializer):
-
-    
-    # Display values
     disease_type_display = serializers.CharField(
         source='get_disease_type_display',
         read_only=True
@@ -170,16 +161,11 @@ class DiseaseDetailSerializer(serializers.ModelSerializer):
         source='get_severity_level_display',
         read_only=True
     )
-    
-    # Nested serializers for related data
     affected_plants = PlantListSerializer(many=True, read_only=True)
     treatments = TreatmentListSerializer(many=True, read_only=True)
-    
-    # Computed properties
     affected_plant_count = serializers.ReadOnlyField()
     treatment_count = serializers.ReadOnlyField()
     severity_color = serializers.SerializerMethodField()
-    
     class Meta:
         model = Disease
         fields = [
@@ -207,16 +193,10 @@ class DiseaseDetailSerializer(serializers.ModelSerializer):
             'updated_at',
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
-    
     def get_severity_color(self, obj):
-       
         return obj.get_severity_color()
 
-
 class DiseaseCreateUpdateSerializer(serializers.ModelSerializer):
-   
-    
-    # Accept plant IDs for many-to-many relationship
     affected_plant_ids = serializers.PrimaryKeyRelatedField(
         many=True,
         source='affected_plants',
@@ -224,7 +204,6 @@ class DiseaseCreateUpdateSerializer(serializers.ModelSerializer):
         write_only=True,
         required=False
     )
-    
     class Meta:
         model = Disease
         fields = [
