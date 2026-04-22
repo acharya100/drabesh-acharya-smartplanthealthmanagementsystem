@@ -153,9 +153,14 @@ npm run dev
 ---
 
 
-- **Real-time Expert Chat**: Integration with WebSocket for live agricultural advice.
-- **IoT Integration**: Direct feed from soil sensors for live dashboard monitoring.
-- **AR Plant Scouting**: Augmented Reality overlays for localized disease identification in the field.
+## 🔮 Future Enhancements
+
+- **Real-time Expert Chat**: Integration with WebSockets for live, instantaneous agricultural advice.
+- **IoT Integration**: Direct feed from physical soil sensors in the field for live dashboard monitoring and automated NPK data entry.
+- **AR Plant Scouting**: Augmented Reality overlays for localized, real-time disease identification directly in the field.
+- **Drone-Based Image Processing**: Expansion to accept batch video/image feeds from agricultural drones for macro-scale disease detection across entire acreages.
+- **Native Mobile Application**: Deployment of dedicated iOS and Android apps for faster edge AI processing and improved offline capabilities in hyper-remote areas.
+- **Expanded Regional Languages**: Addition of localized dialects (e.g., Maithili, Bhojpuri, Tharu) to ensure complete accessibility for all regional farming demographics.
 
 ---
 
