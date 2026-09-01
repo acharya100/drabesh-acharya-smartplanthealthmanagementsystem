@@ -6,8 +6,8 @@ import os
 import json
 
 
-CONF_THRESHOLD_VALID      = 40.0  # Below this -> Outside Scope (model not confident)
-CONF_THRESHOLD_HIGH_BYPASS = 80.0  # Above this -> Skip coherence check (model is certain)
+CONF_THRESHOLD_VALID      = 40.0  # Below this  Outside Scope (model not confident)
+CONF_THRESHOLD_HIGH_BYPASS = 80.0  # Above this  Skip check (model is certain)
 CONF_THRESHOLD_NON_PLANT  = 55.0  # MobileNet threshold to declare non-plant
 CONF_THRESHOLD_FOREIGN_PLANT = 45.0  # MobileNet threshold to declare out-of-scope plant
 
@@ -159,10 +159,10 @@ PLANT_RELATED_KEYWORDS = [
     'branch', 'shrub', 'seedling', 'fruit', 'vegetable', 'organic', 'crop',
     'herb', 'stalk', 'stem', 'petal', 'bud', 'seed', 'buckeye', 'acorn',
     'head cabbage', 'zucchini', 'artichoke', 'leafhopper', 'greenhouse',
-    'pot', 'vase', 'flora', 'botany', 'vine', 'ivy', 'velvet',
-    'velvet', 'stinkhorn', 'gyromitra', 'earthstar', 'bolete', 'fungus', 
+    'vase', 'flora', 'botany', 'vine', 'ivy',
+    'stinkhorn', 'gyromitra', 'earthstar', 'bolete', 'fungus', 
     'weaver', 'slug', 'stinkbug', 'earwig', 'fly', 'ant',
-    'spider', 'web', 'net', 'beehive', 'honeycomb', 'corn', 'ear', 'maize',
+    'beehive', 'honeycomb', 'corn', 'maize',
     'jigsaw puzzle', # Spotted leaves often trigger jigsaw puzzle classes
 ]
 
@@ -229,7 +229,7 @@ class ImageScopeValidator:
             _log_inference("ImageScopeValidator loaded MobileNet OK")
         except Exception as e:
             _log_inference(f"ImageScopeValidator failed to load MobileNet: {e}")
-            self.model = None
+            self.model = None  # type: ignore
             self.imagenet_labels = []
 
         self.preprocess = transforms.Compose([
@@ -303,10 +303,10 @@ class ImageScopeValidator:
             if is_landscape:
                  _log_inference(f"[validator] Landscape/Scene detected @ {geographic_conf:.1f}%")
 
-            # -- Check 1: Is it a supported crop? --
+            # Check 1: Is it a supported crop?
             is_supported = any(p.lower() in top1_label for p in [s.lower() for s in SUPPORTED_PLANTS])
 
-            # -- Check 2: Is it an explicitly out-of-scope (foreign) plant/botany label? --
+            # Check 2: Is it out-of-scope (foreign) plant/botany label?
             is_foreign = False
             for label, prob in zip(top10_labels, top10_probs):
                 conf_pct = float(prob.item() * 100)
@@ -459,23 +459,24 @@ class DiseaseDetector:
             predicted_class = self.classes[predicted_idx.item()]
             _log_inference(f"[detector] Top class: {predicted_class} ({confidence_score:.2f}%)")
 
-            # -- Gate A: Background/No-leaf class ------------------------------
+            # -- Gate A: Background/No-leaf class --
             if "background_without_leaves" in predicted_class.lower():
                 if is_plant_hint:
-                    # MobileNet said it's a plant, but disease model disagrees -> out of scope
-                    _log_inference("[detector] Background class with plant hint -> out_of_scope")
+                    # MobileNet thought it was botanical, but disease model sees NO leaves.
+                    # It is essentially a non-plant (or just a photo of dirt/bark).
+                    _log_inference("[detector] Background class with plant hint -> non_plant")
                     return {
                         "status": "invalid",
-                        "type": "out_of_scope",
-                        "plant_type": "Out of Scope",
+                        "type": "non_plant",
+                        "plant_type": "Non-Plant Image",
                         "disease_name": "Not Applicable",
                         "confidence": round(confidence_score, 2),
                         "severity": None,
                         "is_healthy": False,
-                        "is_plant_image": True,
-                        "is_out_of_scope": True,
-                        "is_non_plant": False,
-                        "message": "The plant is not available in the dataset."
+                        "is_plant_image": False,
+                        "is_out_of_scope": False,
+                        "is_non_plant": True,
+                        "message": "The uploaded image does not contain a clear plant leaf."
                     }
                 else:
                     # Both models agree it's not a plant leaf
@@ -511,7 +512,7 @@ class DiseaseDetector:
                     "message": "The plant is not available in the dataset."
                 }
 
-            # -- Gate C: Coherence check (entropy-based) ------------------------
+            # -- Gate C: Coherence check (entropy-based)
             if self._is_out_of_scope(probabilities):
                 _log_inference(f"[detector] Coherence check failed -> outside_scope. Top: {predicted_class}")
                 return {
@@ -639,7 +640,7 @@ class PlantIdentifier:
             self.model.eval()
         except Exception as e:
             _log_inference(f"PlantIdentifier: MobileNet load failed: {e}")
-            self.model = None
+            self.model = None  # type: ignore
             self.imagenet_labels = []
 
         self.preprocess = transforms.Compose([
@@ -674,7 +675,7 @@ class PlantIdentifier:
         try:
             self._log(f"Identifying: {os.path.basename(image_path)}")
 
-            # -- STAGE 1: Centralized Gating --
+            # -- STAGE 1: Centralized Gating
             scope = scope_validator.validate(image_path)
             
             is_plant_image = (scope['status'] == 'valid')
@@ -682,12 +683,11 @@ class PlantIdentifier:
             generic_name = scope.get('identified_as', 'Unknown').title()
             confidence = scope.get('confidence', 0.0)
 
-            # -- STAGE 2: Deep Analysis --
+            #  STAGE 2: Deep Analysis 
             disease_guess = detector.predict(image_path, is_plant_hint=is_plant_image)
 
-            # -- STAGE 1B: High Confidence Rescue --
-            # If Stage 1 rejected this but our specific dataset detector is extremely sure,
-            # we rescue it and declare it a valid plant image.
+            # STAGE 1B: High Confidence Rescue 
+            # If Stage 1 rejected this but our specific dataset detector is extremely sure we declare it a valid plant image.
             if not is_plant_image and disease_guess and disease_guess.get('status') == 'valid' and disease_guess.get('confidence', 0) > 85.0:
                 self._log(f"[predict] High-confidence Stage-2 rescue: {disease_guess['confidence']:.1f}% > 85.0%")
                 is_plant_image = True
@@ -744,7 +744,7 @@ class PlantIdentifier:
             }
 
 
-# -- Singleton instances ----------------------------------------------------
+# -- Singleton instances 
 scope_validator = ImageScopeValidator()
 detector = DiseaseDetector()
 identifier = PlantIdentifier()

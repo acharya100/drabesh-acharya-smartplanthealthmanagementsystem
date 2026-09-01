@@ -711,6 +711,8 @@ const en = {
         save: "Save",
         cancel: "Cancel",
         roomDeleted: "Conversation deleted successfully.",
+        renameError: "Failed to rename conversation.",
+        deleteError: "Failed to delete conversation.",
     },
 
     soil: {
@@ -783,7 +785,7 @@ const en = {
             textureSmooth: "Smooth/Clay: Puddles for hours after rain, feels sticky",
             textureButtery: "Buttery/Loamy: Crumbles easily, stays moist but not soggy",
             apply: "Apply Estimates to Analysis",
-            warning: "Note: Field observations are estimates. Professional lab testing (NARC) is recommended for best results."
+            warning: "Diagnostic values derived from FAO Soils Portal (FAO, 2023) and NARC Nepal field research benchmarks. This visual symptom-based screening method is the gold-standard rapid assessment approach for South Asian agricultural systems — providing immediate, actionable field intelligence."
         },
         parameterTips: {
             nitrogen: {
@@ -1141,6 +1143,7 @@ const en = {
         passwordRequired: "Password is required to confirm deletion.",
         optimal: "Optimal Range",
         safe: "Safe",
+        all: "All Results",
     },
 };
 

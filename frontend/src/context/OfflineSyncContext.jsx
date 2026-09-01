@@ -86,12 +86,10 @@ export const OfflineSyncProvider = ({ children }) => {
           successCount++;
         } catch (err) {
           console.error(`[OfflineSync] Failed to sync operation ${op.id}:`, err);
-          // If it's a 4xx error (client error), it's likely invalid data.
-          // We mark as failed but don't loop.
+         
           offlineStore.updateOpStatus(op.id, 'failed', true);
           
-          // Stop processing the queue if we hit a serious network error,
-          // but if it's a 400 (Bad Request), maybe skip this item and continue?
+     
           if (err.response?.status === 400) {
              console.warn('[OfflineSync] Item rejected by server (400). Skipping to next item.');
              offlineStore.dequeue(op.id); // Remove bad data to prevent loops

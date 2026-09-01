@@ -1,4 +1,4 @@
-# -- Optimal ranges (scientifically validated for South Asian crops) ----------
+# -- Optimal ranges (scientifically validated for South Asian crops)
 OPTIMAL_RANGES = {
     'nitrogen':       {'low': 250, 'high': 300},   # kg/ha
     'phosphorus':     {'low': 60,  'high': 120},   # kg/ha
@@ -8,7 +8,7 @@ OPTIMAL_RANGES = {
     'organic_matter': {'low': 3.5, 'high': 7.0},  # %
 }
 
-# -- Per-deficiency data --------------------------------------------------------
+# -- Per-deficiency data -
 DEFICIENCY_RECOMMENDATIONS = {
     'nitrogen': {
         'name': 'Nitrogen (N) Deficiency',

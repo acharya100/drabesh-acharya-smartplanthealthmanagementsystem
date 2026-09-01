@@ -248,8 +248,6 @@ class SwitchUserView(APIView):
             return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
 
 
-
-
 class AdminDashboardView(APIView):
     permission_classes = [IsAdminUser]
 

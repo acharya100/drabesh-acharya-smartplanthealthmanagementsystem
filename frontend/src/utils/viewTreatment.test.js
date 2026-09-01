@@ -1,6 +1,6 @@
 // viewTreatment.test.js
 describe("View Treatment Detail Test", () => {
-    test("System should correctly load and display all sections of a treatment protocol like Apple Scab.", () => {
+    test("System should correctly load and display all sections of treatment protocol like Apple Scab.", () => {
 
         // Simulating the data we receive when we click to view a treatment
         const mockTreatmentView = {

@@ -197,11 +197,11 @@ class Plant(models.Model):
     
     def get_sunlight_display_verbose(self):
        
-        return dict(self.SUNLIGHT_CHOICES).get(self.sunlight_requirement, 'Unknown')
+        return dict(self.SUNLIGHT_CHOICES).get(str(self.sunlight_requirement), 'Unknown')
     
     def get_water_frequency_display_verbose(self):
        
-        return dict(self.WATER_FREQUENCY_CHOICES).get(self.water_frequency, 'Unknown')
+        return dict(self.WATER_FREQUENCY_CHOICES).get(str(self.water_frequency), 'Unknown')
     
     @property
     def temperature_range(self):

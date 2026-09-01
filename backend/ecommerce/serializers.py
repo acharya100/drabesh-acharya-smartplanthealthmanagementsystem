@@ -66,7 +66,6 @@ class OrderItemSerializer(serializers.ModelSerializer):
             return obj.product.image.url
         return None
 
-
 class OrderSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True, read_only=True)
     user_name = serializers.CharField(source='user.username', read_only=True)
@@ -139,16 +138,19 @@ class WishlistSerializer(serializers.ModelSerializer):
 
 
 class CouponSerializer(serializers.ModelSerializer):
-    is_valid = serializers.ReadOnlyField()
-
     class Meta:
         model = Coupon
         fields = [
             'id', 'code', 'discount_type', 'discount_value',
             'min_order_amount', 'max_uses', 'used_count',
-            'is_active', 'is_valid', 'valid_from', 'valid_until', 'created_at'
+            'is_active', 'valid_from', 'valid_until', 'created_at'
         ]
         read_only_fields = ['id', 'used_count', 'created_at']
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['is_valid'] = instance.is_valid
+        return representation
 
 
 class CouponValidateSerializer(serializers.Serializer):

@@ -20,7 +20,6 @@ except ImportError:
     
     if os.path.exists(venv_site_packages) and venv_site_packages not in sys.path:
         sys.path.insert(0, venv_site_packages)
-# ------------------------------------------------------------------------------
 
 
 def main():

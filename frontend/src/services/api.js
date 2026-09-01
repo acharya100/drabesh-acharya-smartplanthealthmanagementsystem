@@ -233,6 +233,8 @@ export const chatService = {
     createRoom: (data) => api.post('/chat/rooms/', data),
     getRoomMessages: (id) => api.get(`/chat/rooms/${id}/messages/`),
     sendMessage: (id, content) => api.post(`/chat/rooms/${id}/send/`, { content }),
+    updateRoom: (id, data) => api.patch(`/chat/rooms/${id}/`, data),
+    deleteRoom: (id) => api.delete(`/chat/rooms/${id}/`),
     getPendingRooms: () => api.get('/chat/rooms/pending/'),
 };
 

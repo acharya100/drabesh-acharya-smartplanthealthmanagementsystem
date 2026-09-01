@@ -26,7 +26,6 @@ describe("Add New Treatment Test", () => {
       }
       return "Failed To Save Treatment";
     };
-
     const result = validateTreatmentData(treatmentForm);
     expect(result).toBe("Treatment Saved Successfully");
   });

@@ -335,13 +335,48 @@ class PredictionViewSet(viewsets.ModelViewSet):
             # Link Disease DB record if diseased
             if not results['is_healthy']:
                 disease_name_raw = results.get('disease_name', '')
+                plant_name_raw = results.get('plant_type', '')
+                
                 if disease_name_raw:
-                    disease_obj = Disease.objects.filter(name__icontains=disease_name_raw).first()
+                    # Clean up the AI disease name to extract core keywords
+                    # Remove anything in parentheses (e.g. " (Citrus Greening)")
+                    core_disease = disease_name_raw.split('(')[0].strip()
+                    
+                    disease_obj = None
+                    
+                    # 1. Exact match
+                    disease_obj = Disease.objects.filter(name__iexact=disease_name_raw).first()
+                    
+                    # 2. Try with core disease
+                    if not disease_obj:
+                        disease_obj = Disease.objects.filter(name__iexact=core_disease).first()
+                        
+                    # 3. Try Plant + Core Disease (e.g. "Orange Haunglongbing")
+                    if not disease_obj and plant_name_raw:
+                        disease_obj = Disease.objects.filter(name__iexact=f"{plant_name_raw} {core_disease}").first()
+                        
+                    # 4. Fuzzy inclusion search
                     if not disease_obj:
                         for d in Disease.objects.all():
-                            if d.name.lower() in disease_name_raw.lower():
+                            db_name = d.name.lower()
+                            if db_name in disease_name_raw.lower() or db_name in core_disease.lower():
                                 disease_obj = d
                                 break
+                                
+                    # 5. Reverse fuzzy inclusion (if "haunglongbing" is in "orange haunglongbing")
+                    if not disease_obj:
+                        for d in Disease.objects.all():
+                            db_name = d.name.lower()
+                            if core_disease.lower() in db_name:
+                                # Ensure it belongs to the right plant if plant is in the DB name
+                                if plant_name_raw and plant_name_raw.lower() in db_name:
+                                    disease_obj = d
+                                    break
+                                # If the DB name doesn't specify a plant, accept it
+                                elif not any(p.lower() in db_name for p in ['apple', 'cherry', 'corn', 'grape', 'orange', 'peach', 'pepper', 'potato', 'squash', 'strawberry', 'tomato']):
+                                    disease_obj = d
+                                    break
+
                     if disease_obj:
                         prediction_obj.predicted_disease = disease_obj
 

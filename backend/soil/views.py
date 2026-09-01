@@ -23,7 +23,7 @@ class SoilAnalysisViewSet(mixins.DestroyModelMixin, viewsets.ReadOnlyModelViewSe
             return Response(input_ser.errors, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            data = input_ser.validated_data
+            data: dict = dict(input_ser.validated_data)
             result = analyze_soil(
                 nitrogen=data['nitrogen'],
                 phosphorus=data['phosphorus'],
@@ -70,5 +70,5 @@ class SoilAnalysisViewSet(mixins.DestroyModelMixin, viewsets.ReadOnlyModelViewSe
         if not input_ser.is_valid():
             return Response(input_ser.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        result = analyze_soil(**input_ser.validated_data)
+        result = analyze_soil(**dict(input_ser.validated_data))
         return Response(result)

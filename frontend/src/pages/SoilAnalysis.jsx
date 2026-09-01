@@ -772,7 +772,7 @@ const SoilAnalysis = () => {
                 <div style={{ display: "grid", gridTemplateColumns: "420px 1fr", gap: "2rem", alignItems: "start" }}>
 
                     {/* INPUT PANEL */}
-                    <div style={{ background: "var(--bg-card)", borderRadius: 20, padding: "1.75rem", border: "1px solid var(--border-light)", boxShadow: "var(--shadow-sm)", position: "sticky", top: "1rem", zIndex: 0, isolation: "isolate" }}>
+                    <div style={{ background: "var(--bg-card)", borderRadius: 20, padding: "1.75rem", border: "1px solid var(--border-light)", boxShadow: "var(--shadow-sm)", position: "sticky", top: "1rem" }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
                             <h3 style={{ fontWeight: 900, fontSize: "1rem", margin: 0, color: "var(--text-main)", display: "flex", alignItems: "center", gap: "0.5rem" }}>
                                 <Activity size={17} style={{ color: "var(--primary)" }} />
@@ -794,11 +794,7 @@ const SoilAnalysis = () => {
                             {t("common.good") || "Good"} &nbsp;     {t("common.low") || "Low"} &nbsp;     {t("common.high") || "High"}
                         </p>
 
-                        <DiagnosticAssistant
-                            isOpen={showAssistant}
-                            onClose={() => setShowAssistant(false)}
-                            onApply={(values) => setForm(prev => ({ ...prev, ...values }))}
-                        />
+
 
                         {activeParam && <ActiveParamInfo paramKey={activeParam} onClose={() => setActiveParam(null)} />}
 
@@ -869,7 +865,7 @@ const SoilAnalysis = () => {
                     </div>
 
                     {/* RESULTS PANEL */}
-                    <div style={{ position: "relative", zIndex: 1 }}>
+                    <div>
                         {!result ? (
                             <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
                                 {/* Empty state - mini guide */}
@@ -1164,6 +1160,13 @@ const SoilAnalysis = () => {
                     </div>
                 </div>
             </div>
+
+            {/* DiagnosticAssistant*/}
+            <DiagnosticAssistant
+                isOpen={showAssistant}
+                onClose={() => setShowAssistant(false)}
+                onApply={(values) => setForm(prev => ({ ...prev, ...values }))}
+            />
         </div>
     );
 };

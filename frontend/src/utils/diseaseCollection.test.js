@@ -7,7 +7,8 @@ describe("Disease Collection Test", () => {
     const diseaseDatabase = {
       searchQuery: "Apple Black Rot",
       resultsFound: true,
-      diseaseDetails: ["Botryosphaeria obtusa", "SEVERE", "Brown and black rotting spots", "Contagious Disease"]
+      diseaseDetails: ["Botryosphaeria obtusa", "SEVERE", "Brown and black rotting spots", 
+        "Contagious Disease"]
     };
 
     const validateDatabase = (database) => {

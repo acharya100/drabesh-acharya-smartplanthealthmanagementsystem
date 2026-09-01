@@ -524,7 +524,7 @@ KNOWLEDGE_BASE = [
         "weight": 10,
     },
 
-    # -- PREVENTION & GENERAL --------------------------------------------------
+    # -- PREVENTION & GENERAL -
     {
         "keywords": ["prevention", "prevent disease", "avoid disease", "disease-free"],
         "response": (
@@ -570,9 +570,9 @@ KNOWLEDGE_BASE = [
     },
 ]
 
-# -----------------------------------------------------------------------------
+
 # Matching Engine
-# -----------------------------------------------------------------------------
+
 
 def _score_entry(msg_lower, entry):
     """

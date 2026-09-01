@@ -18,7 +18,7 @@ class ChatRoomViewSet(viewsets.ModelViewSet):
             return ChatRoom.objects.all().prefetch_related('messages')
         return ChatRoom.objects.filter(user=self.request.user).prefetch_related('messages')
 
-    def get_serializer_class(self): # type: ignore[reportIncompatibleMethodOverride]
+    def get_serializer_class(self): # type: ignore
         if self.action == 'retrieve':
             return ChatRoomDetailSerializer
         return ChatRoomSerializer

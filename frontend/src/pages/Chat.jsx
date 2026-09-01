@@ -189,6 +189,7 @@ const Chat = () => {
 
     const pollRef = useRef(null);
     const messagesEndRef = useRef(null);
+    const messagesContainerRef = useRef(null);
     const lastMessageCount = useRef(0);
 
     const isAdmin = sessionStorage.getItem("isStaff") === "true" || sessionStorage.getItem("isSuperuser") === "true";
@@ -243,18 +244,24 @@ const Chat = () => {
     }, [activeRoom, loadMessages, pollMessages]);
 
     useEffect(() => {
-        const scrollToBottom = () => {
-            messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-        };
-        // Scroll on message change
-        scrollToBottom();
-        // Fallback for slower render
-        const timer = setTimeout(scrollToBottom, 50);
+        const container = messagesContainerRef.current;
+        if (!container) return;
+        // Scroll the overflow container to the bottom, not the window
+        container.scrollTop = container.scrollHeight;
+        const timer = setTimeout(() => {
+            if (messagesContainerRef.current) {
+                messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+            }
+        }, 80);
         return () => clearTimeout(timer);
     }, [messages, waitingAI]);
 
     useEffect(() => {
-        const handleScroll = () => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        const handleScroll = () => {
+            if (messagesContainerRef.current) {
+                messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+            }
+        };
         window.addEventListener('scroll-chat-to-bottom', handleScroll);
         return () => window.removeEventListener('scroll-chat-to-bottom', handleScroll);
     }, []);
@@ -267,10 +274,20 @@ const Chat = () => {
             setRooms(prev => [data, ...prev]);
             setActiveRoom(data);
             setMessages([]);
-            // Load welcome message from server after brief delay
-            setTimeout(() => loadMessages(data.id), 800);
+
             if (firstMessage) {
-                setTimeout(() => sendMessageToRoom(data.id, firstMessage), 1200);
+                // Step 1: Load the welcome/greeting message from the server
+                await new Promise(resolve => setTimeout(resolve, 700));
+                const { data: initialMsgs } = await chatService.getRoomMessages(data.id);
+                const msgs = Array.isArray(initialMsgs) ? initialMsgs : [];
+                setMessages(msgs);
+                lastMessageCount.current = msgs.length;
+
+                // Step 2: Wait for the greeting to visually render, then send user message
+                await new Promise(resolve => setTimeout(resolve, 600));
+                await sendMessageToRoom(data.id, firstMessage);
+            } else {
+                setTimeout(() => loadMessages(data.id), 800);
             }
         } catch {
             setError(t("chat.createRoomError"));
@@ -368,7 +385,7 @@ const Chat = () => {
     useEffect(() => {
         if (!loadingRooms && location.state?.initialMessage) {
             const msg = location.state.initialMessage;
-            
+
             // Safely clear the state so it doesn't re-trigger on unmount/re-mount
             const newHistoryState = { ...window.history.state };
             if (newHistoryState && newHistoryState.usr) {
@@ -386,9 +403,9 @@ const Chat = () => {
 
     const formatDate = (iso) => {
         const d = new Date(iso); const today = new Date();
-        if (d.toDateString() === today.toDateString()) return t("common.today") || "Today";
+        if (d.toDateString() === today.toDateString()) return t("chat.today") || "Today";
         const y = new Date(today); y.setDate(today.getDate() - 1);
-        if (d.toDateString() === y.toDateString()) return t("common.yesterday") || "Yesterday";
+        if (d.toDateString() === y.toDateString()) return t("chat.yesterday") || "Yesterday";
         return d.toLocaleDateString();
     };
 
@@ -590,7 +607,7 @@ const Chat = () => {
                             </div>
 
                             {/* Messages */}
-                            <div style={{ flex: 1, overflowY: "auto", padding: "1.5rem 1.5rem 1rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                            <div ref={messagesContainerRef} style={{ flex: 1, overflowY: "auto", padding: "1.5rem 1.5rem 1rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
                                 {loadingMessages ? (
                                     <div style={{ textAlign: "center", padding: "3rem", color: "var(--text-muted)" }}>
                                         <Loader size={24} style={{ animation: "spin 1s linear infinite" }} />
